@@ -19,7 +19,8 @@ var (
 	verbose    = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	instanceID = kingpin.Flag("instanceid", "The instance id to look for").String()
 	sqsQueue   = kingpin.Flag("queue", "The sqs queue to consume").Envar("LIFECYCLED_SQS_QUEUE").Required().String()
-	hooksDir   = kingpin.Flag("hooks", "The directory to look for hooks in").Envar("LIFECYCLED_HOOKS").Required().ExistingDir()
+	hooksDir   = kingpin.Flag("hooks", "The directory to look for hooks in").Envar("LIFECYCLED_HOOKS").Required().String()
+	debug      = kingpin.Flag("debug", "Show debugging info").Bool()
 )
 
 func main() {
@@ -33,6 +34,10 @@ func main() {
 		queue = lifecycled.NewSimulatedQueue(*instanceID)
 	} else {
 		queue = lifecycled.NewSQSQueue(*sqsQueue, *instanceID)
+	}
+
+	if *debug {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	signals := make(chan os.Signal)

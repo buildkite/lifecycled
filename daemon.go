@@ -46,9 +46,9 @@ func (d *Daemon) Start() error {
 			hbt := time.NewTicker(heartbeatFrequency)
 			go func() {
 				for _ = range hbt.C {
-					ctx.Debug("Heartbeat fired")
+					ctx.Debug("Sending heartbeat")
 					if err := sendHeartbeat(d.AutoScaling, m); err != nil {
-						ctx.Error(err.Error())
+						ctx.WithError(err).Error("Heartbeat failed")
 					}
 				}
 			}()
@@ -60,12 +60,29 @@ func (d *Daemon) Start() error {
 			})
 
 			hookCtx.Info("Executing hook")
+			timer := time.Now()
+
 			code, err := executeHook(hook, []string{}, d.Signals)
+			executeCtx := hookCtx.WithFields(log.Fields{
+				"exitcode": code,
+				"duration": time.Now().Sub(timer),
+			})
 			if err != nil {
-				hookCtx.WithError(err)
-				hookCtx.Errorf("Hook exited with %d", code)
+				executeCtx.WithError(err).Error("Hook failed")
+
+				if err = d.Queue.Release(m); err != nil {
+					hookCtx.WithError(err).Error("Failed to release message to queue")
+				} else {
+					hookCtx.Debug("Released message to queue")
+				}
 			} else {
-				hookCtx.Infof("Hook exited with %d", code)
+				executeCtx.Info("Hook finished successfully")
+
+				if err = d.Queue.Delete(m); err != nil {
+					hookCtx.WithError(err).Error("Failed to delete message from queue")
+				} else {
+					hookCtx.Debug("Deleted message from queue")
+				}
 			}
 		}
 	}()
