@@ -1,7 +1,9 @@
-EC2 Lifecycle Listener
-======================
+AWS AutoScaling Lifecycle Hook Daemon
+=====================================
 
-A simple daemon that runs on an EC2 instance and subscribes to an [SQS][] queue and listens for [Auto Scaling Lifecycle events](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroupLifecycle.html). The events are dispatched to shell scripts in a hooks directory. The lifecycle event will be delayed until the shell scripts finish executing, at which point the lifecycle event will be completed.
+[AWS AutoScaling](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/lifecycle-hooks.html) provides a mechanism for performing custom actions when Auto Scaling launches or terminates an instance in your AutoScaling group. `lifecycled` provides a way to consume these events and respond with simple shell scripts.
+
+Lifecycle events are consumed from an SQS queue and a corresponding hook is executed. Whilst the hook is executing `lifecycled` sends heartbeats to the Autoscaling group to stall further action. When the hook completes executing, if it completes successfully the lifecycle action is completed successfully, if the hook returns a non-zero exit code then the lifecycle action is abandoned.
 
 ## Developing
 
