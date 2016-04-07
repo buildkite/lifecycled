@@ -18,13 +18,14 @@ const (
 var (
 	verbose    = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	instanceID = kingpin.Flag("instanceid", "The instance id to look for").String()
-	sqsQueue   = kingpin.Flag("queue", "The sqs queue to consume").Envar("LIFECYCLED_SQS_QUEUE").Required().String()
-	hooksDir   = kingpin.Flag("hooks", "The directory to look for hooks in").Envar("LIFECYCLED_HOOKS").Required().String()
+	sqsQueue   = kingpin.Flag("queue", "The sqs queue to consume").Required().String()
+	hooksDir   = kingpin.Flag("hooks", "The directory to look for hooks in").Required().String()
 	debug      = kingpin.Flag("debug", "Show debugging info").Bool()
 )
 
 func main() {
 	log.SetHandler(text.New(os.Stderr))
+	kingpin.CommandLine.DefaultEnvars()
 	kingpin.Parse()
 
 	var queue lifecycled.Queue

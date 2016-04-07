@@ -1,0 +1,9 @@
+[Unit]
+Description=Autoscale Lifecycle Daemon
+
+[Service]
+EnvironmentFile=/etc/lifecycled
+ExecStart=/usr/bin/lifecycled
+
+[Install]
+WantedBy=multi-user.target
