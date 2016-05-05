@@ -1,8 +1,20 @@
-hash: ae5dbf69771321167e8b2ad8654b2b56e9f5b4a842e59344e47ef58a57910856
-updated: 2016-04-06T15:07:15.508774319+10:00
+hash: 6fa179410a291e99c93794ad93032463c59650ebeda4b245ad0b8fa2b229baf9
+updated: 2016-05-05T12:33:15.489694364+10:00
 imports:
+- name: github.com/alecthomas/kingpin
+  version: e1543c77ba157565dbf7b3e8e4e15087a120397f
+- name: github.com/alecthomas/template
+  version: a0175ee3bccc567396460bf5acd36800cb10c49c
+  subpackages:
+  - parse
+- name: github.com/alecthomas/units
+  version: 2efee857e7cfd4f3d0138cc3cbb1b4966962b93a
+- name: github.com/apex/log
+  version: c20bfcdb771b706fdd57a954ee9da2d0ff97b02d
+  subpackages:
+  - handlers/text
 - name: github.com/aws/aws-sdk-go
-  version: 6f62fc3ff9aa98c629b350376825cda566658d75
+  version: 1403f70ea4684390d0c39c8cf0a89234730397fa
   subpackages:
   - aws
   - aws/session

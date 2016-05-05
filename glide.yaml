@@ -1,4 +1,4 @@
-package: .
+package: github.com/lox/lifecycled
 import:
 - package: github.com/aws/aws-sdk-go
   subpackages:
@@ -6,3 +6,4 @@ import:
   - aws/session
   - service/autoscaling
   - service/sqs
+- package: github.com/apex/log

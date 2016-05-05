@@ -1,4 +1,4 @@
-package main
+package main // import "github.com/lox/lifecycled/cli/lifecycled"
 
 import (
 	"os"

@@ -7,7 +7,7 @@ Lifecycle events are consumed from an SQS queue and a corresponding hook is exec
 
 ## Developing
 
-```
+```bash
 cat << EOF > handler.sh
 #!/bin/bash
 echo got a $1 event
@@ -16,4 +16,13 @@ EOF
 
 chmod +x handler.sh
 go run ./cli/lifecycled/*.go --queue simulate --handler ./test.sh --instanceid llamas
+```
+
+## Releasing
+
+```bash
+glide install
+docker build --tag lifecycled-builder release/
+docker run --rm -v "$PWD":/go/src/github.com/lox/lifecycled lifecycled-builder
+ls -al builds/
 ```
