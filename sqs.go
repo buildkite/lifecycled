@@ -49,7 +49,7 @@ func (sq *sqsQueue) Receive(ch chan Message, opts ReceiveOpts) error {
 func (sq *sqsQueue) Delete(m Message) error {
 	_, err := sq.svc.DeleteMessage(&sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(sq.queueURL),
-		ReceiptHandle: m.Envelope.(sqs.Message).ReceiptHandle,
+		ReceiptHandle: m.Envelope.(*sqs.Message).ReceiptHandle,
 	})
 	return err
 }
@@ -57,8 +57,12 @@ func (sq *sqsQueue) Delete(m Message) error {
 func (sq *sqsQueue) Release(m Message) error {
 	_, err := sq.svc.ChangeMessageVisibility(&sqs.ChangeMessageVisibilityInput{
 		QueueUrl:          aws.String(sq.queueURL),
-		ReceiptHandle:     m.Envelope.(sqs.Message).ReceiptHandle,
+		ReceiptHandle:     m.Envelope.(*sqs.Message).ReceiptHandle,
 		VisibilityTimeout: aws.Int64(0),
 	})
 	return err
+}
+
+func (sq *sqsQueue) String() string {
+	return sq.queueURL
 }

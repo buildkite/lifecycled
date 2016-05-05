@@ -20,6 +20,9 @@ type Daemon struct {
 	AutoScaling *autoscaling.AutoScaling
 	Handler     *os.File
 	Signals     chan os.Signal
+
+	// filters
+	InstanceID string
 }
 
 func (d *Daemon) Start() error {
@@ -28,58 +31,81 @@ func (d *Daemon) Start() error {
 	ch := make(chan Message)
 	go func() {
 		for m := range ch {
-			ctx := log.WithFields(log.Fields{
-				"transition": m.Transition,
-				"instanceid": m.InstanceID,
-			})
+			if m.Transition == "" || m.InstanceID == "" {
+				continue
+			}
+			if d.InstanceID != "" && d.InstanceID != m.InstanceID {
+				log.WithFields(log.Fields{"instanceid": m.InstanceID}).Debug("Skipping filtered message")
+				continue
+			}
+			d.handleMessage(m)
+		}
+	}()
 
-			ctx.Info("Received message")
+	log.WithFields(log.Fields{"queue": d.Queue}).Info("Listening for events")
+	return d.Queue.Receive(ch, d.ReceiveOpts)
+}
 
-			hbt := time.NewTicker(heartbeatFrequency)
-			go func() {
-				for _ = range hbt.C {
-					ctx.Debug("Sending heartbeat")
-					if err := sendHeartbeat(d.AutoScaling, m); err != nil {
-						ctx.WithError(err).Error("Heartbeat failed")
-					}
-				}
-			}()
+func (d *Daemon) handleMessage(m Message) {
+	ctx := log.WithFields(log.Fields{
+		"transition": m.Transition,
+		"instanceid": m.InstanceID,
+	})
 
-			handlerCtx := log.WithFields(log.Fields{
-				"transition": m.Transition,
-				"instanceid": m.InstanceID,
-				"handler":    d.Handler,
-			})
+	ctx.Info("Received message")
 
-			handlerCtx.Info("Executing handler")
-			timer := time.Now()
-
-			code, err := executeHandler(d.Handler, []string{m.Transition, m.InstanceID}, d.Signals)
-			executeCtx := handlerCtx.WithFields(log.Fields{
-				"exitcode": code,
-				"duration": time.Now().Sub(timer),
-			})
-			if err != nil {
-				executeCtx.WithError(err).Error("Handler script failed")
-
-				if err = d.Queue.Release(m); err != nil {
-					handlerCtx.WithError(err).Error("Failed to release message to queue")
-				} else {
-					handlerCtx.Debug("Released message to queue")
-				}
-			} else {
-				executeCtx.Info("Handler finished successfully")
-
-				if err = d.Queue.Delete(m); err != nil {
-					handlerCtx.WithError(err).Error("Failed to delete message from queue")
-				} else {
-					handlerCtx.Debug("Deleted message from queue")
-				}
+	hbt := time.NewTicker(heartbeatFrequency)
+	go func() {
+		for _ = range hbt.C {
+			ctx.Debug("Sending heartbeat")
+			if err := sendHeartbeat(d.AutoScaling, m); err != nil {
+				ctx.WithError(err).Error("Heartbeat failed")
 			}
 		}
 	}()
 
-	return d.Queue.Receive(ch, d.ReceiveOpts)
+	handlerCtx := log.WithFields(log.Fields{
+		"transition": m.Transition,
+		"instanceid": m.InstanceID,
+		"handler":    d.Handler.Name(),
+	})
+
+	handlerCtx.Info("Executing handler")
+	timer := time.Now()
+
+	code, err := executeHandler(d.Handler, []string{m.Transition, m.InstanceID}, d.Signals)
+	executeCtx := handlerCtx.WithFields(log.Fields{
+		"exitcode": code,
+		"duration": time.Now().Sub(timer),
+	})
+	hbt.Stop()
+
+	if err != nil {
+		executeCtx.WithError(err).Error("Handler script failed")
+		if err := d.Queue.Release(m); err != nil {
+			executeCtx.WithError(err).Error("Failed to release message back to queue")
+			return
+		}
+
+		handlerCtx.Debug("Released message to queue")
+		return
+	}
+
+	handlerCtx.Info("Handler finished successfully")
+
+	if err = completeLifecycle(d.AutoScaling, m); err != nil {
+		ctx.WithError(err).Error("Failed to complete lifecycle action")
+		return
+	}
+
+	ctx.Info("Lifecycle action completed successfully")
+
+	if err = d.Queue.Delete(m); err != nil {
+		handlerCtx.WithError(err).Error("Failed to delete message from queue")
+		return
+	}
+
+	handlerCtx.Debug("Deleted message from queue")
 }
 
 func executeHandler(command *os.File, args []string, sigs chan os.Signal) (syscall.WaitStatus, error) {
@@ -97,9 +123,6 @@ func executeHandler(command *os.File, args []string, sigs chan os.Signal) (sysca
 	}()
 
 	if err := cmd.Run(); err != nil {
-		if err != nil {
-			return syscall.WaitStatus(127), err
-		}
 		if exitError, ok := err.(*exec.ExitError); ok {
 			return exitError.Sys().(syscall.WaitStatus), nil
 		}
