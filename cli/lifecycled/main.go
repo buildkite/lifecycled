@@ -19,7 +19,7 @@ var (
 	verbose    = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	instanceID = kingpin.Flag("instanceid", "The instance id to look for").String()
 	sqsQueue   = kingpin.Flag("queue", "The sqs queue to consume").Required().String()
-	hooksDir   = kingpin.Flag("hooks", "The directory to look for hooks in").Required().String()
+	handler    = kingpin.Flag("handler", "The script to invoke to handle events").Required().File()
 	debug      = kingpin.Flag("debug", "Show debugging info").Bool()
 )
 
@@ -47,7 +47,7 @@ func main() {
 	daemon := lifecycled.Daemon{
 		Queue:       queue,
 		AutoScaling: autoscaling.New(session.New()),
-		HooksDir:    *hooksDir,
+		Handler:     *handler,
 		Signals:     signals,
 	}
 
