@@ -28,10 +28,6 @@ func main() {
 	kingpin.CommandLine.DefaultEnvars()
 	kingpin.Parse()
 
-	if *instanceID != "" {
-		log.WithFields(log.Fields{"instance_id": *instanceID}).Info("Filtering messages by instance id")
-	}
-
 	var queue lifecycled.Queue
 
 	// provide a simulated queue for testing
