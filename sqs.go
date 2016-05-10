@@ -10,15 +10,14 @@ import (
 )
 
 type sqsQueue struct {
-	queueURL, instanceID string
-	svc                  *sqs.SQS
+	queueURL string
+	svc      *sqs.SQS
 }
 
-func NewSQSQueue(queueURL, instanceID string) Queue {
+func NewSQSQueue(queueURL string) Queue {
 	return &sqsQueue{
-		svc:        sqs.New(session.New()),
-		queueURL:   queueURL,
-		instanceID: instanceID,
+		svc:      sqs.New(session.New()),
+		queueURL: queueURL,
 	}
 }
 
