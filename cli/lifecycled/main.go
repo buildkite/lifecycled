@@ -53,6 +53,7 @@ func main() {
 		AutoScaling: autoscaling.New(session.New()),
 		Handler:     *handler,
 		Signals:     signals,
+		InstanceID:  *instanceID,
 	}
 
 	err := daemon.Start()

@@ -1,6 +1,7 @@
 package lifecycled
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"syscall"
@@ -12,6 +13,10 @@ import (
 
 const (
 	heartbeatFrequency = time.Second * 10
+)
+
+const (
+	MatchAnyInstanceID = "*"
 )
 
 type Daemon struct {
@@ -26,15 +31,19 @@ type Daemon struct {
 }
 
 func (d *Daemon) Start() error {
+	if d.InstanceID == "" {
+		return errors.New("Expected an instance id to filter")
+	}
+
 	log.Info("Starting lifecycled daemon")
 
 	ch := make(chan Message)
 	go func() {
 		for m := range ch {
-			if m.Transition == "" || m.InstanceID == "" {
+			if m.Transition == "" {
 				continue
 			}
-			if d.InstanceID != "" && d.InstanceID != m.InstanceID {
+			if d.InstanceID != MatchAnyInstanceID && d.InstanceID != m.InstanceID {
 				log.WithFields(log.Fields{"instanceid": m.InstanceID}).Debug("Skipping filtered message")
 				continue
 			}
