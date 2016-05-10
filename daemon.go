@@ -6,7 +6,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/apex/log"
+	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 )
 

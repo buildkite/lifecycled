@@ -6,4 +6,4 @@ import:
   - aws/session
   - service/autoscaling
   - service/sqs
-- package: github.com/apex/log
+- package: github.com/Sirupsen/logrus

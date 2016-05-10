@@ -3,9 +3,8 @@ package main // import "github.com/lox/lifecycled/cli/lifecycled"
 import (
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/alecthomas/kingpin"
-	"github.com/apex/log"
-	"github.com/apex/log/handlers/text"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/lox/lifecycled"
@@ -24,7 +23,8 @@ var (
 )
 
 func main() {
-	log.SetHandler(text.New(os.Stderr))
+	log.SetFormatter(&log.TextFormatter{})
+
 	kingpin.CommandLine.DefaultEnvars()
 	kingpin.Parse()
 
@@ -34,7 +34,7 @@ func main() {
 	if *sqsQueue == simulateQueue {
 		queue = lifecycled.NewSimulatedQueue(*instanceID)
 	} else {
-		queue = lifecycled.NewSQSQueue(*sqsQueue, *instanceID)
+		queue = lifecycled.NewSQSQueue(*sqsQueue)
 	}
 
 	if *debug {
