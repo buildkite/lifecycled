@@ -41,7 +41,6 @@ func (d *Daemon) Start() error {
 				continue
 			}
 			if d.InstanceID != "" && d.InstanceID != m.InstanceID {
-				log.WithFields(log.Fields{"instanceid": m.InstanceID}).Debug("Skipping filtered message based on instance id")
 				continue
 			}
 			d.handleMessage(m)
