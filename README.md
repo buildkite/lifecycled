@@ -8,14 +8,7 @@ Lifecycle events are consumed from an SQS queue and a corresponding hook is exec
 ## Developing
 
 ```bash
-cat << EOF > handler.sh
-#!/bin/bash
-echo got a $1 event
-sleep 25
-EOF
-
-chmod +x handler.sh
-go run ./cli/lifecycled/*.go --queue simulate --handler ./test.sh --instanceid llamas
+go run ./cli/lifecycled/*.go --queue simulate --handler ./handler.sh --instanceid llamas
 ```
 
 ## Releasing
