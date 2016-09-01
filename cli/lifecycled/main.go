@@ -15,7 +15,6 @@ const (
 )
 
 var (
-	verbose    = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	instanceID = kingpin.Flag("instanceid", "An instanceid to use to filter messages").String()
 	sqsQueue   = kingpin.Flag("queue", "The sqs queue identifier to consume").Required().String()
 	handler    = kingpin.Flag("handler", "The script to invoke to handle events").Required().File()
