@@ -38,17 +38,23 @@ func (d *Daemon) Start() error {
 	go func() {
 		for m := range ch {
 			if m.Transition == "" {
-				continue
+				d.ignoreMessage(m)
+			} else if d.InstanceID != "" && d.InstanceID != m.InstanceID {
+				d.ignoreMessage(m)
+			} else {
+				d.handleMessage(m)
 			}
-			if d.InstanceID != "" && d.InstanceID != m.InstanceID {
-				continue
-			}
-			d.handleMessage(m)
 		}
 	}()
 
 	log.WithFields(log.Fields{"queue": d.Queue}).Info("Listening for events")
 	return d.Queue.Receive(ch, d.ReceiveOpts)
+}
+
+func (d *Daemon) ignoreMessage(m Message) {
+	if err := d.Queue.Release(m); err != nil {
+		log.Info("Failed to release ignored message back to queue")
+	}
 }
 
 func (d *Daemon) handleMessage(m Message) {
