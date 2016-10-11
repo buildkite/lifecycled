@@ -12,10 +12,16 @@ go run ./cli/lifecycled/*.go --queue simulate --handler ./handler.sh --instancei
 ```
 
 ## Releasing
+### Building binary
+```bash
+docker build --tag lifecycled-builder release/
+docker run --rm -v "$PWD":/go/src/github.com/lox/lifecycled lifecycled-builder build.sh
+ls -al builds/
+```
+### Building package
 
 ```bash
-glide install
 docker build --tag lifecycled-builder release/
-docker run --rm -v "$PWD":/go/src/github.com/lox/lifecycled lifecycled-builder
-ls -al builds/
+docker run -v "$PWD":/go/src/github.com/lox/lifecycled -v "$PWD/output":/go/src/output -e LIFECYCLE_QUEUE=yourqueue -e AWS_REGION=yourregion lifecycled-public pkg-builder.sh $VERSION
+ls -al output/
 ```
