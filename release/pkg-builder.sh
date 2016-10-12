@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-VERSION=$1
 
 /usr/bin/build.sh
 cd /go/src
@@ -12,7 +11,7 @@ echo export AWS_REGION=$AWS_REGION >> /go/src/etc/sysconfig/lifecycled
 
 chmod +x ./etc/sysconfig/lifecycled
 fpm --verbose  --rpm-os linux -s dir -t deb \
-    -n lifecycled  -v ${VERSION} \
+    -n lifecycled  -v ${PKG_VERSION} \
     -p /go/src/output/NAME_FULLVERSION_ARCH.TYPE \
     --url=https://github.com/lox/lifecycled \
     --vendor=Lox \
@@ -24,7 +23,7 @@ fpm --verbose  --rpm-os linux -s dir -t deb \
 
 
 fpm --verbose --rpm-os linux -s dir -t rpm \
-    -n lifecycled  -v ${VERSION} \
+    -n lifecycled  -v ${PKG_VERSION} \
     -p /go/src/output/NAME_FULLVERSION_ARCH.TYPE \
     --url=https://github.com/lox/lifecycled \
     --vendor=Lox \
