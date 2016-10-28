@@ -1,0 +1,109 @@
+#!/bin/bash
+#
+# lifecycled        Manage the consul agent
+#
+# chkconfig:   2345 95 95
+# description: Lifecycle is a tool for managing aws workflow hooks
+# processname: lifecycled
+# pidfile: /var/run/lifecycled.pid
+
+### BEGIN INIT INFO
+# Provides:       lifecycled
+# Required-Start: $local_fs $network
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop:  0 1 6
+# Short-Description: Manage the lifecycled agent
+# Description: Lifecycle is a tool for managing aws workflow hooks
+### END INIT INFO
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+prog="lifecycled"
+exec="/usr/local/bin/$prog"
+pidfile="/var/run/$prog.pid"
+lockfile="/var/lock/subsys/$prog"
+logfile="/var/log/$prog"
+# Use these in future iterations 
+#conffile="/etc/lifecycled.conf"
+#confdir="/etc/lifecycled.d"
+
+# pull in sysconfig settings
+[ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
+
+export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id --silent)
+export AWS_REGION=us-west-2
+
+start() {
+    [ -x $exec ] || exit 5
+
+    umask 077
+
+    touch $logfile $pidfile
+
+    echo -n $"Starting $prog: "
+    echo *******Service Start******* >> $logfile
+    $exec --queue $LIFECYCLE_QUEUE --handler /etc/lifecycled-runner.sh --instanceid $INSTANCE_ID  >> $logfile 2>&1 &
+    PID=$!
+    RETVAL=$?
+    echo
+
+    [ $RETVAL -eq 0 ] && touch $lockfile && echo $! > $pidfile
+
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Shutting down $prog: "
+    killproc -p $pidfile $exec
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    echo -n $"Reloading $prog: "
+    killproc -p $pidfile $exec -HUP
+    echo
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    status -p "$pidfile" -l $prog $exec
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+case "$1" in
+    start)
+        $1
+        ;;
+    stop)
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    status)
+        rh_status
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart}"
+        exit 2
+esac
+
+exit $?
