@@ -1,4 +1,4 @@
-AWS AutoScaling Lifecycle Hook Daemon
+AWS AutoScaling Lifecycle Hook Daemon [![wercker status](https://app.wercker.com/status/53e4d9070a3b038c7b6aa98b3a2294f1/s/master "wercker status")](https://app.wercker.com/project/byKey/53e4d9070a3b038c7b6aa98b3a2294f1)
 =====================================
 
 [AWS AutoScaling](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/lifecycle-hooks.html) provides a mechanism for performing custom actions when Auto Scaling launches or terminates an instance in your AutoScaling group. `lifecycled` provides a way to consume these events and respond with simple shell scripts.
@@ -14,7 +14,6 @@ go run ./cli/lifecycled/*.go --queue simulate --handler ./handler.sh --instancei
 ## Releasing
 
 ```bash
-glide install
 docker build --tag lifecycled-builder release/
 docker run --rm -v "$PWD":/go/src/github.com/lox/lifecycled lifecycled-builder
 ls -al builds/
