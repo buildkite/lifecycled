@@ -25,3 +25,7 @@ docker build --tag lifecycled-builder release/
 docker run -v "$PWD":/go/src/github.com/lox/lifecycled -v "$PWD/output":/go/src/output -e LIFECYCLE_QUEUE=yourqueue -e AWS_REGION=yourregion lifecycled-public pkg-builder.sh $VERSION
 ls -al output/
 ```
+
+
+### Installing
+Copy the package to your local repo and then use a [puppet module](https://forge.puppet.com/kendrickm/lifecycled/readme) to install
