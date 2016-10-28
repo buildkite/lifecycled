@@ -1,9 +1,0 @@
-package: github.com/lox/lifecycled
-import:
-- package: github.com/aws/aws-sdk-go
-  subpackages:
-  - aws
-  - aws/session
-  - service/autoscaling
-  - service/sqs
-- package: github.com/Sirupsen/logrus
