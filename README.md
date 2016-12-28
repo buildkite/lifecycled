@@ -22,6 +22,6 @@ ls -al builds/
 
 ```bash
 docker build --tag lifecycled-builder release/
-docker run -v "$PWD":/go/src/github.com/lox/lifecycled -v "$PWD/output":/go/src/output -e LIFECYCLE_QUEUE=yourqueue -e AWS_REGION=yourregion lifecycled-public pkg-builder.sh $VERSION
+docker run -v "$PWD":/go/src/github.com/lox/lifecycled -v "$PWD/output":/go/src/output -e LIFECYCLE_QUEUE=yourqueue -e AWS_REGION=yourregion lifecycled-builder pkg-builder.sh $VERSION
 ls -al output/
 ```

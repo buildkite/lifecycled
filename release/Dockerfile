@@ -7,12 +7,6 @@ RUN apt-get install rubygems -y
 RUN apt-get install ruby2.1-dev -y
 RUN apt-get install rpm -y
 
-## SETUP GLIDE
-WORKDIR /
-RUN wget https://github.com/Masterminds/glide/releases/download/v0.12.2/glide-v0.12.2-linux-386.tar.gz
-RUN tar xvf glide-v0.12.2-linux-386.tar.gz
-RUN cp linux-386/glide /usr/bin/glide
-
 WORKDIR /go/src/github.com/lox/lifecycled
 
 RUN gem install fpm --no-ri --no-rdoc

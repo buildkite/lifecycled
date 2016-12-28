@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-<<<<<<< HEAD
-=======
 VERSION=$1
->>>>>>> Adding the ability to build rpm/deb packages
 
 /usr/bin/build.sh
 cd /go/src
@@ -15,11 +12,7 @@ echo export AWS_REGION=$AWS_REGION >> /go/src/etc/sysconfig/lifecycled
 
 chmod +x ./etc/sysconfig/lifecycled
 fpm --verbose  --rpm-os linux -s dir -t deb \
-<<<<<<< HEAD
-    -n lifecycled  -v ${PKG_VERSION} \
-=======
     -n lifecycled  -v ${VERSION} \
->>>>>>> Adding the ability to build rpm/deb packages
     -p /go/src/output/NAME_FULLVERSION_ARCH.TYPE \
     --url=https://github.com/lox/lifecycled \
     --vendor=Lox \
@@ -31,11 +24,7 @@ fpm --verbose  --rpm-os linux -s dir -t deb \
 
 
 fpm --verbose --rpm-os linux -s dir -t rpm \
-<<<<<<< HEAD
-    -n lifecycled  -v ${PKG_VERSION} \
-=======
     -n lifecycled  -v ${VERSION} \
->>>>>>> Adding the ability to build rpm/deb packages
     -p /go/src/output/NAME_FULLVERSION_ARCH.TYPE \
     --url=https://github.com/lox/lifecycled \
     --vendor=Lox \
@@ -44,4 +33,3 @@ fpm --verbose --rpm-os linux -s dir -t rpm \
     ./etc/init.d/=/etc/init.d/ \
     ./etc/sysconfig/=/etc/sysconfig/ \
     ./etc/lifecycled-runner.sh=/etc/lifecycled-runner.sh
-
