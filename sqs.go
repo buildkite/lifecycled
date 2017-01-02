@@ -22,12 +22,12 @@ func NewSQSQueue(queueURL string) Queue {
 }
 
 func (sq *sqsQueue) Receive(ch chan Message, opts ReceiveOpts) error {
-	for _ = range time.NewTicker(time.Millisecond * 500).C {
+	for _ = range time.NewTicker(time.Millisecond * 250).C {
 		resp, err := sq.svc.ReceiveMessage(&sqs.ReceiveMessageInput{
 			QueueUrl:            aws.String(sq.queueURL),
-			MaxNumberOfMessages: aws.Int64(10),
-			WaitTimeSeconds:     aws.Int64(20),
-			VisibilityTimeout:   aws.Int64(30),
+			MaxNumberOfMessages: aws.Int64(1),
+			WaitTimeSeconds:     aws.Int64(5),
+			VisibilityTimeout:   aws.Int64(0),
 		})
 		if err != nil {
 			return err
