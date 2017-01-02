@@ -1,0 +1,14 @@
+steps:
+  - name: ":hammer:"
+    command: make setup clean build
+    artifact_paths: 'build/*'
+    plugins:
+      docker-compose:
+        run: builder
+        config: .buildkite/docker-compose.yml
+
+  - wait
+
+  - name: ":github: Release"
+    command: .buildkite/release.sh
+
