@@ -1,55 +1,132 @@
-package lifecycled
+package main
 
-import "time"
+import (
+	"errors"
+	"fmt"
+	"time"
 
-type Message struct {
-	Time        time.Time `json:"Time"`
-	GroupName   string    `json:"AutoScalingGroupName"`
-	InstanceID  string    `json:"EC2InstanceId"`
-	ActionToken string    `json:"LifecycleActionToken"`
-	Transition  string    `json:"LifecycleTransition"`
-	HookName    string    `json:"LifecycleHookName"`
-	Envelope    interface{}
+	log "github.com/Sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
+)
+
+const queuePolicy = `
+{
+  "Version":"2012-10-17",
+  "Statement":[
+    {
+      "Effect":"Allow",
+      "Principal":"*",
+      "Action":"sqs:SendMessage",
+      "Resource":"*",
+      "Condition":{
+        "ArnEquals":{
+          "aws:SourceArn":"%s"
+        }
+      }
+    }
+  ]
+}
+`
+
+type Queue struct {
+	name         string
+	url          string
+	arn          string
+	subscription string
+	session      *session.Session
 }
 
-type ReceiveOpts struct {
-	VisibilityTimeout time.Duration
-}
+func CreateQueue(sess *session.Session, queueName string, topicARN string) (*Queue, error) {
+	sqsAPI := sqs.New(sess)
+	snsAPI := sns.New(sess)
 
-type Queue interface {
-	Receive(ch chan Message, opts ReceiveOpts) error
-	Delete(m Message) error
-	Release(m Message) error
-}
-
-type simulatedQueue struct {
-	InstanceID string
-}
-
-func NewSimulatedQueue(instanceID string) Queue {
-	return &simulatedQueue{
-		InstanceID: instanceID,
+	log.WithFields(log.Fields{"queue": queueName}).Debug("Creating sqs queue")
+	resp, err := sqsAPI.CreateQueue(&sqs.CreateQueueInput{
+		QueueName: aws.String(queueName),
+		Attributes: map[string]*string{
+			"Policy": aws.String(fmt.Sprintf(queuePolicy, topicARN)),
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
+
+	log.WithFields(log.Fields{"queue": queueName}).Debug("Looking up sqs queue url")
+	attrs, err := sqsAPI.GetQueueAttributes(&sqs.GetQueueAttributesInput{
+		AttributeNames: aws.StringSlice([]string{"QueueArn"}),
+		QueueUrl:       resp.QueueUrl,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	arn, ok := attrs.Attributes["QueueArn"]
+	if !ok {
+		return nil, errors.New("No attribute QueueArn")
+	}
+
+	log.WithFields(log.Fields{"queue": queueName, "topic": topicARN}).Debug("Subscribing queue to sns topic")
+	subscr, err := snsAPI.Subscribe(&sns.SubscribeInput{
+		Protocol: aws.String("sqs"),
+		TopicArn: aws.String(topicARN),
+		Endpoint: arn,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Queue{
+		name:         queueName,
+		url:          *resp.QueueUrl,
+		subscription: *subscr.SubscriptionArn,
+		arn:          *arn,
+		session:      sess,
+	}, nil
 }
 
-func (sq *simulatedQueue) Receive(ch chan Message, opts ReceiveOpts) error {
-	for t := range time.NewTicker(time.Millisecond * 500).C {
-		ch <- Message{
-			Time:        t,
-			Transition:  instanceTerminatingEvent,
-			InstanceID:  sq.InstanceID,
-			GroupName:   "AFakeAutoscalingGroupName",
-			ActionToken: "AFakeActionTokenxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-			HookName:    "AFakeHookToken",
+func (q *Queue) Receive(ch chan *sqs.Message) error {
+	sqsAPI := sqs.New(q.session)
+
+	log.WithFields(log.Fields{"queueURL": q.url}).Debugf("Polling sqs for messages")
+	for range time.NewTicker(time.Millisecond * 100).C {
+		resp, err := sqsAPI.ReceiveMessage(&sqs.ReceiveMessageInput{
+			QueueUrl:            aws.String(q.url),
+			MaxNumberOfMessages: aws.Int64(1),
+			WaitTimeSeconds:     aws.Int64(0),
+			VisibilityTimeout:   aws.Int64(0),
+		})
+		if err != nil {
+			return err
+		}
+		for _, m := range resp.Messages {
+			sqsAPI.DeleteMessage(&sqs.DeleteMessageInput{
+				QueueUrl:      aws.String(q.url),
+				ReceiptHandle: m.ReceiptHandle,
+			})
+			ch <- m
 		}
 	}
 	return nil
 }
 
-func (sq *simulatedQueue) Delete(m Message) error {
-	return nil
-}
+func (q *Queue) Delete() error {
+	sqsAPI := sqs.New(q.session)
+	snsAPI := sns.New(q.session)
 
-func (sq *simulatedQueue) Release(m Message) error {
-	return nil
+	log.WithFields(log.Fields{"arn": q.subscription}).Debugf("Deleting sns subscription")
+	_, err := snsAPI.Unsubscribe(&sns.UnsubscribeInput{
+		SubscriptionArn: aws.String(q.subscription),
+	})
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{"url": q.url}).Debugf("Deleting sqs queue")
+	_, err = sqsAPI.DeleteQueue(&sqs.DeleteQueueInput{
+		QueueUrl: aws.String(q.url),
+	})
+	return err
 }
