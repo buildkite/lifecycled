@@ -31,11 +31,11 @@ logfile="/var/log/$prog"
 #conffile="/etc/lifecycled.conf"
 #confdir="/etc/lifecycled.d"
 
+export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id --silent)
+export AWS_REGION=$(curl http://169.254.169.254/latest/dynamic/instance-identity/document --silent|grep region|awk -F\" '{print $4}')
+
 # pull in sysconfig settings
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
-
-export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id --silent)
-export AWS_REGION=us-west-2
 
 start() {
     [ -x $exec ] || exit 5
