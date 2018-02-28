@@ -75,13 +75,21 @@ func main() {
 
 		var cleanup sync.Once
 		cleanupFunc := func() {
-			queue.Delete()
+			if err = queue.Delete(); err != nil {
+				log.Fatalf("Failed to delete queue: %v", err)
+			}
 		}
 
 		defer cleanup.Do(cleanupFunc)
 
 		sigs := make(chan os.Signal, 2)
-		signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+		signal.Notify(sigs,
+			syscall.SIGHUP,
+			syscall.SIGINT,
+			syscall.SIGTERM,
+			syscall.SIGQUIT,
+			syscall.SIGPIPE)
+
 		go func() {
 			<-sigs
 			log.Info("Shutting down gracefully...")
