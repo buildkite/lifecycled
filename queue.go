@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -31,6 +32,10 @@ const queuePolicy = `
 }
 `
 
+const (
+	longPollingWaitTimeSeconds = 20
+)
+
 type Queue struct {
 	name         string
 	url          string
@@ -47,7 +52,8 @@ func CreateQueue(sess *session.Session, queueName string, topicARN string) (*Que
 	resp, err := sqsAPI.CreateQueue(&sqs.CreateQueueInput{
 		QueueName: aws.String(queueName),
 		Attributes: map[string]*string{
-			"Policy": aws.String(fmt.Sprintf(queuePolicy, topicARN)),
+			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, topicARN)),
+			"ReceiveMessageWaitTimeSeconds": strconv.Itoa(longPollingWaitTimeSeconds),
 		},
 	})
 	if err != nil {
