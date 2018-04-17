@@ -53,7 +53,7 @@ func CreateQueue(sess *session.Session, queueName string, topicARN string) (*Que
 		QueueName: aws.String(queueName),
 		Attributes: map[string]*string{
 			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, topicARN)),
-			"ReceiveMessageWaitTimeSeconds": strconv.Itoa(longPollingWaitTimeSeconds),
+			"ReceiveMessageWaitTimeSeconds": aws.String(strconv.Itoa(longPollingWaitTimeSeconds)),
 		},
 	})
 	if err != nil {
