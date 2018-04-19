@@ -11,12 +11,12 @@ A handler script is provided to gracefully handle these actions before shutdown.
 Installing
 ----------
 
-Either install with `go get -u github.com/lox/lifecycled` or download a [binary release for Linux or Windows](https://github.com/lox/lifecycled/releases).
+Either install with `go get -u github.com/buildkite/lifecycled` or download a [binary release for Linux or Windows](https://github.com/buildkite/lifecycled/releases).
 
 Running
 -------
 
-Check out the [Cloudformatiomn Template](cloudformation/template.yml) for an example of how to setup an autoscaling group with the right permissions and an SNS topic. Once you have the SNS topic, run lifecycled on your aws instance:
+Check out the [Cloudformation Template](cloudformation/template.yml) for an example of how to setup an autoscaling group with the right permissions and an SNS topic. Once you have the SNS topic, run lifecycled on your aws instance:
 
 ```
 lifecycled --sns-topic arn:aws:sns:us-east-1:11111111:lifecycled-test-1501806648-LifecycleTopic-UTAZ7PQOA32Q
@@ -34,3 +34,12 @@ Spot Termination
 
 These notices are consumed by polling the local metadata url every 5 seconds. They are passed to the handler script as a custom event, the instance id and the timestamp, e.g `ec2:SPOT_INSTANCE_TERMINATION i-001405f0fc67e3b12 2015-01-05T18:02:00Z`
 
+Cleaning up Leftover SQS Queues
+-------------------------------
+
+The `lifecycled` daemon should clean up the per-instance SQS queues that are created when it shuts down, but there has been a bug where this does not happen (See https://github.com/buildkite/lifecycled/issues/12). To mitigate this, you can run a cleanup tool:
+
+```
+go get -u github.com/buildkite/lifecycled/tools/lifecycled-queue-cleaner
+lifecycled-queue-cleaner
+```
