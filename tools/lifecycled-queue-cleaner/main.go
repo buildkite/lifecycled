@@ -50,14 +50,19 @@ func deleteInactiveQueues(sess *session.Session, parallel int) (uint64, error) {
 	for i := 0; i < parallel; i++ {
 		go func(total int) {
 			for queue := range queuesCh {
-				idx := atomic.AddUint64(&count, 1)
-				log.Printf("Deleting %s (%d of %d)", queue, idx, total)
+				log.Printf("Deleting %s (%d of %d)", queue, count, total)
 				err = deleteQueue(sess, queue)
 				wg.Done()
+				if awsErr, ok := err.(awserr.Error); ok {
+					if awsErr.Code() == `AWS.SimpleQueueService.NonExistentQueue` {
+						continue
+					}
+				}
 				if err != nil {
 					errCh <- err
 					return
 				}
+				atomic.AddUint64(&count, 1)
 			}
 		}(len(queues))
 	}
@@ -157,8 +162,6 @@ func listInactiveQueues(sess *session.Session) ([]string, error) {
 		instanceId := matches[3]
 		if _, exists := instancesMap[instanceId]; !exists {
 			inactiveQueues = append(inactiveQueues, queue)
-		} else {
-			log.Printf("Skipping %s, still in use", queue)
 		}
 	}
 
@@ -172,13 +175,5 @@ func deleteQueue(sess *session.Session, queueUrl string) error {
 	_, err := sqs.New(sess).DeleteQueue(&sqs.DeleteQueueInput{
 		QueueUrl: aws.String(queueUrl),
 	})
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == `AWS.SimpleQueueService.NonExistentQueue` {
-				log.Printf("Queue %s doesn't exist", queueUrl)
-				return nil
-			}
-		}
-	}
 	return err
 }
