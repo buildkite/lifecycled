@@ -30,7 +30,7 @@ func main() {
 			return
 		} else {
 			log.Printf("Deleted %d queues, running again as aws limits queues returned to 1000", count)
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 60)
 		}
 	}
 }
@@ -50,6 +50,7 @@ func deleteInactiveQueues(sess *session.Session, parallel int) (uint64, error) {
 	for i := 0; i < parallel; i++ {
 		go func(total int) {
 			for queue := range queuesCh {
+				atomic.AddUint64(&count, 1)
 				log.Printf("Deleting %s (%d of %d)", queue, count, total)
 				err = deleteQueue(sess, queue)
 				wg.Done()
@@ -62,7 +63,6 @@ func deleteInactiveQueues(sess *session.Session, parallel int) (uint64, error) {
 					errCh <- err
 					return
 				}
-				atomic.AddUint64(&count, 1)
 			}
 		}(len(queues))
 	}
