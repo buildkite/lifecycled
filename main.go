@@ -24,8 +24,6 @@ const (
 )
 
 func main() {
-	log.SetFormatter(&log.TextFormatter{})
-
 	app := kingpin.New("lifecycled",
 		"Handle AWS autoscaling lifecycle events gracefully")
 
@@ -34,10 +32,11 @@ func main() {
 	app.DefaultEnvars()
 
 	var (
-		instanceID string
-		snsTopic   string
-		handler    *os.File
-		debug      bool
+		instanceID   string
+		snsTopic     string
+		handler      *os.File
+		jsonLogging  bool
+		debugLogging bool
 	)
 
 	app.Flag("instance-id", "The instance id to listen for events for").
@@ -50,14 +49,23 @@ func main() {
 	app.Flag("handler", "The script to invoke to handle events").
 		FileVar(&handler)
 
+	app.Flag("json", "Enable JSON logging").
+		BoolVar(&jsonLogging)
+
 	app.Flag("debug", "Show debugging info").
-		BoolVar(&debug)
+		BoolVar(&debugLogging)
+
+	if jsonLogging {
+		log.SetFormatter(&log.JSONFormatter{})
+	} else {
+		log.SetFormatter(&log.TextFormatter{})
+	}
+
+	if debugLogging {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	app.Action(func(c *kingpin.ParseContext) error {
-		if debug {
-			log.SetLevel(log.DebugLevel)
-		}
-
 		if instanceID == "" {
 			log.Infof("Looking up instance id from metadata service")
 			id, err := getInstanceID()
