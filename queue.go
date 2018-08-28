@@ -12,7 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 )
 
 const queuePolicy = `
@@ -38,69 +40,95 @@ const (
 	longPollingWaitTimeSeconds = 20
 )
 
+// SQSClient for testing purposes (TODO: Gomock).
+type SQSClient sqsiface.SQSAPI
+
+// SNSClient for testing purposes (TODO: Gomock).
+type SNSClient snsiface.SNSAPI
+
+// Queue manages the SQS queue and SNS subscription.
 type Queue struct {
-	name         string
-	url          string
-	arn          string
-	subscription string
-	session      *session.Session
+	name            string
+	url             string
+	arn             string
+	topicArn        string
+	subscriptionArn string
+
+	sqsClient SQSClient
+	snsClient SNSClient
 }
 
-func CreateQueue(sess *session.Session, queueName string, topicARN string) (*Queue, error) {
-	sqsAPI := sqs.New(sess)
-	snsAPI := sns.New(sess)
+// NewQueue returns a new... Queue.
+func NewQueue(sess *session.Session, queueName, topicArn string) *Queue {
+	return &Queue{
+		name:      queueName,
+		topicArn:  topicArn,
+		sqsClient: sqs.New(sess),
+		snsClient: sns.New(sess),
+	}
+}
 
-	log.WithFields(log.Fields{"queue": queueName}).Debug("Creating sqs queue")
-	resp, err := sqsAPI.CreateQueue(&sqs.CreateQueueInput{
-		QueueName: aws.String(queueName),
+// Create the SQS queue.
+func (q *Queue) Create() error {
+	log.WithFields(log.Fields{"queue": q.name}).Debug("Creating sqs queue")
+	out, err := q.sqsClient.CreateQueue(&sqs.CreateQueueInput{
+		QueueName: aws.String(q.name),
 		Attributes: map[string]*string{
-			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, topicARN)),
+			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, q.topicArn)),
 			"ReceiveMessageWaitTimeSeconds": aws.String(strconv.Itoa(longPollingWaitTimeSeconds)),
 		},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	log.WithFields(log.Fields{"queue": queueName}).Debug("Looking up sqs queue url")
-	attrs, err := sqsAPI.GetQueueAttributes(&sqs.GetQueueAttributesInput{
-		AttributeNames: aws.StringSlice([]string{"QueueArn"}),
-		QueueUrl:       resp.QueueUrl,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	arn, ok := attrs.Attributes["QueueArn"]
-	if !ok {
-		return nil, errors.New("No attribute QueueArn")
-	}
-
-	log.WithFields(log.Fields{"queue": queueName, "topic": topicARN}).Debug("Subscribing queue to sns topic")
-	subscr, err := snsAPI.Subscribe(&sns.SubscribeInput{
-		Protocol: aws.String("sqs"),
-		TopicArn: aws.String(topicARN),
-		Endpoint: arn,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &Queue{
-		name:         queueName,
-		url:          *resp.QueueUrl,
-		subscription: *subscr.SubscriptionArn,
-		arn:          *arn,
-		session:      sess,
-	}, nil
+	q.url = aws.StringValue(out.QueueUrl)
+	return nil
 }
 
-func (q *Queue) Receive(ctx context.Context, ch chan *sqs.Message) error {
-	// Close channel before returning since this is the sending side.
-	defer close(ch)
-	log.WithFields(log.Fields{"queueURL": q.url}).Debugf("Polling sqs for messages")
+// GetArn for the SQS queue.
+func (q *Queue) getArn() (string, error) {
+	if q.arn == "" {
+		log.WithFields(log.Fields{"queue": q.name}).Debug("Looking up sqs queue arn")
+		out, err := q.sqsClient.GetQueueAttributes(&sqs.GetQueueAttributesInput{
+			AttributeNames: aws.StringSlice([]string{"QueueArn"}),
+			QueueUrl:       aws.String(q.url),
+		})
+		if err != nil {
+			return "", err
+		}
+		arn, ok := out.Attributes["QueueArn"]
+		if !ok {
+			return "", errors.New("No attribute QueueArn")
+		}
+		q.arn = aws.StringValue(arn)
+	}
+	return q.arn, nil
+}
 
-	sqsAPI := sqs.New(q.session)
+// Subscribe the queue to an SNS topic
+func (q *Queue) Subscribe() error {
+	log.WithFields(log.Fields{"queue": q.name, "topic": q.topicArn}).Debug("Subscribing queue to sns topic")
+
+	arn, err := q.getArn()
+	if err != nil {
+		return err
+	}
+	out, err := q.snsClient.Subscribe(&sns.SubscribeInput{
+		TopicArn: aws.String(q.topicArn),
+		Protocol: aws.String("sqs"),
+		Endpoint: aws.String(arn),
+	})
+	if err != nil {
+		return err
+	}
+	q.subscriptionArn = aws.StringValue(out.SubscriptionArn)
+	return nil
+}
+
+// Receive a message from the SQS queue.
+func (q *Queue) Receive(ctx context.Context, ch chan *sqs.Message) error {
+	log.WithFields(log.Fields{"queueURL": q.url}).Debugf("Polling sqs for messages")
+	defer close(ch) // Close channel before returning since this is the sending side.
 
 Loop:
 	for {
@@ -108,7 +136,7 @@ Loop:
 		case <-ctx.Done():
 			break Loop
 		default:
-			resp, err := sqsAPI.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+			out, err := q.sqsClient.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String(q.url),
 				MaxNumberOfMessages: aws.Int64(1),
 				WaitTimeSeconds:     aws.Int64(longPollingWaitTimeSeconds),
@@ -121,8 +149,8 @@ Loop:
 				}
 				return err
 			}
-			for _, m := range resp.Messages {
-				sqsAPI.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
+			for _, m := range out.Messages {
+				q.sqsClient.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
 					QueueUrl:      aws.String(q.url),
 					ReceiptHandle: m.ReceiptHandle,
 				})
@@ -133,21 +161,26 @@ Loop:
 	return nil
 }
 
-func (q *Queue) Delete() error {
-	sqsAPI := sqs.New(q.session)
-	snsAPI := sns.New(q.session)
-
-	log.WithFields(log.Fields{"arn": q.subscription}).Debugf("Deleting sns subscription")
-	_, err := snsAPI.Unsubscribe(&sns.UnsubscribeInput{
-		SubscriptionArn: aws.String(q.subscription),
-	})
-	if err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{"url": q.url}).Debugf("Deleting sqs queue")
-	_, err = sqsAPI.DeleteQueue(&sqs.DeleteQueueInput{
-		QueueUrl: aws.String(q.url),
+// Unsubscribe the queue from the SNS topic.
+func (q *Queue) Unsubscribe() error {
+	log.WithFields(log.Fields{"arn": q.subscriptionArn}).Debugf("Deleting sns subscription")
+	_, err := q.snsClient.Unsubscribe(&sns.UnsubscribeInput{
+		SubscriptionArn: aws.String(q.subscriptionArn),
 	})
 	return err
+}
+
+// Delete the SQS queue.
+func (q *Queue) Delete() error {
+	log.WithFields(log.Fields{"url": q.url}).Debugf("Deleting sqs queue")
+	_, err := q.sqsClient.DeleteQueue(&sqs.DeleteQueueInput{
+		QueueUrl: aws.String(q.url),
+	})
+	if err != nil {
+		// Ignore error if queue does not exist (which is what we want)
+		if e, ok := err.(awserr.Error); !ok || e.Code() != sqs.ErrCodeQueueDoesNotExist {
+			return err
+		}
+	}
+	return nil
 }

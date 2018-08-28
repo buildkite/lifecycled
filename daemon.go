@@ -41,7 +41,26 @@ type Daemon struct {
 	Signals     chan os.Signal
 }
 
+// Start the daemon.
 func (d *Daemon) Start(ctx context.Context) error {
+	if err := d.Queue.Create(); err != nil {
+		return err
+	}
+	defer func() {
+		if err := d.Queue.Delete(); err != nil {
+			log.WithError(err).Error("Failed to delete queue")
+		}
+	}()
+
+	if err := d.Queue.Subscribe(); err != nil {
+		return err
+	}
+	defer func() {
+		if err := d.Queue.Unsubscribe(); err != nil {
+			log.WithError(err).Error("Failed to unsubscribe from sns topic")
+		}
+	}()
+
 	ch := make(chan *sqs.Message)
 
 	go func() {
