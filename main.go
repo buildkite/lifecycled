@@ -55,17 +55,17 @@ func main() {
 	app.Flag("debug", "Show debugging info").
 		BoolVar(&debugLogging)
 
-	if jsonLogging {
-		log.SetFormatter(&log.JSONFormatter{})
-	} else {
-		log.SetFormatter(&log.TextFormatter{})
-	}
-
-	if debugLogging {
-		log.SetLevel(log.DebugLevel)
-	}
-
 	app.Action(func(c *kingpin.ParseContext) error {
+		if jsonLogging {
+			log.SetFormatter(&log.JSONFormatter{})
+		} else {
+			log.SetFormatter(&log.TextFormatter{})
+		}
+
+		if debugLogging {
+			log.SetLevel(log.DebugLevel)
+		}
+
 		if instanceID == "" {
 			log.Infof("Looking up instance id from metadata service")
 			id, err := getInstanceID()
