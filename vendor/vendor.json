@@ -225,8 +225,20 @@
 			"revisionTime": "2018-08-28T19:42:26Z"
 		},
 		{
+			"checksumSHA1": "dFjsVobwi3REhN6pyQgWuR23VRw=",
+			"path": "github.com/aws/aws-sdk-go/service/sns/snsiface",
+			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
+			"revisionTime": "2018-08-28T19:42:26Z"
+		},
+		{
 			"checksumSHA1": "ECIZck5xhocpUl8GeUAdeSnCgvg=",
 			"path": "github.com/aws/aws-sdk-go/service/sqs",
+			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
+			"revisionTime": "2018-08-28T19:42:26Z"
+		},
+		{
+			"checksumSHA1": "AisiBB02O+XJ/CPCBl4hD6xuXMs=",
+			"path": "github.com/aws/aws-sdk-go/service/sqs/sqsiface",
 			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
 			"revisionTime": "2018-08-28T19:42:26Z"
 		},
@@ -269,5 +281,5 @@
 			"revisionTime": "2018-08-17T08:25:03Z"
 		}
 	],
-	"rootPath": "github.com/buildkite/lifecycled"
+	"rootPath": "github.com/itsdalmo/lifecycled"
 }
