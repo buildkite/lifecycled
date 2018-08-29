@@ -20,7 +20,7 @@ bucket_path="${BUILDKITE_JOB_ID}"
 bucket_url="https://s3.amazonaws.com/${bucket}/${bucket_path}"
 
 aws s3 sync ./init/ "s3://${bucket}/${bucket_path}/init" --acl public-read
-aws s3 sync ./lifecycled-linux-amd64 "s3://${bucket}/${bucket_path}/" --acl public-read
+aws s3 cp ./lifecycled-linux-amd64 "s3://${bucket}/${bucket_path}/" --acl public-read
 
 # test it can be downloaded
 curl -Lf -I "$bucket_url/lifecycled-linux-amd64"
