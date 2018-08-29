@@ -13,17 +13,17 @@ spot_price="${2:-0}"
 
 # setup binary file in s3
 echo "~~~ Uploading artifacts to s3"
-buildkite-agent artifact download "build/*" .
+buildkite-agent artifact download "lifecycled-linux-amd64" .
 
 bucket="buildkite-lifecycled-builds"
 bucket_path="${BUILDKITE_JOB_ID}"
 bucket_url="https://s3.amazonaws.com/${bucket}/${bucket_path}"
 
 aws s3 sync ./init/ "s3://${bucket}/${bucket_path}/init" --acl public-read
-aws s3 sync ./build/ "s3://${bucket}/${bucket_path}" --acl public-read
+aws s3 sync ./lifecycled-linux-amd64 "s3://${bucket}/${bucket_path}/" --acl public-read
 
 # test it can be downloaded
-curl -Lf -I "$bucket_url/lifecycled_linux_amd64"
+curl -Lf -I "$bucket_url/lifecycled-linux-amd64"
 
 # lookup vpc config
 subnets=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpc_id" --query "Subnets[*].[SubnetId,AvailabilityZone]" --output text)

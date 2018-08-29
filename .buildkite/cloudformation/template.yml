@@ -100,7 +100,7 @@ Resources:
             Content-Type: text/cloud-boothook; charset="us-ascii"
             #!/bin/bash -ex
             exec > >(logger -t user-data -s 2>/dev/console) 2>&1
-            curl -Lfs -o /usr/bin/lifecycled ${LifecycledDownloadURL}/lifecycled_linux_amd64
+            curl -Lfs -o /usr/bin/lifecycled ${LifecycledDownloadURL}/lifecycled-linux-amd64
             chmod +x /usr/bin/lifecycled
             curl -Lfs -o /etc/init/lifecycled.conf ${LifecycledDownloadURL}/init/upstart/lifecycled.conf
             echo END
