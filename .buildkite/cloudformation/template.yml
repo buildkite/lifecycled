@@ -32,6 +32,10 @@ Parameters:
     Type: CommaDelimitedList
     Description: Comma separated list of two existing VPC subnet ids where EC2 instances will run.
 
+  LifecycledDownloadURL:
+    Type: String
+    Description: The url to download lifecycled from
+
 Conditions:
     UseSpotInstances:
       "Fn::Not": [ "Fn::Equals": [ { Ref: SpotPrice }, 0 ] ]
@@ -85,8 +89,31 @@ Resources:
       KeyName : !Ref KeyName
       IamInstanceProfile: !Ref IAMInstanceProfile
       InstanceType: !Ref InstanceType
-      ImageId: "ami-abc1ebbd"
+      ImageId: "ami-97785bed" # Amazon Linux AMI 2017.09.1, released on 2018-01-17.
       SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
+      UserData:
+        "Fn::Base64":
+          "Fn::Sub": |
+            Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+            MIME-Version: 1.0
+            --==BOUNDARY==
+            Content-Type: text/cloud-boothook; charset="us-ascii"
+            #!/bin/bash -ex
+            exec > >(logger -t user-data -s 2>/dev/console) 2>&1
+            curl -Lfs -o /usr/bin/lifecycled ${LifecycledDownloadURL}/lifecycled_linux_amd64
+            chmod +x /usr/bin/lifecycled
+            curl -Lfs -o /etc/init/lifecycled.conf ${LifecycledDownloadURL}/init/upstart/lifecycled.conf
+            echo END
+            --==BOUNDARY==
+            Content-Type: text/x-shellscript; charset="us-ascii"
+            #!/bin/bash -ex
+            /opt/aws/bin/cfn-signal \
+              --region "${AWS::Region}" \
+              --stack "${AWS::StackName}" \
+              --resource "LaunchConfiguration" \
+              --exit-code 0
+            --==BOUNDARY==--
+
 
   LifecycleTopic:
     Type: AWS::SNS::Topic
@@ -124,9 +151,16 @@ Resources:
     Properties:
       VPCZoneIdentifier: !Ref Subnets
       LaunchConfigurationName: !Ref LaunchConfiguration
-      MinSize: 0
+      MinSize: !Ref Count
       DesiredCapacity: !Ref Count
-      MaxSize: 10
+      MaxSize: !Ref Count
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+        Count: !Ref Count
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: true
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
