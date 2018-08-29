@@ -101,7 +101,7 @@ func (q *Queue) Receive(ch chan *sqs.Message) error {
 		resp, err := sqsAPI.ReceiveMessage(&sqs.ReceiveMessageInput{
 			QueueUrl:            aws.String(q.url),
 			MaxNumberOfMessages: aws.Int64(1),
-			WaitTimeSeconds:     aws.Int64(0),
+			WaitTimeSeconds:     aws.Int64(longPollingWaitTimeSeconds),
 			VisibilityTimeout:   aws.Int64(0),
 		})
 		if err != nil {
