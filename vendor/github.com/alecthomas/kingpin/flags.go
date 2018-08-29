@@ -53,7 +53,7 @@ func (f *flagGroup) init(defaultEnvarPrefix string) error {
 }
 
 func (f *flagGroup) checkDuplicates() error {
-	seenShort := map[byte]bool{}
+	seenShort := map[rune]bool{}
 	seenLong := map[string]bool{}
 	for _, flag := range f.flagOrder {
 		if flag.shorthand != 0 {
@@ -89,11 +89,14 @@ loop:
 
 			name := token.Value
 			if token.Type == TokenLong {
-				if strings.HasPrefix(name, "no-") {
-					name = name[3:]
-					invert = true
-				}
 				flag, ok = f.long[name]
+				if !ok {
+					if strings.HasPrefix(name, "no-") {
+						name = name[3:]
+						invert = true
+					}
+					flag, ok = f.long[name]
+				}
 				if !ok {
 					return nil, fmt.Errorf("unknown long flag '%s'", flagToken)
 				}
@@ -144,7 +147,7 @@ type FlagClause struct {
 	completionsMixin
 	envarMixin
 	name          string
-	shorthand     byte
+	shorthand     rune
 	help          string
 	defaultValues []string
 	placeholder   string
@@ -292,7 +295,7 @@ func (f *FlagClause) Required() *FlagClause {
 }
 
 // Short sets the short flag name.
-func (f *FlagClause) Short(name byte) *FlagClause {
+func (f *FlagClause) Short(name rune) *FlagClause {
 	f.shorthand = name
 	return f
 }
