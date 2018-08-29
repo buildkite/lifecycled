@@ -1,7 +1,4 @@
-# Kingpin - A Go (golang) command line and flag parser
-[![](https://godoc.org/github.com/alecthomas/kingpin?status.svg)](http://godoc.org/github.com/alecthomas/kingpin) [![Build Status](https://travis-ci.org/alecthomas/kingpin.svg?branch=master)](https://travis-ci.org/alecthomas/kingpin) [![Gitter chat](https://badges.gitter.im/alecthomas.png)](https://gitter.im/alecthomas/Lobby)
-
-
+# Kingpin - A Go (golang) command line and flag parser [![](https://godoc.org/github.com/alecthomas/kingpin?status.svg)](http://godoc.org/github.com/alecthomas/kingpin) [![Build Status](https://travis-ci.org/alecthomas/kingpin.png)](https://travis-ci.org/alecthomas/kingpin)
 
 <!-- MarkdownTOC -->
 
@@ -141,7 +138,7 @@ $ go get gopkg.in/alecthomas/kingpin.v1
 - *2015-09-19* -- Stable v2.1.0 release.
     - Added `command.Default()` to specify a default command to use if no other
       command matches. This allows for convenient user shortcuts.
-    - Exposed `HelpFlag` and `VersionFlag` for further customisation.
+    - Exposed `HelpFlag` and `VersionFlag` for further cusomisation.
     - `Action()` and `PreAction()` added and both now support an arbitrary
       number of callbacks.
     - `kingpin.SeparateOptionalFlagsUsageTemplate`.
@@ -222,7 +219,7 @@ Args:
   <ip>        IP address to ping.
   [<count>]   Number of packets to send
 $ ping 1.2.3.4 5
-Would ping: 1.2.3.4 with timeout 5s and count 5
+Would ping: 1.2.3.4 with timeout 5s and count 0
 ```
 
 From the following source:
@@ -246,7 +243,7 @@ var (
 func main() {
   kingpin.Version("0.0.1")
   kingpin.Parse()
-  fmt.Printf("Would ping: %s with timeout %s and count %d\n", *ip, *timeout, *count)
+  fmt.Printf("Would ping: %s with timeout %s and count %d", *ip, *timeout, *count)
 }
 ```
 
@@ -387,7 +384,7 @@ func main() {
 
 Kingpin supports both flag and positional argument parsers for converting to
 Go types. For example, some included parsers are `Int()`, `Float()`,
-`Duration()` and `ExistingFile()` (see [parsers.go](./parsers.go) for a complete list of included parsers).
+`Duration()` and `ExistingFile()`.
 
 Parsers conform to Go's [`flag.Value`](http://godoc.org/flag#Value)
 interface, so any existing implementations will work.
@@ -415,7 +412,7 @@ As a convenience, I would recommend something like this:
 
 ```go
 func HTTPHeader(s Settings) (target *http.Header) {
-  target = &http.Header{}
+  target = new(http.Header)
   s.SetValue((*HTTPHeaderValue)(target))
   return
 }
@@ -461,7 +458,7 @@ Here are some examples of flags with various permutations:
 
     --name=NAME           // Flag(...).String()
     --name="Harry"        // Flag(...).Default("Harry").String()
-    --name=FULL-NAME      // Flag(...).PlaceHolder("FULL-NAME").Default("Harry").String()
+    --name=FULL-NAME      // flag(...).PlaceHolder("FULL-NAME").Default("Harry").String()
 
 ### Consuming all remaining arguments
 
@@ -581,7 +578,7 @@ Consider the case that you needed to read a local database or a file to
 provide suggestions. You can dynamically generate the options
 
 ```
-func listHosts() []string {
+func listHosts(args []string) []string {
   // Provide a dynamic list of hosts from a hosts file or otherwise
   // for bash completion. In this example we simply return static slice.
 

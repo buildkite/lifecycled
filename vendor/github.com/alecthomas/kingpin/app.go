@@ -13,7 +13,7 @@ var (
 )
 
 var (
-	envarTransformRegexp = regexp.MustCompile(`[^a-zA-Z0-9_]+`)
+	envarTransformRegexp = regexp.MustCompile(`[^a-zA-Z_]+`)
 )
 
 type ApplicationValidator func(*Application) error
@@ -29,8 +29,7 @@ type Application struct {
 
 	author         string
 	version        string
-	errorWriter    io.Writer // Destination for errors.
-	usageWriter    io.Writer // Destination for usage
+	writer         io.Writer // Destination for usage and errors.
 	usageTemplate  string
 	validator      ApplicationValidator
 	terminate      func(status int) // See Terminate()
@@ -51,8 +50,7 @@ func New(name, help string) *Application {
 	a := &Application{
 		Name:          name,
 		Help:          help,
-		errorWriter:   os.Stderr, // Left for backwards compatibility purposes.
-		usageWriter:   os.Stderr,
+		writer:        os.Stderr,
 		usageTemplate: DefaultUsageTemplate,
 		terminate:     os.Exit,
 	}
@@ -126,23 +124,9 @@ func (a *Application) Terminate(terminate func(int)) *Application {
 	return a
 }
 
-// Writer specifies the writer to use for usage and errors. Defaults to os.Stderr.
-// DEPRECATED: See ErrorWriter and UsageWriter.
+// Specify the writer to use for usage and errors. Defaults to os.Stderr.
 func (a *Application) Writer(w io.Writer) *Application {
-	a.errorWriter = w
-	a.usageWriter = w
-	return a
-}
-
-// ErrorWriter sets the io.Writer to use for errors.
-func (a *Application) ErrorWriter(w io.Writer) *Application {
-	a.errorWriter = w
-	return a
-}
-
-// UsageWriter sets the io.Writer to use for errors.
-func (a *Application) UsageWriter(w io.Writer) *Application {
-	a.usageWriter = w
+	a.writer = w
 	return a
 }
 
@@ -234,18 +218,12 @@ func (a *Application) writeUsage(context *ParseContext, err error) {
 	if err := a.UsageForContext(context); err != nil {
 		panic(err)
 	}
-	if err != nil {
-		a.terminate(1)
-	} else {
-		a.terminate(0)
-	}
+	a.terminate(1)
 }
 
 func (a *Application) maybeHelp(context *ParseContext) {
 	for _, element := range context.Elements {
 		if flag, ok := element.Clause.(*FlagClause); ok && flag == a.HelpFlag {
-			// Re-parse the command-line ignoring defaults, so that help works correctly.
-			context, _ = a.parseContext(true, context.rawArgs)
 			a.writeUsage(context, nil)
 		}
 	}
@@ -255,7 +233,7 @@ func (a *Application) maybeHelp(context *ParseContext) {
 func (a *Application) Version(version string) *Application {
 	a.version = version
 	a.VersionFlag = a.Flag("version", "Show application version.").PreAction(func(*ParseContext) error {
-		fmt.Fprintln(a.usageWriter, version)
+		fmt.Fprintln(a.writer, version)
 		a.terminate(0)
 		return nil
 	})
@@ -263,7 +241,6 @@ func (a *Application) Version(version string) *Application {
 	return a
 }
 
-// Author sets the author output by some help templates.
 func (a *Application) Author(author string) *Application {
 	a.author = author
 	return a
@@ -402,9 +379,6 @@ func (a *Application) setDefaults(context *ParseContext) error {
 	flagElements := map[string]*ParseElement{}
 	for _, element := range context.Elements {
 		if flag, ok := element.Clause.(*FlagClause); ok {
-			if flag.name == "help" {
-				return nil
-			}
 			flagElements[flag.name] = element
 		}
 	}
@@ -564,7 +538,7 @@ func (a *Application) applyActions(context *ParseContext) error {
 
 // Errorf prints an error message to w in the format "<appname>: error: <message>".
 func (a *Application) Errorf(format string, args ...interface{}) {
-	fmt.Fprintf(a.errorWriter, a.Name+": error: "+format+"\n", args...)
+	fmt.Fprintf(a.writer, a.Name+": error: "+format+"\n", args...)
 }
 
 // Fatalf writes a formatted error to w then terminates with exit status 1.
@@ -577,8 +551,6 @@ func (a *Application) Fatalf(format string, args ...interface{}) {
 // exits with a non-zero status.
 func (a *Application) FatalUsage(format string, args ...interface{}) {
 	a.Errorf(format, args...)
-	// Force usage to go to error output.
-	a.usageWriter = a.errorWriter
 	a.Usage([]string{})
 	a.terminate(1)
 }
@@ -656,7 +628,7 @@ func (a *Application) completionOptions(context *ParseContext) []string {
 		}
 
 		// Add top level flags if we're not at the top level and no match was found.
-		if context.SelectedCommand != nil && !flagMatched {
+		if context.SelectedCommand != nil && flagMatched == false {
 			topOptions, topFlagMatched, topValueMatched := a.FlagCompletion(flagName, flagValue)
 			if topValueMatched {
 				// Value Matched. Back to cmdCompletions
