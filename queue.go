@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
@@ -106,12 +107,12 @@ func (q *Queue) getArn() (string, error) {
 
 // Subscribe the queue to an SNS topic
 func (q *Queue) Subscribe() error {
+	log.WithFields(log.Fields{"queue": q.name, "topic": q.topicArn}).Debug("Subscribing queue to sns topic")
+
 	arn, err := q.getArn()
 	if err != nil {
 		return err
 	}
-	log.WithFields(log.Fields{"queue": q.name, "topic": q.topicArn}).Debug("Subscribing queue to sns topic")
-
 	out, err := q.snsClient.Subscribe(&sns.SubscribeInput{
 		TopicArn: aws.String(q.topicArn),
 		Protocol: aws.String("sqs"),
@@ -125,24 +126,36 @@ func (q *Queue) Subscribe() error {
 }
 
 // Receive a message from the SQS queue.
-func (q *Queue) Receive(ch chan *sqs.Message) error {
+func (q *Queue) Receive(ctx context.Context, ch chan *sqs.Message) error {
 	log.WithFields(log.Fields{"queueURL": q.url}).Debugf("Polling sqs for messages")
-	for range time.NewTicker(time.Millisecond * 100).C {
-		resp, err := q.sqsClient.ReceiveMessage(&sqs.ReceiveMessageInput{
-			QueueUrl:            aws.String(q.url),
-			MaxNumberOfMessages: aws.Int64(1),
-			WaitTimeSeconds:     aws.Int64(0),
-			VisibilityTimeout:   aws.Int64(0),
-		})
-		if err != nil {
-			return err
-		}
-		for _, m := range resp.Messages {
-			q.sqsClient.DeleteMessage(&sqs.DeleteMessageInput{
-				QueueUrl:      aws.String(q.url),
-				ReceiptHandle: m.ReceiptHandle,
+	defer close(ch) // Close channel before returning since this is the sending side.
+
+Loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break Loop
+		default:
+			out, err := q.sqsClient.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+				QueueUrl:            aws.String(q.url),
+				MaxNumberOfMessages: aws.Int64(1),
+				WaitTimeSeconds:     aws.Int64(longPollingWaitTimeSeconds),
+				VisibilityTimeout:   aws.Int64(0),
 			})
-			ch <- m
+			if err != nil {
+				// Ignore error if the context was cancelled (i.e. we are shutting down)
+				if e, ok := err.(awserr.Error); ok && e.Code() == request.CanceledErrorCode {
+					return nil
+				}
+				return err
+			}
+			for _, m := range out.Messages {
+				q.sqsClient.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
+					QueueUrl:      aws.String(q.url),
+					ReceiptHandle: m.ReceiptHandle,
+				})
+				ch <- m
+			}
 		}
 	}
 	return nil

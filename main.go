@@ -1,12 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
@@ -80,50 +80,27 @@ func main() {
 			log.WithError(err).Fatal("Failed to create new session")
 		}
 
-		var (
-			cleanQueue        sync.Once
-			cleanSubscription sync.Once
-		)
-		queueName := generateQueueName(instanceID)
-
-		queue := NewQueue(sess, queueName, snsTopic)
-		if err := queue.Create(); err != nil {
-			log.WithError(err).Fatal("Failed to create queue")
-		}
-		deleteQueue := func() {
-			if err = queue.Delete(); err != nil {
-				log.WithError(err).Fatal("Failed to delete queue")
-			}
-		}
-		defer cleanQueue.Do(deleteQueue)
-
-		if err := queue.Subscribe(); err != nil {
-			// Cannot log fatal here since the deferred calls will not be run (leaks a queue)
-			log.WithError(err).Error("Failed to subscribe to the sns topic")
-			return err
-		}
-		deleteSubscription := func() {
-			if err := queue.Unsubscribe(); err != nil {
-				log.WithError(err).Error("Failed to unsubscribe from sns topic")
-			}
-
-		}
-		defer cleanSubscription.Do(deleteSubscription)
-
 		sigs := make(chan os.Signal, 2)
+		defer close(sigs)
+
 		signal.Notify(sigs,
 			syscall.SIGHUP,
 			syscall.SIGINT,
 			syscall.SIGTERM,
 			syscall.SIGQUIT,
 			syscall.SIGPIPE)
+		defer signal.Stop(sigs)
+
+		// Create an execution context for the daemon that can be cancelled on OS signal
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
 		go func() {
-			<-sigs
-			log.Info("Shutting down gracefully...")
-			cleanSubscription.Do(deleteSubscription)
-			cleanQueue.Do(deleteQueue)
-			os.Exit(1)
+			for signal := range sigs {
+				log.Info("Received signal (%s) shutting down...", signal)
+				cancel()
+				break
+			}
 		}()
 
 		daemon := Daemon{
@@ -131,10 +108,10 @@ func main() {
 			AutoScaling: autoscaling.New(sess),
 			Handler:     handler,
 			Signals:     sigs,
-			Queue:       queue,
+			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
 		}
 
-		return daemon.Start()
+		return daemon.Start(ctx)
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
