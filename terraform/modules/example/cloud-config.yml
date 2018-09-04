@@ -1,0 +1,88 @@
+#cloud-config
+package_update: true
+packages:
+  - awslogs
+  - aws-cfn-bootstrap
+write_files:
+  - path: "/etc/awslogs/awscli.template"
+    permissions: "0644"
+    owner: "root"
+    content: |
+      [plugins]
+      cwlogs = cwlogs
+      [default]
+      region = ${region}
+  - path: "/etc/awslogs/awslogs.template"
+    permissions: "0644"
+    owner: "root"
+    content: |
+      [general]
+      state_file = /var/lib/awslogs/lifecycled-state
+
+      [/var/log/lifecycled.log]
+      file = /var/log/lifecycled.log
+      log_group_name = ${log_group_name}
+      log_stream_name = {instance_id}
+  - path: "/etc/systemd/system/lifecycled.service"
+    permissions: "0644"
+    owner: "root"
+    content: |
+      [Unit]
+      Description=Service for AWS lifecycle
+      Requires=network-online.target
+      After=network-online.target
+
+      [Service]
+      Type=simple
+      Restart=on-failure
+      RestartSec=1m
+      TimeoutStopSec=5m
+
+      Environment="AWS_REGION=${region}"
+      ExecStart=/usr/local/bin/lifecycled --sns-topic=${lifecycle_topic} --handler=/usr/local/scripts/lifecycle-handler.sh --log-file=/var/log/lifecycled.log --json --debug
+
+      [Install]
+      WantedBy=multi-user.target
+  - path: "/usr/local/scripts/cloudformation-signal.sh"
+    permissions: "0744"
+    owner: "root"
+    content: |
+      #! /usr/bin/bash
+
+      set -euo pipefail
+
+      function await_unit() {
+        echo -n "Waiting for $1..."
+        while ! systemctl is-active $1 > /dev/null; do
+            sleep 1
+        done
+        echo "Done!"
+      }
+
+      await_unit lifecycled.service
+  - path: "/usr/local/scripts/lifecycle-handler.sh"
+    permissions: "0744"
+    owner: "root"
+    content: |
+      #! /usr/bin/bash
+
+      set -euo pipefail
+
+      echo "hello from the handler"
+      sleep 120
+      echo "goodbye from the handler"
+runcmd:
+  - | 
+    aws s3 cp s3://${artifact_bucket}/${artifact_key} /usr/local/bin/lifecycled
+    chmod +x /usr/local/bin/lifecycled
+    chown root:root /usr/local/bin/lifecycled
+    echo "lifecycled ${artifact_etag} installed"
+  - |
+    cp /etc/awslogs/awscli.template /etc/awslogs/awscli.conf
+    cp /etc/awslogs/awslogs.template /etc/awslogs/awslogs.conf
+  - |
+    systemctl enable awslogsd.service --now
+    systemctl enable lifecycled.service --now
+  - |
+    /usr/local/scripts/cloudformation-signal.sh
+    /opt/aws/bin/cfn-signal -e $? --stack ${stack_name} --resource AutoScalingGroup --region ${region}
