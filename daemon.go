@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"os/exec"
@@ -40,8 +41,9 @@ type Daemon struct {
 	Signals     chan os.Signal
 }
 
-func (d *Daemon) Start() error {
+func (d *Daemon) Start(ctx context.Context) error {
 	ch := make(chan *sqs.Message)
+
 	go func() {
 		for m := range ch {
 			var env Envelope
@@ -76,7 +78,7 @@ func (d *Daemon) Start() error {
 		}
 	}()
 
-	spotTerminations := pollSpotTermination()
+	spotTerminations := pollSpotTermination(ctx)
 	go func() {
 		for notice := range spotTerminations {
 			log.Infof("Got a spot instance termination notice: %v", notice)
@@ -99,7 +101,7 @@ func (d *Daemon) Start() error {
 	}()
 
 	log.Info("Listening for lifecycle notifications")
-	return d.Queue.Receive(ch)
+	return d.Queue.Receive(ctx, ch)
 }
 
 func (d *Daemon) handleMessage(m AutoscalingMessage) {

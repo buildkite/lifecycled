@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -93,26 +95,39 @@ func CreateQueue(sess *session.Session, queueName string, topicARN string) (*Que
 	}, nil
 }
 
-func (q *Queue) Receive(ch chan *sqs.Message) error {
+func (q *Queue) Receive(ctx context.Context, ch chan *sqs.Message) error {
+	// Close channel before returning since this is the sending side.
+	defer close(ch)
+	log.WithFields(log.Fields{"queueURL": q.url}).Debugf("Polling sqs for messages")
+
 	sqsAPI := sqs.New(q.session)
 
-	log.WithFields(log.Fields{"queueURL": q.url}).Debugf("Polling sqs for messages")
-	for range time.NewTicker(time.Millisecond * 100).C {
-		resp, err := sqsAPI.ReceiveMessage(&sqs.ReceiveMessageInput{
-			QueueUrl:            aws.String(q.url),
-			MaxNumberOfMessages: aws.Int64(1),
-			WaitTimeSeconds:     aws.Int64(longPollingWaitTimeSeconds),
-			VisibilityTimeout:   aws.Int64(0),
-		})
-		if err != nil {
-			return err
-		}
-		for _, m := range resp.Messages {
-			sqsAPI.DeleteMessage(&sqs.DeleteMessageInput{
-				QueueUrl:      aws.String(q.url),
-				ReceiptHandle: m.ReceiptHandle,
+Loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break Loop
+		default:
+			resp, err := sqsAPI.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+				QueueUrl:            aws.String(q.url),
+				MaxNumberOfMessages: aws.Int64(1),
+				WaitTimeSeconds:     aws.Int64(longPollingWaitTimeSeconds),
+				VisibilityTimeout:   aws.Int64(0),
 			})
-			ch <- m
+			if err != nil {
+				// Ignore error if the context was cancelled (i.e. we are shutting down)
+				if e, ok := err.(awserr.Error); ok && e.Code() == request.CanceledErrorCode {
+					return nil
+				}
+				return err
+			}
+			for _, m := range resp.Messages {
+				sqsAPI.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
+					QueueUrl:      aws.String(q.url),
+					ReceiptHandle: m.ReceiptHandle,
+				})
+				ch <- m
+			}
 		}
 	}
 	return nil

@@ -1,12 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
@@ -80,29 +80,33 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		var cleanup sync.Once
-		cleanupFunc := func() {
+		defer func() {
 			if err = queue.Delete(); err != nil {
 				log.Fatalf("Failed to delete queue: %v", err)
 			}
-		}
-
-		defer cleanup.Do(cleanupFunc)
+		}()
 
 		sigs := make(chan os.Signal, 2)
+		defer close(sigs)
+
 		signal.Notify(sigs,
 			syscall.SIGHUP,
 			syscall.SIGINT,
 			syscall.SIGTERM,
 			syscall.SIGQUIT,
 			syscall.SIGPIPE)
+		defer signal.Stop(sigs)
+
+		// Create an execution context for the daemon that can be cancelled on OS signal
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
 		go func() {
-			<-sigs
-			log.Info("Shutting down gracefully...")
-			cleanup.Do(cleanupFunc)
-			os.Exit(1)
+			for signal := range sigs {
+				log.Info("Received signal (%s) shutting down...", signal)
+				cancel()
+				break
+			}
 		}()
 
 		daemon := Daemon{
@@ -113,7 +117,7 @@ func main() {
 			Queue:       queue,
 		}
 
-		return daemon.Start()
+		return daemon.Start(ctx)
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
