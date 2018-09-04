@@ -75,16 +75,10 @@ func main() {
 			instanceID = id
 		}
 
-		sess := session.New()
-		queue, err := CreateQueue(sess, generateQueueName(instanceID), snsTopic)
+		sess, err := session.NewSession()
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err).Fatal("Failed to create new session")
 		}
-		defer func() {
-			if err = queue.Delete(); err != nil {
-				log.Fatalf("Failed to delete queue: %v", err)
-			}
-		}()
 
 		sigs := make(chan os.Signal, 2)
 		defer close(sigs)
@@ -114,7 +108,7 @@ func main() {
 			AutoScaling: autoscaling.New(sess),
 			Handler:     handler,
 			Signals:     sigs,
-			Queue:       queue,
+			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
 		}
 
 		return daemon.Start(ctx)
