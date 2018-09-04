@@ -1,0 +1,117 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Lifecycled Test Autoscaling Group with SNS/SQS Notifications'
+
+Parameters:
+  KeyName:
+    Description: SSH keypair used to access the instances
+    Type: AWS::EC2::KeyPair::KeyName
+    MinLength: 1
+
+  InstanceType:
+    Description: Instance type
+    Type: String
+    Default: t3.nano
+    MinLength: 1
+
+  Count:
+    Description: Instance Count
+    Type: Number
+    Default: 1
+
+  DownloadURL:
+    Type: String
+    Description: The url to download lifecycled from
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+
+  LaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: true
+      SecurityGroups: [ !ImportValue LifecycledTestSecurityGroup ]
+      KeyName : !Ref KeyName
+      IamInstanceProfile: !ImportValue LifecycledTestIAMInstanceProfile
+      InstanceType: !Ref InstanceType
+      ImageId: "ami-b270a8cf" # amzn2-ami-hvm-2017.12.0.20180328.1-x86_64-ebs
+      UserData:
+        "Fn::Base64":
+          "Fn::Sub": |
+            Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+            MIME-Version: 1.0
+            --==BOUNDARY==
+            Content-Type: text/cloud-boothook; charset="us-ascii"
+            #!/bin/bash -ex
+            exec > >(tee /var/log/cloud-boothook.log|logger -t cloud-boothook -s 2>/dev/console) 2>&1
+            # Install journald-cloudwatch-logs
+            curl -Lfs -o /usr/local/bin/journald-cloudwatch-logs https://github.com/sj26/journald-cloudwatch-logs/releases/download/v0.0.1-text/journald-cloudwatch-logs
+            chmod +x /usr/local/bin/journald-cloudwatch-logs
+            mkdir -p /var/lib/journald-cloudwatch-logs
+            chmod 777 -R /var/lib/journald-cloudwatch-logs
+            curl -Lfs -o /etc/systemd/system/journald-cloudwatch-logs.service ${DownloadURL}/support/journald-cloudwatch-logs.service
+            curl -Lfs -o /etc/journald-cloudwatch-logs.conf ${DownloadURL}/support/journald-cloudwatch-logs.conf
+            printf 'log_group = "${LogGroup}"\n' >> /etc/journald-cloudwatch-logs.conf
+            # Install lifecycled
+            curl -Lfs -o /usr/bin/lifecycled ${DownloadURL}/lifecycled-linux-amd64
+            chmod +x /usr/bin/lifecycled
+            curl -Lfs -o /usr/local/bin/lifecycled_handler ${DownloadURL}/support/handler.sh
+            chmod +x /usr/local/bin/lifecycled_handler
+            curl -Lfs -o /etc/systemd/system/lifecycled.service ${DownloadURL}/init/systemd/lifecycled.unit
+            echo "AWS_REGION=${AWS::Region}" >> /etc/lifecycled
+            echo "LIFECYCLED_SNS_TOPIC=${LifecycleTopic}" >> /etc/lifecycled
+            echo "LIFECYCLED_HANDLER=/usr/local/bin/lifecycled_handler" >> /etc/lifecycled
+            # Configure systemd
+            systemctl daemon-reload
+            systemctl enable lifecycled.service
+            systemctl enable journald-cloudwatch-logs.service
+            systemctl start journald-cloudwatch-logs
+            systemctl start lifecycled
+            --==BOUNDARY==
+            Content-Type: text/x-shellscript; charset="us-ascii"
+            #!/bin/bash -ex
+            /opt/aws/bin/cfn-signal \
+              --region "${AWS::Region}" \
+              --stack "${AWS::StackName}" \
+              --resource "AutoScaleGroup" \
+              --exit-code 0
+            --==BOUNDARY==--
+
+  LifecycleTopic:
+    Type: AWS::SNS::Topic
+
+  LifecycleHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref AutoScaleGroup
+      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      DefaultResult: CONTINUE
+      NotificationTargetARN: !Ref LifecycleTopic
+      RoleARN: !ImportValue LifecycledTestLifecycleHookRoleArn
+
+  AutoScaleGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier: !Split [",", !ImportValue LifecycledTestSubnets]
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      MinSize: "0"
+      DesiredCapacity: !Ref Count
+      MaxSize: "100"
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+        Count: !Ref Count
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: true
+
+
+Outputs:
+  AutoScaleGroup:
+    Description: The autoscaling group that was created
+    Value: !Ref AutoScaleGroup
+
+  LogGroup:
+    Description: The cloudwatch log group that was created
+    Value: !Ref LogGroup
