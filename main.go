@@ -97,7 +97,7 @@ func main() {
 
 		go func() {
 			for signal := range sigs {
-				log.Info("Received signal (%s) shutting down...", signal)
+				log.Infof("Received signal (%s) shutting down...", signal)
 				cancel()
 				break
 			}
