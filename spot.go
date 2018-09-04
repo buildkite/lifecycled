@@ -35,16 +35,18 @@ func pollSpotTermination(ctx context.Context) chan time.Time {
 					log.WithError(err).Info("Failed to query metadata service")
 					continue
 				}
-				defer res.Body.Close()
 
-				// will return 200 OK with termination notice
-				if res.StatusCode != http.StatusOK {
+				// We read the body immediately so that we can close the body in one place
+				// and still use 'continue' if any of our conditions are false.
+				body, err := ioutil.ReadAll(res.Body)
+				res.Body.Close()
+				if err != nil {
+					log.WithError(err).Info("Failed to read response from metadata service")
 					continue
 				}
 
-				body, err := ioutil.ReadAll(res.Body)
-				if err != nil {
-					log.WithError(err).Info("Failed to read response from metadata service")
+				// will return 200 OK with termination notice
+				if res.StatusCode != http.StatusOK {
 					continue
 				}
 
