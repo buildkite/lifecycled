@@ -29,7 +29,7 @@ func pollSpotTermination(ctx context.Context) chan time.Time {
 			case <-ctx.Done():
 				return
 			case <-time.NewTicker(time.Second * 5).C:
-				timeout, hasTimeout, err := getTerminationTime(ctx)
+				timeout, hasTimeout, err := getTerminationTime(ctx, metadataURLTerminationTime)
 				if err != nil {
 					log.WithError(err).Info("Failed to get spot termination time")
 					continue
@@ -45,8 +45,8 @@ func pollSpotTermination(ctx context.Context) chan time.Time {
 }
 
 // getTermination time returns a termination time, whether one exists and any error
-func getTerminationTime(ctx context.Context) (time.Time, bool, error) {
-	req, err := http.NewRequest(http.MethodGet, metadataURLTerminationTime, nil)
+func getTerminationTime(ctx context.Context, metadataURL string) (time.Time, bool, error) {
+	req, err := http.NewRequest(http.MethodGet, metadataURL, nil)
 	if err != nil {
 		return time.Time{}, false, err
 	}
