@@ -1,0 +1,14 @@
+steps:
+  - name: ":hammer: :golang: Build"
+    plugins:
+      golang-cross-compile#v1.1.0:
+        build: "."
+        import: github.com/buildkite/lifecycled
+        targets:
+          - version: 1.10.2
+            goos: linux
+            goarch: amd64
+
+  - wait
+  - name: ":aws: Test"
+    command: .buildkite/cloudformation/test.sh

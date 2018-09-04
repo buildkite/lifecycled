@@ -1,0 +1,174 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Autoscaling Group with SNS/SQS Notifications'
+
+Parameters:
+  KeyName:
+    Description: SSH keypair used to access the instances
+    Type: AWS::EC2::KeyPair::KeyName
+    MinLength: 1
+
+  InstanceType:
+    Description: Instance type
+    Type: String
+    Default: t1.micro
+    MinLength: 1
+
+  SpotPrice:
+    Description: Spot bid price to use for the instances. 0 means normal (non-spot) instances
+    Type: String
+    Default: 0
+
+  Count:
+    Description: Instance Count
+    Type: Number
+    Default: 1
+
+  VpcId:
+    Type: String
+    Description: Id of an existing VPC to launch instances into.
+
+  Subnets:
+    Type: CommaDelimitedList
+    Description: Comma separated list of two existing VPC subnet ids where EC2 instances will run.
+
+  LifecycledDownloadURL:
+    Type: String
+    Description: The url to download lifecycled from
+
+Conditions:
+    UseSpotInstances:
+      "Fn::Not": [ "Fn::Equals": [ { Ref: SpotPrice }, 0 ] ]
+
+Resources:
+  # Allow ec2 instances to assume a role and be granted the IAMPolicies
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [ !Ref IAMRole ]
+
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ ec2.amazonaws.com ]
+            Action: sts:AssumeRole
+      Path: /
+
+  IAMPolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: InstancePolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - autoscaling:DescribeAutoScalingInstances
+              - autoscaling:DescribeLifecycleHooks
+              - autoscaling:RecordLifecycleActionHeartbeat
+              - autoscaling:CompleteLifecycleAction
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - sqs:*
+              - sns:Unsubscribe
+              - sns:Subscribe
+            Resource: "*"
+      Roles:
+        - !Ref IAMRole
+
+  LaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: true
+      SecurityGroups: [ !Ref SecurityGroup ]
+      KeyName : !Ref KeyName
+      IamInstanceProfile: !Ref IAMInstanceProfile
+      InstanceType: !Ref InstanceType
+      ImageId: "ami-97785bed" # Amazon Linux AMI 2017.09.1, released on 2018-01-17.
+      SpotPrice: !If [ "UseSpotInstances", !Ref SpotPrice, !Ref 'AWS::NoValue' ]
+      UserData:
+        "Fn::Base64":
+          "Fn::Sub": |
+            Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+            MIME-Version: 1.0
+            --==BOUNDARY==
+            Content-Type: text/cloud-boothook; charset="us-ascii"
+            #!/bin/bash -ex
+            exec > >(logger -t user-data -s 2>/dev/console) 2>&1
+            curl -Lfs -o /usr/bin/lifecycled ${LifecycledDownloadURL}/lifecycled-linux-amd64
+            chmod +x /usr/bin/lifecycled
+            curl -Lfs -o /etc/init/lifecycled.conf ${LifecycledDownloadURL}/init/upstart/lifecycled.conf
+            echo END
+            --==BOUNDARY==
+            Content-Type: text/x-shellscript; charset="us-ascii"
+            #!/bin/bash -ex
+            /opt/aws/bin/cfn-signal \
+              --region "${AWS::Region}" \
+              --stack "${AWS::StackName}" \
+              --resource "LaunchConfiguration" \
+              --exit-code 0
+            --==BOUNDARY==--
+
+
+  LifecycleTopic:
+    Type: AWS::SNS::Topic
+
+  LifecycleHookRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ autoscaling.amazonaws.com ]
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LifecyclePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref LifecycleTopic
+      Path: /
+
+  LifecycleHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Properties:
+      AutoScalingGroupName: !Ref AutoScaleGroup
+      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      DefaultResult: CONTINUE
+      NotificationTargetARN: !Ref LifecycleTopic
+      RoleARN: !GetAtt LifecycleHookRole.Arn
+
+  AutoScaleGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier: !Ref Subnets
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      MinSize: !Ref Count
+      DesiredCapacity: !Ref Count
+      MaxSize: !Ref Count
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+        Count: !Ref Count
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: true
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to SSH
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0

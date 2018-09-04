@@ -1,0 +1,205 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Lifecycled Test VPC and Common Resources'
+
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: { Ref: 'AWS::StackName' }
+
+  Gateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: { Ref: 'AWS::StackName' }
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: { Ref: Gateway }
+      VpcId: !Ref Vpc
+
+  Subnet0:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 0, { "Fn::GetAZs": '' } ]
+      CidrBlock: 10.0.1.0/24
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 1, { "Fn::GetAZs": '' } ]
+      CidrBlock: 10.0.2.0/24
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+
+  Routes:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+
+  RouteDefault:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref Gateway
+      RouteTableId: !Ref Routes
+
+  Subnet0Routes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet0
+      RouteTableId: !Ref Routes
+
+  Subnet1Routes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref Routes
+
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [ !Ref IAMRole ]
+
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ ec2.amazonaws.com ]
+            Action: sts:AssumeRole
+      Path: /
+
+  IAMPolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: InstancePolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - autoscaling:DescribeAutoScalingInstances
+              - autoscaling:DescribeLifecycleHooks
+              - autoscaling:RecordLifecycleActionHeartbeat
+              - autoscaling:CompleteLifecycleAction
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - sqs:*
+              - sns:Unsubscribe
+              - sns:Subscribe
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:DescribeLogStream
+            Resource: "*"
+      Roles:
+        - !Ref IAMRole
+
+  LifecycleHookRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ autoscaling.amazonaws.com ]
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LifecyclePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: "*"
+      Path: /
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to SSH
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'lifecycled-test-${AWS::Region}-${AWS::AccountId}'
+    DeletionPolicy: Delete
+
+Outputs:
+  Vpc:
+    Description: The Vpc that was created
+    Value: !Ref Vpc
+    Export:
+      Name: LifecycledTestVpc
+
+  Subnets:
+    Description: The Vpc that was created
+    Value: !Join [",", [!Ref Subnet0, !Ref Subnet1]]
+    Export:
+      Name: LifecycledTestSubnets
+
+  IAMInstanceProfile:
+    Description: The IAMInstanceProfile that can be used for ASG tests
+    Value: !Ref IAMInstanceProfile
+    Export:
+      Name: LifecycledTestIAMInstanceProfile
+
+  IAMRole:
+    Description: The IAMRole that can be used for ASG tests
+    Value: !Ref IAMRole
+    Export:
+      Name: LifecycledTestIAMRole
+
+  LifecycleHookRole:
+    Description: The LifecycleHookRole that can be used for ASG tests
+    Value: !Ref LifecycleHookRole
+    Export:
+      Name: LifecycledestLifecycleHookRole
+
+  LifecycleHookRoleArn:
+    Description: The LifecycleHookRoleArn that can be used for ASG tests
+    Value: !GetAtt LifecycleHookRole.Arn
+    Export:
+      Name: LifecycledTestLifecycleHookRoleArn
+
+  SecurityGroup:
+    Description: A SecurityGroup for accessing SSH on instances
+    Value: !Ref SecurityGroup
+    Export:
+      Name: LifecycledTestSecurityGroup
+
+  S3Bucket:
+    Description: An s3 bucket for provisioning test instances
+    Value: !Ref S3Bucket
+    Export:
+      Name: LifecycledTestS3Bucket
+
