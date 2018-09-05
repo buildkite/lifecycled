@@ -171,6 +171,18 @@
 			"revisionTime": "2018-08-28T19:42:26Z"
 		},
 		{
+			"checksumSHA1": "CTsp/h3FbFg9QizH4bH1abLwljg=",
+			"path": "github.com/aws/aws-sdk-go/private/protocol/json/jsonutil",
+			"revision": "82d6f352f907cec59b1519f5807fac6ee05618d0",
+			"revisionTime": "2018-09-04T21:47:07Z"
+		},
+		{
+			"checksumSHA1": "R00RL5jJXRYq1iiK1+PGvMfvXyM=",
+			"path": "github.com/aws/aws-sdk-go/private/protocol/jsonrpc",
+			"revision": "82d6f352f907cec59b1519f5807fac6ee05618d0",
+			"revisionTime": "2018-09-04T21:47:07Z"
+		},
+		{
 			"checksumSHA1": "SBBVYdLcocjdPzMWgDuR8vcOfDQ=",
 			"path": "github.com/aws/aws-sdk-go/private/protocol/query",
 			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
@@ -205,6 +217,12 @@
 			"path": "github.com/aws/aws-sdk-go/service/autoscaling",
 			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
 			"revisionTime": "2018-08-28T19:42:26Z"
+		},
+		{
+			"checksumSHA1": "nGSD4idK9hW8o3U4gLGLESYCpwE=",
+			"path": "github.com/aws/aws-sdk-go/service/cloudwatchlogs",
+			"revision": "82d6f352f907cec59b1519f5807fac6ee05618d0",
+			"revisionTime": "2018-09-04T21:47:07Z"
 		},
 		{
 			"checksumSHA1": "QutiSGcdlnEisOq+KNZ872PAl7I=",
@@ -255,6 +273,18 @@
 			"path": "github.com/jmespath/go-jmespath",
 			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
 			"revisionTime": "2018-08-28T19:42:26Z"
+		},
+		{
+			"checksumSHA1": "gEjGS03N1eysvpQ+FCHTxPcbxXc=",
+			"path": "github.com/kardianos/osext",
+			"revision": "ae77be60afb1dcacde03767a8c37337fad28ac14",
+			"revisionTime": "2017-05-10T13:15:34Z"
+		},
+		{
+			"checksumSHA1": "vf7DiJ5zpPxX9VbbHFcDa03IKQM=",
+			"path": "github.com/kdar/logrus-cloudwatchlogs",
+			"revision": "c4ba9db972a45b7d5e01e17fd1a698636e5b4508",
+			"revisionTime": "2018-02-08T17:52:44Z"
 		},
 		{
 			"checksumSHA1": "tICW9WtACqNYYw14mOulb1GJaSs=",
