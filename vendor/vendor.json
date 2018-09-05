@@ -243,6 +243,12 @@
 			"revisionTime": "2018-08-28T19:42:26Z"
 		},
 		{
+			"checksumSHA1": "s7l1mB7hP6KuCl4nF+x0zy49M8c=",
+			"path": "github.com/brunotm/backoff",
+			"revision": "49b03d13934dfbdc2ee5cbb2e88775fa8698c48b",
+			"revisionTime": "2018-07-07T15:29:03Z"
+		},
+		{
 			"checksumSHA1": "VvZKmbuBN1QAG699KduTdmSPwA4=",
 			"origin": "github.com/aws/aws-sdk-go/vendor/github.com/go-ini/ini",
 			"path": "github.com/go-ini/ini",
