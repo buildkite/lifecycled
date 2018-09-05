@@ -3,12 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "DaqSkfEqxFCaw1zkGrr9RQTK0hE=",
-			"path": "github.com/Sirupsen/logrus",
-			"revision": "51df1d314861d341546c26e4354ce760fe4bb02b",
-			"revisionTime": "2018-08-27T05:22:11Z"
-		},
-		{
 			"checksumSHA1": "jzHGiFS8iLQUVcytF5vA1Yw9V6o=",
 			"path": "github.com/alecthomas/kingpin",
 			"revision": "a39589180ebd6bbf43076e514b55f20a95d43086",
@@ -261,6 +255,12 @@
 			"path": "github.com/jmespath/go-jmespath",
 			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
 			"revisionTime": "2018-08-28T19:42:26Z"
+		},
+		{
+			"checksumSHA1": "tICW9WtACqNYYw14mOulb1GJaSs=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "3791101e143bf0f32515ac23e831475684f61229",
+			"revisionTime": "2018-09-04T20:21:35Z"
 		},
 		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
