@@ -4,7 +4,6 @@ terraform {
 
 provider "aws" {
   version = "1.34.0"
-  region  = "eu-west-1"
 }
 
 # Use the default VPC and subnets
