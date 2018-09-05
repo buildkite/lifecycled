@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -35,6 +36,7 @@ func main() {
 		instanceID   string
 		snsTopic     string
 		handler      *os.File
+		logFile      *os.File
 		jsonLogging  bool
 		debugLogging bool
 	)
@@ -48,6 +50,9 @@ func main() {
 
 	app.Flag("handler", "The script to invoke to handle events").
 		FileVar(&handler)
+
+	app.Flag("log-file", "Write a copy of the logs to the specified path").
+		OpenFileVar(&logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 
 	app.Flag("json", "Enable JSON logging").
 		BoolVar(&jsonLogging)
@@ -64,6 +69,10 @@ func main() {
 
 		if debugLogging {
 			log.SetLevel(log.DebugLevel)
+		}
+
+		if logFile != nil {
+			log.SetOutput(io.MultiWriter(os.Stdout, logFile))
 		}
 
 		if instanceID == "" {
