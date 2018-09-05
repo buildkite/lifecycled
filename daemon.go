@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -37,6 +39,7 @@ type Daemon struct {
 	InstanceID  string
 	Queue       *Queue
 	AutoScaling *autoscaling.AutoScaling
+	EC2Metadata *ec2metadata.EC2Metadata
 	Handler     *os.File
 	Signals     chan os.Signal
 }
@@ -97,7 +100,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 		}
 	}()
 
-	spotTerminations := pollSpotTermination(ctx)
+	spotTerminations := pollSpotTermination(ctx, d.EC2Metadata)
 	go func() {
 		for notice := range spotTerminations {
 			log.Infof("Got a spot instance termination notice: %v", notice)
