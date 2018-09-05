@@ -1,7 +1,13 @@
 [Unit]
 Description=Autoscale Lifecycle Daemon
+Requires=network-online.target
+After=network-online.target
 
 [Service]
+Type=simple
+Restart=on-failure
+RestartSec=30s
+TimeoutStopSec=5m
 EnvironmentFile=/etc/lifecycled
 ExecStart=/usr/bin/lifecycled
 
