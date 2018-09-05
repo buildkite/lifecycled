@@ -1,34 +1,14 @@
 #cloud-config
 package_update: true
 packages:
-  - awslogs
   - aws-cfn-bootstrap
 write_files:
-  - path: "/etc/awslogs/awscli.template"
-    permissions: "0644"
-    owner: "root"
-    content: |
-      [plugins]
-      cwlogs = cwlogs
-      [default]
-      region = ${region}
-  - path: "/etc/awslogs/awslogs.template"
-    permissions: "0644"
-    owner: "root"
-    content: |
-      [general]
-      state_file = /var/lib/awslogs/lifecycled-state
-
-      [/var/log/lifecycled.log]
-      file = /var/log/lifecycled.log
-      log_group_name = ${log_group_name}
-      log_stream_name = {instance_id}
   - path: "/etc/systemd/system/lifecycled.service"
     permissions: "0644"
     owner: "root"
     content: |
       [Unit]
-      Description=Service for AWS lifecycle
+      Description=Autoscale Lifecycle Daemon
       Requires=network-online.target
       After=network-online.target
 
@@ -39,7 +19,7 @@ write_files:
       TimeoutStopSec=5m
 
       Environment="AWS_REGION=${region}"
-      ExecStart=/usr/local/bin/lifecycled --sns-topic=${lifecycle_topic} --handler=/usr/local/scripts/lifecycle-handler.sh --log-file=/var/log/lifecycled.log --json --debug
+      ExecStart=/usr/local/bin/lifecycled --sns-topic=${lifecycle_topic} --handler=/usr/local/scripts/lifecycle-handler.sh --json --debug
 
       [Install]
       WantedBy=multi-user.target
@@ -78,10 +58,6 @@ runcmd:
     chown root:root /usr/local/bin/lifecycled
     echo "lifecycled ${artifact_etag} installed"
   - |
-    cp /etc/awslogs/awscli.template /etc/awslogs/awscli.conf
-    cp /etc/awslogs/awslogs.template /etc/awslogs/awslogs.conf
-  - |
-    systemctl enable awslogsd.service --now
     systemctl enable lifecycled.service --now
   - |
     /usr/local/scripts/cloudformation-signal.sh
