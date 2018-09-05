@@ -10,8 +10,11 @@ import (
 	"syscall"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+
+	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -32,11 +35,13 @@ func main() {
 	app.DefaultEnvars()
 
 	var (
-		instanceID   string
-		snsTopic     string
-		handler      *os.File
-		jsonLogging  bool
-		debugLogging bool
+		instanceID       string
+		snsTopic         string
+		handler          *os.File
+		jsonLogging      bool
+		debugLogging     bool
+		cloudwatchGroup  string
+		cloudwatchStream string
 	)
 
 	app.Flag("instance-id", "The instance id to listen for events for").
@@ -51,6 +56,12 @@ func main() {
 
 	app.Flag("json", "Enable JSON logging").
 		BoolVar(&jsonLogging)
+
+	app.Flag("cloudwatch-group", "Write logs to a specific Cloudwatch Logs group").
+		StringVar(&cloudwatchGroup)
+
+	app.Flag("cloudwatch-stream", "Write logs to a specific Cloudwatch Logs stream, defaults to instance-id").
+		StringVar(&cloudwatchStream)
 
 	app.Flag("debug", "Show debugging info").
 		BoolVar(&debugLogging)
@@ -73,6 +84,28 @@ func main() {
 				log.Fatalf("Failed to lookup instance id: %v", err)
 			}
 			instanceID = id
+		}
+
+		if cloudwatchStream == "" {
+			cloudwatchStream = instanceID
+		}
+
+		if cloudwatchGroup != "" {
+			hook, err := logrus_cloudwatchlogs.NewHook(cloudwatchGroup, cloudwatchStream, aws.NewConfig())
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Infof("Writing logs to Cloudwatch Group %s, Stream %s", cloudwatchGroup, cloudwatchStream)
+			log.AddHook(hook)
+			log.SetOutput(ioutil.Discard)
+
+			if !jsonLogging {
+				log.SetFormatter(&log.TextFormatter{
+					DisableColors:    true,
+					DisableTimestamp: true,
+				})
+			}
 		}
 
 		sess, err := session.NewSession()
@@ -111,7 +144,11 @@ func main() {
 			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
 		}
 
-		return daemon.Start(ctx)
+		err = daemon.Start(ctx)
+		if err != nil {
+			log.Error(err)
+		}
+		return err
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
