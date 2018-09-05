@@ -1,3 +1,7 @@
 /handler.sh
 build/
 lifecycled
+
+# Terraform
+**/.terraform
+*.tfstate*
