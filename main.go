@@ -98,7 +98,6 @@ func main() {
 
 			log.Infof("Writing logs to Cloudwatch Group %s, Stream %s", cloudwatchGroup, cloudwatchStream)
 			log.AddHook(hook)
-			log.SetOutput(ioutil.Discard)
 
 			if !jsonLogging {
 				log.SetFormatter(&log.TextFormatter{
