@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -15,52 +14,27 @@ const (
 	terminationTimeFormat      = "2006-01-02T15:04:05Z"
 )
 
-func pollSpotTermination(ctx context.Context) chan time.Time {
-	ch := make(chan time.Time)
+func getSpotTermination(ctx context.Context) (*time.Time, error) {
+	res, err := http.Get(metadataURLTerminationTime)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
 
-	log.Debugf("Polling metadata service for spot termination notices")
+	// will return 200 OK with termination notice
+	if res.StatusCode != http.StatusOK {
+		return nil, nil
+	}
 
-	go func() {
-		// Close channel before returning since this (goroutine) is the sending side.
-		defer close(ch)
-		retry := time.NewTicker(time.Second * 5).C
-	Loop:
-		for {
-			select {
-			case <-ctx.Done():
-				break Loop
-			case <-retry:
-				res, err := http.Get(metadataURLTerminationTime)
-				if err != nil {
-					log.WithError(err).Info("Failed to query metadata service")
-					continue
-				}
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
-				// We read the body immediately so that we can close the body in one place
-				// and still use 'continue' if any of our conditions are false.
-				body, err := ioutil.ReadAll(res.Body)
-				res.Body.Close()
-				if err != nil {
-					log.WithError(err).Info("Failed to read response from metadata service")
-					continue
-				}
-
-				// will return 200 OK with termination notice
-				if res.StatusCode != http.StatusOK {
-					continue
-				}
-
-				// if 200 OK, expect a body like 2015-01-05T18:02:00Z
-				t, err := time.Parse(terminationTimeFormat, string(body))
-				if err != nil {
-					log.WithError(err).Info("Failed to parse time in termination notice")
-					continue
-				}
-
-				ch <- t
-			}
-		}
-	}()
-
-	return ch
+	// if 200 OK, expect a body like 2015-01-05T18:02:00Z
+	t, err := time.Parse(terminationTimeFormat, string(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse time in termination notice: %s", err)
+	}
+	return &t, err
 }

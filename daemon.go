@@ -63,13 +63,14 @@ func (d *Daemon) Start(ctx context.Context) error {
 	lifecycleTermination := make(chan AutoscalingMessage)
 	go d.pollTerminationNotice(ctx, lifecycleTermination)
 
-	spotTerminations := pollSpotTermination(ctx)
+	spotTermination := make(chan *time.Time)
+	go d.pollSpotTermination(ctx, spotTermination)
 
+	log.Info("Listening for lifecycle notifications")
 	var (
 		targetInstanceID    string
 		lifecycleTransition string
 	)
-	log.Info("Listening for lifecycle notifications")
 
 Listener:
 	for {
@@ -80,7 +81,7 @@ Listener:
 			log.Infof("Got a lifecycle hook termination notice")
 			targetInstanceID, lifecycleTransition = notice.InstanceID, notice.Transition
 			break Listener
-		case notice := <-spotTerminations:
+		case notice := <-spotTermination:
 			log.Infof("Got a spot instance termination notice: %v", notice)
 			targetInstanceID, lifecycleTransition = d.InstanceID, terminationTransition
 			break Listener
@@ -88,20 +89,19 @@ Listener:
 	}
 
 	log.Info("Executing handler")
-	timer := time.Now()
-	err := executeHandler(d.Handler, []string{terminationTransition, d.InstanceID}, d.Signals)
-	executeCtx := log.WithFields(log.Fields{
-		"duration": time.Now().Sub(timer),
-	})
+	start := time.Now()
+	err := executeHandler(d.Handler, []string{lifecycleTransition, targetInstanceID}, d.Signals)
+	logEntry := log.WithField("duration", time.Now().Sub(start))
 	if err != nil {
-		executeCtx.WithError(err).Error("Handler script failed")
+		logEntry.WithError(err).Error("Handler script failed")
 	} else {
-		executeCtx.Info("Handler finished successfully")
+		logEntry.Info("Handler finished successfully")
 	}
-	return d.Queue.Receive(ctx, ch)
+	return nil
 }
 
 func (d *Daemon) pollTerminationNotice(ctx context.Context, notices chan<- AutoscalingMessage) {
+	log.Debugf("Polling lifecycle hook for termination notices")
 	defer close(notices)
 	for {
 		select {
@@ -147,6 +147,27 @@ func (d *Daemon) pollTerminationNotice(ctx context.Context, notices chan<- Autos
 				notices <- msg
 				return
 			}
+		}
+	}
+}
+
+func (d *Daemon) pollSpotTermination(ctx context.Context, notices chan<- *time.Time) {
+	log.Debugf("Polling metadata for spot termination notices")
+	defer close(notices)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.NewTicker(time.Second * 5).C:
+			t, err := getSpotTermination(ctx)
+			if err != nil {
+				log.WithError(err).Error("Failed to get spot termination")
+			}
+			if t == nil {
+				continue
+			}
+			notices <- t
+			return
 		}
 	}
 }
