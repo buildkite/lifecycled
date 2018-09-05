@@ -8,10 +8,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/brunotm/backoff"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -118,21 +120,46 @@ func main() {
 }
 
 func getInstanceID() (string, error) {
-	res, err := http.Get(metadataURLInstanceID)
+	client := http.Client{
+		Timeout: time.Second * 5,
+	}
+
+	instanceIDCh := make(chan string)
+	defer close(instanceIDCh)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	// Retry getting the instance id. Sometimes the metadata service takes a while to start
+	err := backoff.Until(ctx, time.Second, time.Second*5, func() error {
+		res, err := client.Get(metadataURLInstanceID)
+		if err != nil {
+			log.WithError(err).Errorf("Failed to read instance-id from metadata service")
+			return err
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusOK {
+			err := fmt.Errorf("Got a %d response from metatadata service", res.StatusCode)
+			log.WithError(err).Errorf("Failed to read instance-id from metadata service")
+			return err
+		}
+
+		id, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.WithError(err).Errorf("Failed to read instance-id from metadata service: %v", err)
+			return err
+		}
+
+		instanceIDCh <- string(id)
+		return nil
+	})
+
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Got a %d response from metatadata service", res.StatusCode)
-	}
-
-	id, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
+	return <-instanceIDCh, nil
 }
 
 func generateQueueName(instanceID string) string {

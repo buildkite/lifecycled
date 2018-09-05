@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/brunotm/backoff"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -47,9 +48,17 @@ func (d *Daemon) Start(ctx context.Context) error {
 		return err
 	}
 	defer func() {
-		if err := d.Queue.Delete(); err != nil {
-			log.WithError(err).Error("Failed to delete queue")
-		}
+		// Retry the queue deletion for up to 30 seconds
+		subctx, cancel := context.WithTimeout(ctx, time.Second*30)
+		defer cancel()
+
+		backoff.Until(subctx, 100*time.Millisecond, time.Second, func() error {
+			queueErr := d.Queue.Delete()
+			if queueErr != nil {
+				log.WithError(queueErr).Error("Failed to delete queue")
+			}
+			return queueErr
+		})
 	}()
 
 	if err := d.Queue.Subscribe(); err != nil {
