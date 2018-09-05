@@ -125,38 +125,36 @@ func (q *Queue) Subscribe() error {
 	return nil
 }
 
-// Receive a message from the SQS queue.
-func (q *Queue) Receive(ctx context.Context, ch chan *sqs.Message) error {
+// GetMessages long polls for messages from the SQS queue.
+func (q *Queue) GetMessages(ctx context.Context) ([]*sqs.Message, error) {
 	log.WithFields(log.Fields{"queueURL": q.url}).Debugf("Polling sqs for messages")
-	defer close(ch) // Close channel before returning since this is the sending side.
-
-Loop:
-	for {
-		select {
-		case <-ctx.Done():
-			break Loop
-		default:
-			out, err := q.sqsClient.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
-				QueueUrl:            aws.String(q.url),
-				MaxNumberOfMessages: aws.Int64(1),
-				WaitTimeSeconds:     aws.Int64(longPollingWaitTimeSeconds),
-				VisibilityTimeout:   aws.Int64(0),
-			})
-			if err != nil {
-				// Ignore error if the context was cancelled (i.e. we are shutting down)
-				if e, ok := err.(awserr.Error); ok && e.Code() == request.CanceledErrorCode {
-					return nil
-				}
-				return err
-			}
-			for _, m := range out.Messages {
-				q.sqsClient.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
-					QueueUrl:      aws.String(q.url),
-					ReceiptHandle: m.ReceiptHandle,
-				})
-				ch <- m
-			}
+	out, err := q.sqsClient.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+		QueueUrl:            aws.String(q.url),
+		MaxNumberOfMessages: aws.Int64(1),
+		WaitTimeSeconds:     aws.Int64(longPollingWaitTimeSeconds),
+		VisibilityTimeout:   aws.Int64(0),
+	})
+	if err != nil {
+		// Ignore error if the context was cancelled (i.e. we are shutting down)
+		if e, ok := err.(awserr.Error); ok && e.Code() == request.CanceledErrorCode {
+			return nil, nil
 		}
+		return nil, err
+	}
+	return out.Messages, nil
+}
+
+// DeleteMessage from the queue.
+func (q *Queue) DeleteMessage(ctx context.Context, receiptHandle string) error {
+	_, err := q.sqsClient.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(q.url),
+		ReceiptHandle: aws.String(receiptHandle),
+	})
+	if err != nil {
+		if e, ok := err.(awserr.Error); ok && e.Code() == request.CanceledErrorCode {
+			return nil
+		}
+		return err
 	}
 	return nil
 }
