@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,66 +60,95 @@ func (d *Daemon) Start(ctx context.Context) error {
 		}
 	}()
 
-	ch := make(chan *sqs.Message)
-
-	go func() {
-		for m := range ch {
-			var env Envelope
-			var msg AutoscalingMessage
-
-			// unmarshal outer layer
-			if err := json.Unmarshal([]byte(*m.Body), &env); err != nil {
-				log.WithError(err).Info("Failed to unmarshal envelope")
-				continue
-			}
-
-			log.WithFields(log.Fields{
-				"type":    env.Type,
-				"subject": env.Subject,
-			}).Debugf("Received an SQS message")
-
-			// unmarshal inner layer
-			if err := json.Unmarshal([]byte(env.Message), &msg); err != nil {
-				log.WithError(err).Info("Failed to unmarshal autoscaling message")
-				continue
-			}
-
-			if msg.InstanceID != d.InstanceID {
-				log.WithFields(log.Fields{
-					"was":    msg.InstanceID,
-					"wanted": d.InstanceID,
-				}).Debugf("Skipping autoscaling event, doesn't match instance id")
-				continue
-			}
-
-			d.handleMessage(msg)
-		}
-	}()
+	lifecycleTermination := make(chan AutoscalingMessage)
+	go d.pollTerminationNotice(ctx, lifecycleTermination)
 
 	spotTerminations := pollSpotTermination(ctx)
-	go func() {
-		for notice := range spotTerminations {
+
+	var (
+		targetInstanceID    string
+		lifecycleTransition string
+	)
+	log.Info("Listening for lifecycle notifications")
+
+Listener:
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case notice := <-lifecycleTermination:
+			log.Infof("Got a lifecycle hook termination notice")
+			targetInstanceID, lifecycleTransition = notice.InstanceID, notice.Transition
+			break Listener
+		case notice := <-spotTerminations:
 			log.Infof("Got a spot instance termination notice: %v", notice)
+			targetInstanceID, lifecycleTransition = d.InstanceID, terminationTransition
+			break Listener
+		}
+	}
 
-			log.Info("Executing handler")
-			timer := time.Now()
-			err := executeHandler(d.Handler, []string{terminationTransition, d.InstanceID}, d.Signals)
-			executeCtx := log.WithFields(log.Fields{
-				"duration": time.Now().Sub(timer),
-			})
+	log.Info("Executing handler")
+	timer := time.Now()
+	err := executeHandler(d.Handler, []string{terminationTransition, d.InstanceID}, d.Signals)
+	executeCtx := log.WithFields(log.Fields{
+		"duration": time.Now().Sub(timer),
+	})
+	if err != nil {
+		executeCtx.WithError(err).Error("Handler script failed")
+	} else {
+		executeCtx.Info("Handler finished successfully")
+	}
+	return d.Queue.Receive(ctx, ch)
+}
 
+func (d *Daemon) pollTerminationNotice(ctx context.Context, notices chan<- AutoscalingMessage) {
+	defer close(notices)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			messages, err := d.Queue.GetMessages(ctx)
 			if err != nil {
-				executeCtx.WithError(err).Error("Handler script failed")
+				log.WithError(err).Warn("Failed to get messages from SQS")
+			}
+			for _, m := range messages {
+				var env Envelope
+				var msg AutoscalingMessage
+
+				if err := d.Queue.DeleteMessage(ctx, aws.StringValue(m.ReceiptHandle)); err != nil {
+					log.WithError(err).Warn("Failed to delete message")
+				}
+
+				// unmarshal outer layer
+				if err := json.Unmarshal([]byte(*m.Body), &env); err != nil {
+					log.WithError(err).Info("Failed to unmarshal envelope")
+					continue
+				}
+
+				log.WithFields(log.Fields{
+					"type":    env.Type,
+					"subject": env.Subject,
+				}).Debugf("Received an SQS message")
+
+				// unmarshal inner layer
+				if err := json.Unmarshal([]byte(env.Message), &msg); err != nil {
+					log.WithError(err).Info("Failed to unmarshal autoscaling message")
+					continue
+				}
+
+				if msg.InstanceID != d.InstanceID {
+					log.WithFields(log.Fields{
+						"was":    msg.InstanceID,
+						"wanted": d.InstanceID,
+					}).Debugf("Skipping autoscaling event, doesn't match instance id")
+					continue
+				}
+				notices <- msg
 				return
 			}
-
-			executeCtx.Info("Handler finished successfully")
-
 		}
-	}()
-
-	log.Info("Listening for lifecycle notifications")
-	return d.Queue.Receive(ctx, ch)
+	}
 }
 
 func (d *Daemon) handleMessage(m AutoscalingMessage) {
