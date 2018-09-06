@@ -59,12 +59,16 @@ func (d *Daemon) Start(ctx context.Context) (completeFunc func() error, err erro
 		}
 	}()
 
-	lifecycleTermination := make(chan *AutoscalingMessage)
-	go d.pollTerminationNotice(ctx, lifecycleTermination)
+	// Add a child context to cancel both polling go-routines when one has returned
+	pollCtx, stopPolling := context.WithCancel(ctx)
+	defer stopPolling()
+
+	lifecycleTermination := make(chan *AutoscalingMessage, 1)
+	go d.pollTerminationNotice(pollCtx, lifecycleTermination)
 	log.Info("Listening for lifecycle termination notices")
 
-	spotTermination := make(chan *time.Time)
-	go d.pollSpotTermination(ctx, spotTermination)
+	spotTermination := make(chan *time.Time, 1)
+	go d.pollSpotTermination(pollCtx, spotTermination)
 	log.Info("Listening for spot termination notices")
 
 	var (
@@ -100,6 +104,7 @@ Listener:
 
 		// Source: https://stackoverflow.com/a/13666733
 		if lifecycleTermination == nil || spotTermination == nil {
+			stopPolling()
 			break Listener
 		}
 	}
