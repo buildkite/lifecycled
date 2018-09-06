@@ -15,11 +15,11 @@ write_files:
       [Service]
       Type=simple
       Restart=on-failure
-      RestartSec=1m
+      RestartSec=30s
       TimeoutStopSec=5m
 
       Environment="AWS_REGION=${region}"
-      ExecStart=/usr/local/bin/lifecycled --sns-topic=${lifecycle_topic} --handler=/usr/local/scripts/lifecycle-handler.sh --json --debug
+      ExecStart=/usr/local/bin/lifecycled --sns-topic=${lifecycle_topic} --cloudwatch-group=${log_group_name} --handler=/usr/local/scripts/lifecycle-handler.sh --json --debug
 
       [Install]
       WantedBy=multi-user.target
