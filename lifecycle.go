@@ -46,6 +46,8 @@ type LifecycleMonitor struct {
 func (l *LifecycleMonitor) Run(ctx context.Context) error {
 	var cleanup sync.Once
 	cleanupFunc := func() {
+		log.Debug("Cleaning up lifecycle queue")
+
 		if err := l.Queue.Delete(); err != nil {
 			log.WithError(err).Error("Failed to delete queue")
 		}
@@ -54,6 +56,8 @@ func (l *LifecycleMonitor) Run(ctx context.Context) error {
 			log.WithError(err).Error("Failed to unsubscribe from sns topic")
 		}
 	}
+
+	log.Debug("Creating lifecycle queue")
 
 	// create an SQS queue for the upstream SNS topic
 	if err := l.Queue.Create(); err != nil {
