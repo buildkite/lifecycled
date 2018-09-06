@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -15,6 +17,7 @@ const (
 )
 
 func getSpotTermination(ctx context.Context) (*time.Time, error) {
+	log.Debugf("Polling ec2 metadata for spot termination notices")
 	res, err := http.Get(metadataURLTerminationTime)
 	if err != nil {
 		return nil, err

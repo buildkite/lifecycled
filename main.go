@@ -139,15 +139,20 @@ func main() {
 			InstanceID:  instanceID,
 			AutoScaling: autoscaling.New(sess),
 			Handler:     handler,
-			Signals:     sigs,
 			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
 		}
 
-		err = daemon.Start(ctx)
+		complete, err := daemon.Start(ctx)
 		if err != nil {
-			log.Error(err)
+			log.WithError(err).Fatal("Failed to start daemon")
 		}
-		return err
+		if complete != nil {
+			if err := complete(); err != nil {
+				log.WithError(err).Fatal("Failed to complete lifecycle action")
+			}
+			log.Info("Lifecycle action completed successfully")
+		}
+		return nil
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
