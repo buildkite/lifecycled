@@ -41,6 +41,11 @@ data "aws_ami" "linux2" {
   }
 }
 
+variable "instance_key" {
+  description = "Name of EC2 Keypair"
+  default = "lifecycled-example"
+}
+
 module "example" {
   source = "modules/example"
 
@@ -51,7 +56,7 @@ module "example" {
   instance_ami   = "${data.aws_ami.linux2.id}"
   instance_count = "1"
   instance_type  = "t3.micro"
-  instance_key   = "lifecycled-example"
+  instance_key   = "${var.instance_key}"
 
   binary_path = "../build/lifecycled-linux-amd64"
 
