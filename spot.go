@@ -2,20 +2,18 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
-	"net/http"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	log "github.com/sirupsen/logrus"
 )
 
 const (
-	metadataURLTerminationTime = "http://169.254.169.254/latest/meta-data/spot/termination-time"
-	terminationTransition      = "ec2:SPOT_INSTANCE_TERMINATION"
-	terminationTimeFormat      = "2006-01-02T15:04:05Z"
+	terminationTransition = "ec2:SPOT_INSTANCE_TERMINATION"
+	terminationTimeFormat = "2006-01-02T15:04:05Z"
 )
 
-func pollSpotTermination(ctx context.Context) chan time.Time {
+func pollSpotTermination(ctx context.Context, svc *ec2metadata.EC2Metadata) chan time.Time {
 	ch := make(chan time.Time)
 
 	log.Debugf("Polling metadata service for spot termination notices")
@@ -23,33 +21,21 @@ func pollSpotTermination(ctx context.Context) chan time.Time {
 	go func() {
 		// Close channel before returning since this (goroutine) is the sending side.
 		defer close(ch)
-		retry := time.NewTicker(time.Second * 5).C
-	Loop:
+
 		for {
 			select {
 			case <-ctx.Done():
-				break Loop
-			case <-retry:
-				res, err := http.Get(metadataURLTerminationTime)
+				return
+
+			case <-time.NewTicker(time.Second * 5).C:
+				resp, err := svc.GetMetadata("spot/termination-time")
 				if err != nil {
-					log.WithError(err).Info("Failed to query metadata service")
-					continue
-				}
-				defer res.Body.Close()
-
-				// will return 200 OK with termination notice
-				if res.StatusCode != http.StatusOK {
+					log.WithError(err).Info("Failed to fetch spot termination time")
 					continue
 				}
 
-				body, err := ioutil.ReadAll(res.Body)
-				if err != nil {
-					log.WithError(err).Info("Failed to read response from metadata service")
-					continue
-				}
-
-				// if 200 OK, expect a body like 2015-01-05T18:02:00Z
-				t, err := time.Parse(terminationTimeFormat, string(body))
+				// expect a body like 2015-01-05T18:02:00Z
+				t, err := time.Parse(terminationTimeFormat, resp)
 				if err != nil {
 					log.WithError(err).Info("Failed to parse time in termination notice")
 					continue

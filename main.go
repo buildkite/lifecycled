@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 
@@ -20,10 +19,6 @@ import (
 
 var (
 	Version string
-)
-
-const (
-	metadataURLInstanceID = "http://169.254.169.254/latest/meta-data/instance-id"
 )
 
 func main() {
@@ -77,13 +72,17 @@ func main() {
 			log.SetLevel(log.DebugLevel)
 		}
 
+		sess, err := session.NewSession()
+		if err != nil {
+			log.WithError(err).Fatal("Failed to create new session")
+		}
+
 		if instanceID == "" {
 			log.Infof("Looking up instance id from metadata service")
-			id, err := getInstanceID()
+			instanceID, err = ec2metadata.New(sess).GetMetadata("instance-id")
 			if err != nil {
 				log.Fatalf("Failed to lookup instance id: %v", err)
 			}
-			instanceID = id
 		}
 
 		if cloudwatchStream == "" {
@@ -105,11 +104,6 @@ func main() {
 					DisableTimestamp: true,
 				})
 			}
-		}
-
-		sess, err := session.NewSession()
-		if err != nil {
-			log.WithError(err).Fatal("Failed to create new session")
 		}
 
 		sigs := make(chan os.Signal, 2)
@@ -138,6 +132,7 @@ func main() {
 		daemon := Daemon{
 			InstanceID:  instanceID,
 			AutoScaling: autoscaling.New(sess),
+			EC2Metadata: ec2metadata.New(sess),
 			Handler:     handler,
 			Signals:     sigs,
 			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
@@ -151,24 +146,6 @@ func main() {
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
-}
-
-func getInstanceID() (string, error) {
-	res, err := http.Get(metadataURLInstanceID)
-	if err != nil {
-		return "", err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Got a %d response from metatadata service", res.StatusCode)
-	}
-
-	id, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
 }
 
 func generateQueueName(instanceID string) string {
