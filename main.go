@@ -48,7 +48,6 @@ func main() {
 		StringVar(&instanceID)
 
 	app.Flag("sns-topic", "The SNS topic that receives events").
-		Required().
 		StringVar(&snsTopic)
 
 	app.Flag("handler", "The script to invoke to handle events").
@@ -136,10 +135,19 @@ func main() {
 		}()
 
 		daemon := Daemon{
-			InstanceID:  instanceID,
-			AutoScaling: autoscaling.New(sess),
-			Handler:     handler,
-			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
+			SpotMonitor: &SpotMonitor{
+				InstanceID: instanceID,
+				Handler:    handler,
+			},
+		}
+
+		if snsTopic != "" {
+			daemon.LifecycleMonitor = &LifecycleMonitor{
+				InstanceID:  instanceID,
+				Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
+				AutoScaling: autoscaling.New(sess),
+				Handler:     handler,
+			}
 		}
 
 		err = daemon.Start(ctx)
