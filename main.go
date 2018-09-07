@@ -48,7 +48,6 @@ func main() {
 		StringVar(&instanceID)
 
 	app.Flag("sns-topic", "The SNS topic that receives events").
-		Required().
 		StringVar(&snsTopic)
 
 	app.Flag("handler", "The script to invoke to handle events").
@@ -78,7 +77,7 @@ func main() {
 		}
 
 		if instanceID == "" {
-			log.Infof("Looking up instance id from metadata service")
+			log.Debug("Looking up instance id from metadata service")
 			id, err := getInstanceID()
 			if err != nil {
 				log.Fatalf("Failed to lookup instance id: %v", err)
@@ -136,10 +135,19 @@ func main() {
 		}()
 
 		daemon := Daemon{
-			InstanceID:  instanceID,
-			AutoScaling: autoscaling.New(sess),
-			Handler:     handler,
-			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
+			InstanceID: instanceID,
+			Handler:    handler,
+			SpotMonitor: &SpotMonitor{
+				InstanceID: instanceID,
+			},
+		}
+
+		if snsTopic != "" {
+			daemon.LifecycleMonitor = &LifecycleMonitor{
+				InstanceID:  instanceID,
+				Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
+				AutoScaling: autoscaling.New(sess),
+			}
 		}
 
 		err = daemon.Start(ctx)
