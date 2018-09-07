@@ -12,7 +12,6 @@ import (
 
 const (
 	metadataURLTerminationTime = "http://169.254.169.254/latest/meta-data/spot/termination-time"
-	terminationTransition      = "ec2:SPOT_INSTANCE_TERMINATION"
 	terminationTimeFormat      = "2006-01-02T15:04:05Z"
 )
 

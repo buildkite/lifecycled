@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,9 +13,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type Transition string
+
 const (
-	heartbeatFrequency = time.Second * 10
+	SpotTermination      Transition = "ec2:SPOT_INSTANCE_TERMINATION"
+	LifecycleTermination Transition = "autoscaling:EC2_INSTANCE_TERMINATING"
+	heartbeatFrequency              = time.Second * 10
 )
+
+type Notice struct {
+	TargetInstanceID string
+	Transition       Transition
+	Message          *AutoscalingMessage
+	Deadline         *time.Time
+}
 
 type Envelope struct {
 	Type    string    `json:"Type"`
@@ -40,7 +52,7 @@ type Daemon struct {
 }
 
 // Start the daemon.
-func (d *Daemon) Start(ctx context.Context) (completeFunc func() error, err error) {
+func (d *Daemon) Start(rootCtx context.Context) (completeFunc func() error, err error) {
 	if err := d.Queue.Create(); err != nil {
 		return nil, err
 	}
@@ -59,65 +71,50 @@ func (d *Daemon) Start(ctx context.Context) (completeFunc func() error, err erro
 		}
 	}()
 
-	// Add a child context to cancel both polling go-routines when one has returned
-	pollCtx, stopPolling := context.WithCancel(ctx)
+	// Add a child context to cancel both polling go-routines when one
+	// has returned and wait group to know when it's safe to close the channel
+	ctx, stopPolling := context.WithCancel(rootCtx)
 	defer stopPolling()
+	var wg sync.WaitGroup
 
-	lifecycleTermination := make(chan *AutoscalingMessage, 1)
-	go d.pollTerminationNotice(pollCtx, lifecycleTermination)
+	// We are using a buffered channel to avoid deadlocking a goroutine when we stop listening
+	notices := make(chan *Notice, 1)
+
+	go d.pollTerminationNotice(ctx, &wg, notices)
+	wg.Add(1)
 	log.Info("Listening for lifecycle termination notices")
 
-	spotTermination := make(chan *time.Time, 1)
-	go d.pollSpotTermination(pollCtx, spotTermination)
+	go d.pollSpotTermination(ctx, &wg, notices)
+	wg.Add(1)
 	log.Info("Listening for spot termination notices")
 
-	var (
-		targetInstanceID    string
-		lifecycleTransition string
-	)
+	go func() {
+		wg.Wait()
+		close(notices)
+	}()
 
-Listener:
-	for {
-		select {
-		case notice, open := <-lifecycleTermination:
-			if !open {
-				lifecycleTermination = nil
-				break
-			}
-			log.Infof("Got a lifecycle hook termination notice")
-			targetInstanceID, lifecycleTransition = notice.InstanceID, notice.Transition
-
-			// Start the heartbeat
-			hbt := time.NewTicker(heartbeatFrequency)
-			go d.startHeartbeat(hbt, notice)
-
-			// Generate the completeFunc
-			completeFunc = d.newCompleteFunc(hbt, notice)
-		case notice, open := <-spotTermination:
-			if !open {
-				spotTermination = nil
-				break
-			}
-			log.Infof("Got a spot instance termination notice: %v", notice)
-			targetInstanceID, lifecycleTransition = d.InstanceID, terminationTransition
+	var notice *Notice
+	for n := range notices {
+		switch n.Transition {
+		case LifecycleTermination:
+			log.Info("Got a lifecycle hook termination notice")
+			completeFunc = d.generateCompleteFunc(n)
+		case SpotTermination:
+			log.WithField("deadline", n.Deadline).Info("Got a spot instance termination notice")
 		}
-
-		// Source: https://stackoverflow.com/a/13666733
-		if lifecycleTermination == nil || spotTermination == nil {
-			stopPolling()
-			break Listener
-		}
+		notice = n
+		break
 	}
+	stopPolling()
 
 	// The handler should not be executed if the channels were closed because the context was cancelled.
-	if ctx.Err() == context.Canceled {
+	if rootCtx.Err() == context.Canceled {
 		return nil, nil
 	}
 
-	// Execute the handler
 	log.Info("Executing handler")
 	start := time.Now()
-	err = d.executeHandler(ctx, []string{lifecycleTransition, targetInstanceID})
+	err = d.executeHandler(ctx, []string{string(notice.Transition), notice.TargetInstanceID})
 	logEntry := log.WithField("duration", time.Since(start))
 	if err != nil {
 		logEntry.WithError(err).Error("Handler script failed")
@@ -127,8 +124,9 @@ Listener:
 	return completeFunc, nil
 }
 
-func (d *Daemon) pollTerminationNotice(ctx context.Context, notices chan<- *AutoscalingMessage) {
-	defer close(notices)
+func (d *Daemon) pollTerminationNotice(ctx context.Context, wg *sync.WaitGroup, notices chan<- *Notice) {
+	defer wg.Done()
+	defer log.Info("Stopped listening for lifecycle termination notices")
 	for {
 		select {
 		case <-ctx.Done():
@@ -148,37 +146,45 @@ func (d *Daemon) pollTerminationNotice(ctx context.Context, notices chan<- *Auto
 
 				// unmarshal outer layer
 				if err := json.Unmarshal([]byte(*m.Body), &env); err != nil {
-					log.WithError(err).Info("Failed to unmarshal envelope")
+					log.WithError(err).Warn("Failed to unmarshal envelope")
 					continue
 				}
 
 				log.WithFields(log.Fields{
 					"type":    env.Type,
 					"subject": env.Subject,
-				}).Debugf("Received an SQS message")
+				}).Debug("Received an SQS message")
 
 				// unmarshal inner layer
 				if err := json.Unmarshal([]byte(env.Message), &msg); err != nil {
-					log.WithError(err).Info("Failed to unmarshal autoscaling message")
+					log.WithError(err).Warn("Failed to unmarshal autoscaling message")
 					continue
 				}
 
 				if msg.InstanceID != d.InstanceID {
-					log.WithFields(log.Fields{
-						"was":    msg.InstanceID,
-						"wanted": d.InstanceID,
-					}).Debugf("Skipping autoscaling event, doesn't match instance id")
+					log.WithField("target", msg.InstanceID).Debug("Skipping autoscaling event, doesn't match instance id")
 					continue
 				}
-				notices <- &msg
+
+				if msg.Transition != string(LifecycleTermination) {
+					log.WithField("transition", msg.Transition).Debug("Skipping autoscaling event, not a termination notice")
+					continue
+				}
+
+				notices <- &Notice{
+					TargetInstanceID: msg.InstanceID,
+					Transition:       LifecycleTermination,
+					Message:          &msg,
+				}
 				return
 			}
 		}
 	}
 }
 
-func (d *Daemon) pollSpotTermination(ctx context.Context, notices chan<- *time.Time) {
-	defer close(notices)
+func (d *Daemon) pollSpotTermination(ctx context.Context, wg *sync.WaitGroup, notices chan<- *Notice) {
+	defer wg.Done()
+	defer log.Info("Stopped listening for spot termination notices")
 	for {
 		select {
 		case <-ctx.Done():
@@ -191,21 +197,43 @@ func (d *Daemon) pollSpotTermination(ctx context.Context, notices chan<- *time.T
 			if t == nil {
 				continue
 			}
-			notices <- t
+			notices <- &Notice{
+				TargetInstanceID: d.InstanceID,
+				Transition:       SpotTermination,
+				Deadline:         t,
+			}
 			return
 		}
 	}
 }
 
-func (d *Daemon) startHeartbeat(ticker *time.Ticker, m *AutoscalingMessage) {
+func (d *Daemon) generateCompleteFunc(n *Notice) func() error {
+	ticker := time.NewTicker(heartbeatFrequency)
+	go d.startHeartbeat(ticker, n)
+
+	return func() error {
+		defer ticker.Stop()
+
+		_, err := d.AutoScaling.CompleteLifecycleAction(&autoscaling.CompleteLifecycleActionInput{
+			AutoScalingGroupName:  aws.String(n.Message.GroupName),
+			LifecycleHookName:     aws.String(n.Message.HookName),
+			InstanceId:            aws.String(n.Message.InstanceID),
+			LifecycleActionToken:  aws.String(n.Message.ActionToken),
+			LifecycleActionResult: aws.String("CONTINUE"),
+		})
+		return err
+	}
+}
+
+func (d *Daemon) startHeartbeat(ticker *time.Ticker, n *Notice) {
 	for range ticker.C {
 		log.Debug("Sending heartbeat")
 		_, err := d.AutoScaling.RecordLifecycleActionHeartbeat(
 			&autoscaling.RecordLifecycleActionHeartbeatInput{
-				AutoScalingGroupName: aws.String(m.GroupName),
-				LifecycleHookName:    aws.String(m.HookName),
-				InstanceId:           aws.String(m.InstanceID),
-				LifecycleActionToken: aws.String(m.ActionToken),
+				AutoScalingGroupName: aws.String(n.Message.GroupName),
+				LifecycleHookName:    aws.String(n.Message.HookName),
+				InstanceId:           aws.String(n.Message.InstanceID),
+				LifecycleActionToken: aws.String(n.Message.ActionToken),
 			},
 		)
 		if err != nil {
@@ -228,19 +256,4 @@ func (d *Daemon) executeHandler(ctx context.Context, args []string) error {
 	}()
 
 	return cmd.Run()
-}
-
-func (d *Daemon) newCompleteFunc(ticker *time.Ticker, m *AutoscalingMessage) func() error {
-	return func() error {
-		defer ticker.Stop()
-
-		_, err := d.AutoScaling.CompleteLifecycleAction(&autoscaling.CompleteLifecycleActionInput{
-			AutoScalingGroupName:  aws.String(m.GroupName),
-			LifecycleHookName:     aws.String(m.HookName),
-			InstanceId:            aws.String(m.InstanceID),
-			LifecycleActionToken:  aws.String(m.ActionToken),
-			LifecycleActionResult: aws.String("CONTINUE"),
-		})
-		return err
-	}
 }
