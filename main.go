@@ -137,10 +137,8 @@ func main() {
 		daemon := Daemon{
 			InstanceID: instanceID,
 			Handler:    handler,
-
 			SpotMonitor: &SpotMonitor{
 				InstanceID: instanceID,
-				Handler:    handler,
 			},
 		}
 
@@ -149,7 +147,6 @@ func main() {
 				InstanceID:  instanceID,
 				Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
 				AutoScaling: autoscaling.New(sess),
-				Handler:     handler,
 			}
 		}
 

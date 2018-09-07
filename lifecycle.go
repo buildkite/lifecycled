@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"encoding/json"
@@ -38,7 +37,6 @@ type LifecycleMonitor struct {
 	InstanceID  string
 	Queue       *Queue
 	AutoScaling *autoscaling.AutoScaling
-	Handler     *os.File
 }
 
 func (l *LifecycleMonitor) create() error {

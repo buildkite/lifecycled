@@ -4,7 +4,6 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -18,7 +17,6 @@ const (
 
 type SpotMonitor struct {
 	InstanceID string
-	Handler    *os.File
 }
 
 func (s *SpotMonitor) Run(ctx context.Context, termCh chan TerminationNotice) error {
