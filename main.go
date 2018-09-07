@@ -139,7 +139,6 @@ func main() {
 			InstanceID:  instanceID,
 			AutoScaling: autoscaling.New(sess),
 			Handler:     handler,
-			Signals:     sigs,
 			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
 		}
 
