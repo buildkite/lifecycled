@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"os/exec"
-	"sync"
 	"time"
 
 	"encoding/json"
@@ -43,33 +41,42 @@ type LifecycleMonitor struct {
 	Handler     *os.File
 }
 
-func (l *LifecycleMonitor) Run(ctx context.Context) error {
-	var cleanup sync.Once
-	cleanupFunc := func() {
-		log.Debug("Cleaning up lifecycle queue")
-
-		if err := l.Queue.Delete(); err != nil {
-			log.WithError(err).Error("Failed to delete queue")
-		}
-
-		if err := l.Queue.Unsubscribe(); err != nil {
-			log.WithError(err).Error("Failed to unsubscribe from sns topic")
-		}
-	}
-
+func (l *LifecycleMonitor) create() error {
 	log.Debug("Creating lifecycle queue")
 
-	// create an SQS queue for the upstream SNS topic
 	if err := l.Queue.Create(); err != nil {
 		return err
 	}
 
-	defer cleanup.Do(cleanupFunc)
-
-	// connect the SQS queue to the SNS topic
 	if err := l.Queue.Subscribe(); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (l *LifecycleMonitor) destroy() error {
+	log.Debug("Cleaning up lifecycle queue")
+
+	if err := l.Queue.Unsubscribe(); err != nil {
+		return err
+	}
+
+	if err := l.Queue.Delete(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (l *LifecycleMonitor) Run(ctx context.Context, termCh chan TerminationNotice) error {
+	if err := l.create(); err != nil {
+		return err
+	}
+
+	defer func() {
+
+	}()
 
 	ch := make(chan *sqs.Message)
 
@@ -80,25 +87,10 @@ func (l *LifecycleMonitor) Run(ctx context.Context) error {
 		}
 	}()
 
-	for m := range ch {
-		var env envelope
-		var msg autoscalingMessage
-
-		// unmarshal outer layer
-		if err := json.Unmarshal([]byte(*m.Body), &env); err != nil {
-			log.WithError(err).Info("Failed to unmarshal envelope")
-			continue
-		}
-
-		log.WithFields(log.Fields{
-			"type":    env.Type,
-			"subject": env.Subject,
-		}).Debugf("Received an SQS message")
-
-		// unmarshal inner layer
-		if err := json.Unmarshal([]byte(env.Message), &msg); err != nil {
-			log.WithError(err).Info("Failed to unmarshal autoscaling message")
-			continue
+	for sqsMessage := range ch {
+		msg, err := l.parseQueueMessage(sqsMessage)
+		if err != nil {
+			log.WithError(err).Error("Failed to parse SQS message")
 		}
 
 		if msg.InstanceID != l.InstanceID {
@@ -109,64 +101,69 @@ func (l *LifecycleMonitor) Run(ctx context.Context) error {
 			continue
 		}
 
-		l.handleMessage(msg, func() {
-			cleanup.Do(cleanupFunc)
+		messageLogCtx := log.WithFields(log.Fields{
+			"transition": msg.Transition,
+			"instanceid": msg.InstanceID,
 		})
+
+		hbt := time.NewTicker(heartbeatFrequency)
+		go func() {
+			for range hbt.C {
+				messageLogCtx.Debug("Sending heartbeat")
+				if err := sendHeartbeat(l.AutoScaling, msg); err != nil {
+					messageLogCtx.WithError(err).Error("Heartbeat failed")
+				}
+			}
+		}()
+
+		doneCh := make(chan struct{})
+		errCh := make(chan error)
+
+		termCh <- TerminationNotice{
+			Done:  doneCh,
+			Error: errCh,
+			Args:  []string{msg.Transition, msg.InstanceID},
+		}
+
+		select {
+		case <-doneCh:
+			hbt.Stop()
+
+			// try and destroy the queue as soon as we can
+			if err := l.destroy(); err != nil {
+				log.WithError(err).Error("Failed to destroy lifecycle monitor")
+			}
+
+			if err = completeLifecycle(l.AutoScaling, msg); err != nil {
+				messageLogCtx.WithError(err).Error("Failed to complete lifecycle action")
+				return err
+			}
+
+			return nil
+
+		case <-errCh:
+			hbt.Stop()
+		}
 	}
 
-	return nil
+	return l.destroy()
 }
 
-func (l *LifecycleMonitor) handleMessage(m autoscalingMessage, cleanup func()) {
-	ctx := log.WithFields(log.Fields{
-		"transition": m.Transition,
-		"instanceid": m.InstanceID,
-	})
+func (l *LifecycleMonitor) parseQueueMessage(m *sqs.Message) (autoscalingMessage, error) {
+	var env envelope
+	var msg autoscalingMessage
 
-	hbt := time.NewTicker(heartbeatFrequency)
-	go func() {
-		for range hbt.C {
-			ctx.Debug("Sending heartbeat")
-			if err := sendHeartbeat(l.AutoScaling, m); err != nil {
-				ctx.WithError(err).Error("Heartbeat failed")
-			}
-		}
-	}()
-
-	handlerCtx := log.WithFields(log.Fields{
-		"transition": m.Transition,
-		"instanceid": m.InstanceID,
-		"handler":    l.Handler.Name(),
-	})
-
-	handlerCtx.Info("Executing handler")
-	timer := time.Now()
-
-	cmd := exec.Command(l.Handler.Name(), m.Transition, m.InstanceID)
-	cmd.Env = os.Environ()
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	executeCtx := handlerCtx.WithFields(log.Fields{
-		"duration": time.Now().Sub(timer),
-	})
-	hbt.Stop()
-
-	if err != nil {
-		executeCtx.WithError(err).Error("Handler script failed")
-		return
+	// unmarshal outer layer
+	if err := json.Unmarshal([]byte(*m.Body), &env); err != nil {
+		return msg, err
 	}
 
-	executeCtx.Info("Handler finished successfully")
-	cleanup()
-
-	if err = completeLifecycle(l.AutoScaling, m); err != nil {
-		ctx.WithError(err).Error("Failed to complete lifecycle action")
-		return
+	// unmarshal inner layer
+	if err := json.Unmarshal([]byte(env.Message), &msg); err != nil {
+		return msg, err
 	}
 
-	ctx.Info("Lifecycle action completed successfully")
+	return msg, nil
 }
 
 func sendHeartbeat(svc *autoscaling.AutoScaling, m autoscalingMessage) error {

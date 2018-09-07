@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"os"
+	"os/exec"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -10,12 +12,26 @@ import (
 type Daemon struct {
 	LifecycleMonitor *LifecycleMonitor
 	SpotMonitor      *SpotMonitor
+
+	InstanceID string
+	Handler    *os.File
+}
+
+type TerminationNotice struct {
+	Done  chan struct{}
+	Error chan error
+	Args  []string
 }
 
 // Start the daemon.
 func (d *Daemon) Start(ctx context.Context) error {
 	var wg sync.WaitGroup
-	var errCh = make(chan error)
+
+	var errCh = make(chan error, 2)
+	var termCh = make(chan TerminationNotice)
+
+	subctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	// Process lifecycle events
 	if d.LifecycleMonitor != nil {
@@ -23,7 +39,12 @@ func (d *Daemon) Start(ctx context.Context) error {
 
 		go func() {
 			defer wg.Done()
-			errCh <- d.LifecycleMonitor.Run(ctx)
+			if err := d.LifecycleMonitor.Run(subctx, termCh); err != nil {
+				log.WithError(err).Debug("Lifecycle monitor failed with error")
+				errCh <- err
+				cancel()
+			}
+			log.Debug("Lifecycle monitor terminating")
 		}()
 	}
 
@@ -33,31 +54,48 @@ func (d *Daemon) Start(ctx context.Context) error {
 
 		go func() {
 			defer wg.Done()
-			errCh <- d.SpotMonitor.Run(ctx)
+			if err := d.SpotMonitor.Run(subctx, termCh); err != nil {
+				log.WithError(err).Debug("Spot monitor failed with error")
+				errCh <- err
+				cancel()
+			}
+			log.Debug("Spot monitor terminating")
 		}()
 	}
 
-	// Wait for monitors to have finished and then close the error channel
+	// Handle termination notices
 	go func() {
-		wg.Wait()
-		close(errCh)
+		for term := range termCh {
+			log.Info("Received termination notice, executing handler")
+			if err := executeHandler(subctx, d.Handler, term.Args); err != nil {
+				log.WithError(err).Info("Handler finished with an error")
+				term.Error <- err
+			} else {
+				log.Info("Handler finished successfully")
+				term.Done <- struct{}{}
+				cancel()
+			}
+		}
 	}()
 
-	var errs []error
+	// Wait for services to finish via context and close our channels
+	wg.Wait()
+	log.Debug("Services finished, closing channels")
+	close(errCh)
+	close(termCh)
 
-	// Wait for either an error or nil back from each monitor. Blocks until
-	// the above wait fires
+	// Return any errors, only the first matters
 	for err := range errCh {
-		log.WithFields(log.Fields{"err": err}).Debugf("Monitor finished")
-
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	if len(errs) > 0 {
-		return errs[0]
+		return err
 	}
 
 	return nil
+}
+
+func executeHandler(ctx context.Context, command *os.File, args []string) error {
+	cmd := exec.CommandContext(ctx, command.Name(), args...)
+	cmd.Env = os.Environ()
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }

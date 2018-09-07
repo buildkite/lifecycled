@@ -22,7 +22,7 @@ type SpotMonitor struct {
 	Handler    *os.File
 }
 
-func (s *SpotMonitor) Run(ctx context.Context) error {
+func (s *SpotMonitor) Run(ctx context.Context, termCh chan TerminationNotice) error {
 	log.Debugf("Polling metadata service for spot termination notices")
 
 	for {

@@ -135,6 +135,9 @@ func main() {
 		}()
 
 		daemon := Daemon{
+			InstanceID: instanceID,
+			Handler:    handler,
+
 			SpotMonitor: &SpotMonitor{
 				InstanceID: instanceID,
 				Handler:    handler,
