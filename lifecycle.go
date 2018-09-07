@@ -74,10 +74,6 @@ func (l *LifecycleMonitor) Run(ctx context.Context, termCh chan TerminationNotic
 		return err
 	}
 
-	defer func() {
-
-	}()
-
 	ch := make(chan *sqs.Message)
 
 	go func() {

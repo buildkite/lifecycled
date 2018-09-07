@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -36,25 +35,20 @@ func (s *SpotMonitor) Run(ctx context.Context, termCh chan TerminationNotice) er
 				continue
 			}
 			if has {
-				log.Info("Executing handler")
-				timer := time.Now()
+				log.Info("Received spot termination notice")
+				doneCh := make(chan struct{})
+				errCh := make(chan error)
 
-				cmd := exec.Command(s.Handler.Name(), terminationTransition, s.InstanceID)
-				cmd.Env = os.Environ()
-				cmd.Stdout = os.Stderr
-				cmd.Stderr = os.Stderr
-				err := cmd.Run()
-
-				executeCtx := log.WithFields(log.Fields{
-					"duration": time.Now().Sub(timer),
-				})
-
-				if err != nil {
-					executeCtx.WithError(err).Error("Handler script failed")
-					return err
+				termCh <- TerminationNotice{
+					Done:  doneCh,
+					Error: errCh,
+					Args:  []string{terminationTransition, s.InstanceID},
 				}
 
-				executeCtx.Info("Handler finished successfully")
+				select {
+				case <-doneCh:
+				case <-errCh:
+				}
 			}
 		}
 	}

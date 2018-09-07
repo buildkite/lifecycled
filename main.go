@@ -77,7 +77,7 @@ func main() {
 		}
 
 		if instanceID == "" {
-			log.Infof("Looking up instance id from metadata service")
+			log.Debug("Looking up instance id from metadata service")
 			id, err := getInstanceID()
 			if err != nil {
 				log.Fatalf("Failed to lookup instance id: %v", err)
