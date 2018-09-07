@@ -38,7 +38,6 @@ type Daemon struct {
 	Queue       *Queue
 	AutoScaling *autoscaling.AutoScaling
 	Handler     *os.File
-	Signals     chan os.Signal
 }
 
 // Start the daemon.
@@ -93,7 +92,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 				continue
 			}
 
-			d.handleMessage(msg)
+			d.handleMessage(ctx, msg)
 		}
 	}()
 
@@ -104,7 +103,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 
 			log.Info("Executing handler")
 			timer := time.Now()
-			err := executeHandler(d.Handler, []string{terminationTransition, d.InstanceID}, d.Signals)
+			err := executeHandler(ctx, d.Handler, []string{terminationTransition, d.InstanceID})
 			executeCtx := log.WithFields(log.Fields{
 				"duration": time.Now().Sub(timer),
 			})
@@ -123,8 +122,8 @@ func (d *Daemon) Start(ctx context.Context) error {
 	return d.Queue.Receive(ctx, ch)
 }
 
-func (d *Daemon) handleMessage(m AutoscalingMessage) {
-	ctx := log.WithFields(log.Fields{
+func (d *Daemon) handleMessage(ctx context.Context, m AutoscalingMessage) {
+	logCtx := log.WithFields(log.Fields{
 		"transition": m.Transition,
 		"instanceid": m.InstanceID,
 	})
@@ -132,56 +131,48 @@ func (d *Daemon) handleMessage(m AutoscalingMessage) {
 	hbt := time.NewTicker(heartbeatFrequency)
 	go func() {
 		for range hbt.C {
-			ctx.Debug("Sending heartbeat")
+			logCtx.Debug("Sending heartbeat")
 			if err := sendHeartbeat(d.AutoScaling, m); err != nil {
-				ctx.WithError(err).Error("Heartbeat failed")
+				logCtx.WithError(err).Error("Heartbeat failed")
 			}
 		}
 	}()
 
-	handlerCtx := log.WithFields(log.Fields{
+	handlerLogCtx := log.WithFields(log.Fields{
 		"transition": m.Transition,
 		"instanceid": m.InstanceID,
 		"handler":    d.Handler.Name(),
 	})
 
-	handlerCtx.Info("Executing handler")
+	handlerLogCtx.Info("Executing handler")
 	timer := time.Now()
 
-	err := executeHandler(d.Handler, []string{m.Transition, m.InstanceID}, d.Signals)
-	executeCtx := handlerCtx.WithFields(log.Fields{
+	err := executeHandler(ctx, d.Handler, []string{m.Transition, m.InstanceID})
+	executeLogCtx := handlerLogCtx.WithFields(log.Fields{
 		"duration": time.Now().Sub(timer),
 	})
 	hbt.Stop()
 
 	if err != nil {
-		executeCtx.WithError(err).Error("Handler script failed")
+		executeLogCtx.WithError(err).Error("Handler script failed")
 		return
 	}
 
-	executeCtx.Info("Handler finished successfully")
+	executeLogCtx.Info("Handler finished successfully")
 
 	if err = completeLifecycle(d.AutoScaling, m); err != nil {
-		ctx.WithError(err).Error("Failed to complete lifecycle action")
+		logCtx.WithError(err).Error("Failed to complete lifecycle action")
 		return
 	}
 
-	ctx.Info("Lifecycle action completed successfully")
+	logCtx.Info("Lifecycle action completed successfully")
 }
 
-func executeHandler(command *os.File, args []string, sigs chan os.Signal) error {
-	cmd := exec.Command(command.Name(), args...)
+func executeHandler(ctx context.Context, command *os.File, args []string) error {
+	cmd := exec.CommandContext(ctx, command.Name(), args...)
 	cmd.Env = os.Environ()
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
-
-	go func() {
-		sig := <-sigs
-		if cmd.Process != nil {
-			cmd.Process.Signal(sig)
-		}
-	}()
-
 	return cmd.Run()
 }
 
