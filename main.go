@@ -48,7 +48,6 @@ func main() {
 		StringVar(&instanceID)
 
 	app.Flag("sns-topic", "The SNS topic that receives events").
-		Required().
 		StringVar(&snsTopic)
 
 	app.Flag("handler", "The script to invoke to handle events").
@@ -115,12 +114,7 @@ func main() {
 		sigs := make(chan os.Signal, 2)
 		defer close(sigs)
 
-		signal.Notify(sigs,
-			syscall.SIGHUP,
-			syscall.SIGINT,
-			syscall.SIGTERM,
-			syscall.SIGQUIT,
-			syscall.SIGPIPE)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		defer signal.Stop(sigs)
 
 		// Create an execution context for the daemon that can be cancelled on OS signal
@@ -135,22 +129,27 @@ func main() {
 			}
 		}()
 
-		daemon := Daemon{
-			InstanceID:  instanceID,
-			AutoScaling: autoscaling.New(sess),
-			Handler:     handler,
-			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
+		daemon := NewDaemon(instanceID, NewSpotListener(instanceID))
+
+		if snsTopic != "" {
+			daemon.AddListener(NewAutoscalingListener(
+				instanceID,
+				NewQueue(sess, fmt.Sprintf("lifecycled-%s", instanceID), snsTopic),
+				autoscaling.New(sess),
+			))
 		}
 
-		complete, err := daemon.Start(ctx)
+		notice, err := daemon.Start(ctx)
 		if err != nil {
-			log.WithError(err).Fatal("Failed to start daemon")
-		}
-		if complete != nil {
-			if err := complete(); err != nil {
-				log.WithError(err).Fatal("Failed to complete lifecycle action")
+			if ctx.Err() == context.Canceled {
+				return nil
 			}
-			log.Info("Lifecycle action completed successfully")
+			return err
+		}
+		if err := notice.Handle(ctx, NewFileHandler(handler)); err != nil {
+			log.WithError(err).Fatal("Failed to execute handler")
+		} else {
+			log.Info("Handler completed successfully")
 		}
 		return nil
 	})
