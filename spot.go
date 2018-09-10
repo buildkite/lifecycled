@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"errors"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -16,10 +16,11 @@ const (
 )
 
 // NewSpotListener ...
-func NewSpotListener(instanceID string) *SpotListener {
+func NewSpotListener(instanceID string, metadata *ec2metadata.EC2Metadata) *SpotListener {
 	return &SpotListener{
 		listenerType: "spot",
 		instanceID:   instanceID,
+		metadata:     metadata,
 	}
 }
 
@@ -27,6 +28,7 @@ func NewSpotListener(instanceID string) *SpotListener {
 type SpotListener struct {
 	listenerType string
 	instanceID   string
+	metadata     *ec2metadata.EC2Metadata
 }
 
 // Type returns a string describing the listener type.
@@ -36,16 +38,27 @@ func (l *SpotListener) Type() string {
 
 // Start the spot termination notice listener.
 func (l *SpotListener) Start(ctx context.Context, notices chan<- Notice) error {
+	if !l.metadata.Available() {
+		return errors.New("ec2 metadata is not available")
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-time.NewTicker(time.Second * 5).C:
-			t, err := getSpotTermination(ctx)
+			log.Debugf("Polling ec2 metadata for spot termination notices")
+			out, err := l.metadata.GetMetadata("spot/termination-time")
 			if err != nil {
 				log.WithError(err).Error("Failed to get spot termination")
+				continue
 			}
-			if t == nil {
+			if out == "" {
+				log.WithError(err).Error("Empty response from metadata")
+				continue
+			}
+			t, err := time.Parse(terminationTimeFormat, out)
+			if out == "" {
+				log.WithError(err).Error("Failed to parse termination time")
 				continue
 			}
 			notices <- &spotNotice{
@@ -59,37 +72,11 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- Notice) error {
 	}
 }
 
-func getSpotTermination(ctx context.Context) (*time.Time, error) {
-	log.Debugf("Polling ec2 metadata for spot termination notices")
-	res, err := http.Get(metadataURLTerminationTime)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	// will return 200 OK with termination notice
-	if res.StatusCode != http.StatusOK {
-		return nil, nil
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	// if 200 OK, expect a body like 2015-01-05T18:02:00Z
-	t, err := time.Parse(terminationTimeFormat, string(body))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse time in termination notice: %s", err)
-	}
-	return &t, err
-}
-
 type spotNotice struct {
 	noticeType      string
 	instanceID      string
 	transition      string
-	terminationTime *time.Time
+	terminationTime time.Time
 }
 
 func (n *spotNotice) Type() string {
