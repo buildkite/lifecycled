@@ -129,7 +129,7 @@ func main() {
 			}
 		}()
 
-		daemon := NewDaemon(instanceID, NewSpotListener(instanceID))
+		daemon := NewDaemon(instanceID, NewFileHandler(handler), NewSpotListener(instanceID))
 
 		if snsTopic != "" {
 			daemon.AddListener(NewAutoscalingListener(
@@ -139,19 +139,7 @@ func main() {
 			))
 		}
 
-		notice, err := daemon.Start(ctx)
-		if err != nil {
-			if ctx.Err() == context.Canceled {
-				return nil
-			}
-			return err
-		}
-		if err := notice.Handle(ctx, NewFileHandler(handler)); err != nil {
-			log.WithError(err).Fatal("Failed to execute handler")
-		} else {
-			log.Info("Handler completed successfully")
-		}
-		return nil
+		return daemon.Start(ctx)
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))

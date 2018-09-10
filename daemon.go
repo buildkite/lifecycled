@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -13,19 +14,21 @@ import (
 // Daemon is what orchestrates the listening and execution of the handler on a termination notice.
 type Daemon struct {
 	instanceID string
+	handler    Handler
 	listeners  []Listener
 }
 
 // NewDaemon creates a new Daemon.
-func NewDaemon(instanceID string, listeners ...Listener) *Daemon {
+func NewDaemon(instanceID string, handler Handler, listeners ...Listener) *Daemon {
 	return &Daemon{
 		instanceID: instanceID,
+		handler:    handler,
 		listeners:  listeners,
 	}
 }
 
 // Start the Daemon.
-func (d *Daemon) Start(userCtx context.Context) (Notice, error) {
+func (d *Daemon) Start(userCtx context.Context) error {
 	// Add a child context to stop all listeners when one has returned
 	ctx, stop := context.WithCancel(userCtx)
 	defer stop()
@@ -56,11 +59,23 @@ func (d *Daemon) Start(userCtx context.Context) (Notice, error) {
 	}()
 
 	for n := range notices {
-		log.Infof("Received a %s termination notice", n.Type())
-		return n, nil
+		log.Infof("Received a %s termination notice: executing handler", n.Type())
+
+		start, err := time.Now(), n.Handle(userCtx, d.handler)
+		if err != nil {
+			log.WithField("duration", time.Since(start)).WithError(err).Error("Failed to execute handler")
+		}
+		log.WithField("duration", time.Since(start)).Error("Handler executed succesfully")
+		return nil
 	}
 
-	return nil, errors.New("an error occured")
+	// We should only reach this code if a notice was not received,
+	// which means we are either exiting because of an error or because
+	// the user context was interrupted (by e.g. SIGINT or SIGTERM).
+	if userCtx.Err() != context.Canceled {
+		return nil
+	}
+	return errors.New("an error occured")
 }
 
 // AddListener to the Daemon.
@@ -101,6 +116,5 @@ func (h *FileHandler) Execute(ctx context.Context, instanceID, transition string
 	cmd.Env = os.Environ()
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
-
 	return cmd.Run()
 }
