@@ -72,7 +72,7 @@ func (d *Daemon) Start(userCtx context.Context) error {
 	// We should only reach this code if a notice was not received,
 	// which means we are either exiting because of an error or because
 	// the user context was interrupted (by e.g. SIGINT or SIGTERM).
-	if userCtx.Err() != context.Canceled {
+	if userCtx.Err() == context.Canceled {
 		return nil
 	}
 	return errors.New("an error occured")
