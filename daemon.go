@@ -28,10 +28,10 @@ func NewDaemon(instanceID string, handler Handler, listeners ...Listener) *Daemo
 }
 
 // Start the Daemon.
-func (d *Daemon) Start(userCtx context.Context) error {
+func (d *Daemon) Start(ctx context.Context) error {
 	// Add a child context to stop all listeners when one has returned
-	ctx, stop := context.WithCancel(userCtx)
-	defer stop()
+	listenerCtx, stopListening := context.WithCancel(ctx)
+	defer stopListening()
 
 	// Use a buffered channel to avoid deadlocking a goroutine when we stop listening
 	notices := make(chan Notice, 1)
@@ -42,9 +42,9 @@ func (d *Daemon) Start(userCtx context.Context) error {
 
 		go func() {
 			defer wg.Done()
-			defer stop()
+			defer stopListening()
 
-			if err := listener.Start(ctx, notices); err != nil {
+			if err := listener.Start(listenerCtx, notices); err != nil {
 				log.WithError(err).Errorf("Failed to start listening for %s notices", listener.Type())
 			} else {
 				log.Infof("Stopped listening for %s termination notices", listener.Type())
@@ -61,7 +61,7 @@ func (d *Daemon) Start(userCtx context.Context) error {
 	for n := range notices {
 		log.Infof("Received a %s termination notice: executing handler", n.Type())
 
-		start, err := time.Now(), n.Handle(userCtx, d.handler)
+		start, err := time.Now(), n.Handle(ctx, d.handler)
 		if err != nil {
 			log.WithField("duration", time.Since(start)).WithError(err).Error("Failed to execute handler")
 		}
@@ -72,7 +72,7 @@ func (d *Daemon) Start(userCtx context.Context) error {
 	// We should only reach this code if a notice was not received,
 	// which means we are either exiting because of an error or because
 	// the user context was interrupted (by e.g. SIGINT or SIGTERM).
-	if userCtx.Err() == context.Canceled {
+	if ctx.Err() == context.Canceled {
 		return nil
 	}
 	return errors.New("an error occured")
