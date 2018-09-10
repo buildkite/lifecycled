@@ -11,6 +11,7 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 
@@ -37,6 +38,7 @@ func main() {
 	var (
 		instanceID       string
 		snsTopic         string
+		spotListener     bool
 		handler          *os.File
 		jsonLogging      bool
 		debugLogging     bool
@@ -49,6 +51,9 @@ func main() {
 
 	app.Flag("sns-topic", "The SNS topic that receives events").
 		StringVar(&snsTopic)
+
+	app.Flag("spot", "Listen for spot termination notices").
+		BoolVar(&spotListener)
 
 	app.Flag("handler", "The script to invoke to handle events").
 		FileVar(&handler)
@@ -111,7 +116,7 @@ func main() {
 			log.WithError(err).Fatal("Failed to create new session")
 		}
 
-		sigs := make(chan os.Signal, 2)
+		sigs := make(chan os.Signal)
 		defer close(sigs)
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -129,12 +134,19 @@ func main() {
 			}
 		}()
 
-		daemon := NewDaemon(instanceID, NewFileHandler(handler), NewSpotListener(instanceID))
+		daemon := NewDaemon(instanceID, NewFileHandler(handler))
+
+		if spotListener {
+			daemon.AddListener(NewSpotListener(
+				instanceID,
+				ec2metadata.New(sess),
+			))
+		}
 
 		if snsTopic != "" {
 			daemon.AddListener(NewAutoscalingListener(
 				instanceID,
-				NewQueue(sess, fmt.Sprintf("lifecycled-%s", instanceID), snsTopic),
+				NewQueue(sess, generateQueueName(instanceID), snsTopic),
 				autoscaling.New(sess),
 			))
 		}
