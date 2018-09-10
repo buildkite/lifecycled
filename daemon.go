@@ -44,10 +44,12 @@ func (d *Daemon) Start(ctx context.Context) error {
 			defer wg.Done()
 			defer stopListening()
 
+			t := listener.Type()
+
 			if err := listener.Start(listenerCtx, notices); err != nil {
-				log.WithError(err).Errorf("Failed to start listening for %s notices", listener.Type())
+				log.WithError(err).Errorf("Failed to start listening for %s notices", t)
 			} else {
-				log.Infof("Stopped listening for %s termination notices", listener.Type())
+				log.Infof("Stopped listening for %s termination notices", t)
 			}
 		}()
 		log.Infof("Listening for %s termination notices", listener.Type())
