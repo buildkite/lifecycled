@@ -35,17 +35,14 @@ func (s *SpotMonitor) Run(ctx context.Context, termCh chan TerminationNotice) er
 			if has {
 				log.Info("Received spot termination notice")
 				doneCh := make(chan struct{})
-				errCh := make(chan error)
 
 				termCh <- TerminationNotice{
-					Done:  doneCh,
-					Error: errCh,
-					Args:  []string{terminationTransition, s.InstanceID},
+					Done: doneCh,
+					Args: []string{terminationTransition, s.InstanceID},
 				}
 
 				select {
 				case <-doneCh:
-				case <-errCh:
 				}
 			}
 		}

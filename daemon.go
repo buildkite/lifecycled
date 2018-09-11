@@ -18,9 +18,8 @@ type Daemon struct {
 }
 
 type TerminationNotice struct {
-	Done  chan struct{}
-	Error chan error
-	Args  []string
+	Done chan struct{}
+	Args []string
 }
 
 // Start the daemon.
@@ -69,7 +68,6 @@ func (d *Daemon) Start(ctx context.Context) error {
 			log.Info("Received termination notice, executing handler")
 			if err := executeHandler(subctx, d.Handler, term.Args); err != nil {
 				log.WithError(err).Info("Handler finished with an error")
-				term.Error <- err
 			} else {
 				log.Info("Handler finished successfully")
 				term.Done <- struct{}{}

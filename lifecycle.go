@@ -111,12 +111,10 @@ func (l *LifecycleMonitor) Run(ctx context.Context, termCh chan TerminationNotic
 		}()
 
 		doneCh := make(chan struct{})
-		errCh := make(chan error)
 
 		termCh <- TerminationNotice{
-			Done:  doneCh,
-			Error: errCh,
-			Args:  []string{msg.Transition, msg.InstanceID},
+			Done: doneCh,
+			Args: []string{msg.Transition, msg.InstanceID},
 		}
 
 		select {
@@ -134,9 +132,6 @@ func (l *LifecycleMonitor) Run(ctx context.Context, termCh chan TerminationNotic
 			}
 
 			return nil
-
-		case <-errCh:
-			hbt.Stop()
 		}
 	}
 
