@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -45,10 +46,11 @@ func (d *Daemon) Start(ctx context.Context) error {
 	if err := d.Queue.Create(); err != nil {
 		return err
 	}
+
+	// ensure the queue deletion happens only once
+	var deleteOnce sync.Once
 	defer func() {
-		if err := d.Queue.Delete(); err != nil {
-			log.WithError(err).Error("Failed to delete queue")
-		}
+		deleteOnce.Do(d.deleteQueue)
 	}()
 
 	if err := d.Queue.Subscribe(); err != nil {
@@ -92,7 +94,10 @@ func (d *Daemon) Start(ctx context.Context) error {
 				continue
 			}
 
-			d.handleMessage(ctx, msg)
+			d.handleMessage(ctx, msg, func() {
+				// delete the queue before we complete
+				deleteOnce.Do(d.deleteQueue)
+			})
 		}
 	}()
 
@@ -114,7 +119,6 @@ func (d *Daemon) Start(ctx context.Context) error {
 			}
 
 			executeCtx.Info("Handler finished successfully")
-
 		}
 	}()
 
@@ -122,7 +126,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 	return d.Queue.Receive(ctx, ch)
 }
 
-func (d *Daemon) handleMessage(ctx context.Context, m AutoscalingMessage) {
+func (d *Daemon) handleMessage(ctx context.Context, m AutoscalingMessage, complete func()) {
 	logCtx := log.WithFields(log.Fields{
 		"transition": m.Transition,
 		"instanceid": m.InstanceID,
@@ -160,12 +164,20 @@ func (d *Daemon) handleMessage(ctx context.Context, m AutoscalingMessage) {
 
 	executeLogCtx.Info("Handler finished successfully")
 
+	complete()
+
 	if err = completeLifecycle(d.AutoScaling, m); err != nil {
 		logCtx.WithError(err).Error("Failed to complete lifecycle action")
 		return
 	}
 
 	logCtx.Info("Lifecycle action completed successfully")
+}
+
+func (d *Daemon) deleteQueue() {
+	if err := d.Queue.Delete(); err != nil {
+		log.WithError(err).Error("Failed to delete queue")
+	}
 }
 
 func executeHandler(ctx context.Context, command *os.File, args []string) error {
