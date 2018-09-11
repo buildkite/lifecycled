@@ -2,10 +2,6 @@ terraform {
   required_version = "0.11.8"
 }
 
-provider "aws" {
-  version = "1.34.0"
-}
-
 # Use the default VPC and subnets
 data "aws_vpc" "main" {
   default = true

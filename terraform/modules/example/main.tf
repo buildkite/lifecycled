@@ -36,30 +36,46 @@ data "template_file" "main" {
   }
 }
 
-# The autoscaling group
-module "asg" {
-  source  = "telia-oss/asg/aws"
-  version = "0.2.0"
+resource "aws_launch_configuration" "main" {
+  name_prefix            = "${var.name_prefix}"
+  image_id               = "${var.instance_ami}"
+  instance_type          = "${var.instance_type}"
+  key_name               = "${var.instance_key}"
+  iam_instance_profile   = "${aws_iam_instance_profile.lifecycle.name}"
+  security_groups        = ["${aws_security_group.main.id}"]
 
-  name_prefix       = "${var.name_prefix}"
-  user_data         = "${data.template_file.main.rendered}"
-  vpc_id            = "${var.vpc_id}"
-  subnet_ids        = "${var.subnet_ids}"
-  await_signal      = "true"
-  pause_time        = "PT5M"
-  health_check_type = "EC2"
-  instance_policy   = "${data.aws_iam_policy_document.permissions.json}"
-  min_size          = "${var.instance_count}"
-  instance_type     = "${var.instance_type}"
-  instance_ami      = "${var.instance_ami}"
-  instance_key      = "${var.instance_key}"
+  user_data = "${data.template_file.main.rendered}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "main" {
+  name                 = "${var.name_prefix}-${aws_launch_configuration.main.name}"
+  launch_configuration = "${aws_launch_configuration.main.id}"
+  vpc_zone_identifier  = ["${var.subnet_ids}"]
+
+  min_size         = "0"
+  desired_capacity = "${var.instance_count}"
+  max_size         = "1"
   tags              = "${var.tags}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group" "main" {
+  name        = "${var.name_prefix}-sg"
+  description = "Allow access to lifecycled instances"
+  vpc_id      = "${var.vpc_id}"
 }
 
 # Allow SSH ingress if a EC2 key pair is specified.
 resource "aws_security_group_rule" "ssh_ingress" {
   count             = "${var.instance_key != "" ? 1 : 0}"
-  security_group_id = "${module.asg.security_group_id}"
+  security_group_id = "${aws_security_group.main.id}"
   type              = "ingress"
   protocol          = "tcp"
   from_port         = 22
@@ -155,12 +171,17 @@ resource "aws_sns_topic" "main" {
 # Lifecycle hook
 resource "aws_autoscaling_lifecycle_hook" "main" {
   name                    = "${var.name_prefix}-lifecycle"
-  autoscaling_group_name  = "${module.asg.id}"
+  autoscaling_group_name  = "${aws_autoscaling_group.main.id}"
   lifecycle_transition    = "autoscaling:EC2_INSTANCE_TERMINATING"
   default_result          = "CONTINUE"
   heartbeat_timeout       = "60"
   notification_target_arn = "${aws_sns_topic.main.arn}"
   role_arn                = "${aws_iam_role.lifecycle.arn}"
+}
+
+resource "aws_iam_instance_profile" "lifecycle" {
+  name = "${var.name_prefix}-lifecycle-instance-profile"
+  role = "${aws_iam_role.lifecycle.name}"
 }
 
 # Execution role and policies for the lifecycle hook
