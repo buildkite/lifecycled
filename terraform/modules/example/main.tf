@@ -59,7 +59,7 @@ resource "aws_autoscaling_group" "main" {
   min_size         = "0"
   desired_capacity = "${var.instance_count}"
   max_size         = "1"
-  tags              = "${var.tags}"
+  tags              = ["${var.tags}"]
 
   lifecycle {
     create_before_destroy = true
