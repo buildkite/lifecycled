@@ -47,14 +47,19 @@ func (d *Daemon) Start(ctx context.Context) error {
 		return err
 	}
 
-	if err := d.Queue.Subscribe(); err != nil {
-		return err
-	}
-
 	// ensure the queue deletion happens only once
 	var deleteOnce sync.Once
 	defer func() {
 		deleteOnce.Do(d.deleteQueue)
+	}()
+
+	if err := d.Queue.Subscribe(); err != nil {
+		return err
+	}
+	defer func() {
+		if err := d.Queue.Unsubscribe(); err != nil {
+			log.WithError(err).Error("Failed to unsubscribe from sns topic")
+		}
 	}()
 
 	ch := make(chan *sqs.Message)
@@ -173,11 +178,6 @@ func (d *Daemon) deleteQueue() {
 	if err := d.Queue.Delete(); err != nil {
 		log.WithError(err).Error("Failed to delete queue")
 	}
-
-	if err := d.Queue.Unsubscribe(); err != nil {
-		log.WithError(err).Error("Failed to unsubscribe from sns topic")
-	}
-
 }
 
 func executeHandler(ctx context.Context, command *os.File, args []string) error {
