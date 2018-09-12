@@ -12,11 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	metadataURLTerminationTime = "http://169.254.169.254/latest/meta-data/spot/termination-time"
-	terminationTimeFormat      = "2006-01-02T15:04:05Z"
-)
-
 // NewSpotListener ...
 func NewSpotListener(instanceID string, metadata *ec2metadata.EC2Metadata) *SpotListener {
 	return &SpotListener{
@@ -64,7 +59,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- Notice) error {
 				log.Error("Empty response from metadata")
 				continue
 			}
-			t, err := time.Parse(terminationTimeFormat, out)
+			t, err := time.Parse("2006-01-02T15:04:05Z", out)
 			if out == "" {
 				log.WithError(err).Error("Failed to parse termination time")
 				continue
