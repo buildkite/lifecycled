@@ -105,7 +105,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 
 				// unmarshal inner layer
 				if err := json.Unmarshal([]byte(env.Message), &msg); err != nil {
-					log.WithError(err).Warn("Failed to unmarshal autoscaling message")
+					log.WithError(err).Error("Failed to unmarshal autoscaling message")
 					continue
 				}
 
