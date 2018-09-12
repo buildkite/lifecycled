@@ -52,7 +52,7 @@ func (l *AutoscalingListener) Type() string {
 }
 
 // Start the autoscaling lifecycle hook listener.
-func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Notice) error {
+func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- TerminationNotice) error {
 	if err := l.queue.Create(); err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Notice) 
 					continue
 				}
 
-				notices <- &autoscalingNotice{
+				notices <- &autoscalingTerminationNotice{
 					noticeType:  l.Type(),
 					message:     &msg,
 					autoscaling: l.autoscaling,
@@ -126,17 +126,17 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Notice) 
 	}
 }
 
-type autoscalingNotice struct {
+type autoscalingTerminationNotice struct {
 	noticeType  string
 	message     *Message
 	autoscaling *autoscaling.AutoScaling
 }
 
-func (n *autoscalingNotice) Type() string {
+func (n *autoscalingTerminationNotice) Type() string {
 	return n.noticeType
 }
 
-func (n *autoscalingNotice) Handle(ctx context.Context, handler Handler) error {
+func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handler) error {
 	defer func() {
 		_, err := n.autoscaling.CompleteLifecycleAction(&autoscaling.CompleteLifecycleActionInput{
 			AutoScalingGroupName:  aws.String(n.message.GroupName),

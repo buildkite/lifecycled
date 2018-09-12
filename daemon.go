@@ -34,7 +34,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 	defer stopListening()
 
 	// Use a buffered channel to avoid deadlocking a goroutine when we stop listening
-	notices := make(chan Notice, 1)
+	notices := make(chan TerminationNotice, 1)
 
 	var wg sync.WaitGroup
 	for _, listener := range d.listeners {
@@ -88,11 +88,11 @@ func (d *Daemon) AddListener(l Listener) {
 // Listener ...
 type Listener interface {
 	Type() string
-	Start(context.Context, chan<- Notice) error
+	Start(context.Context, chan<- TerminationNotice) error
 }
 
-// Notice ...
-type Notice interface {
+// TerminationNotice ...
+type TerminationNotice interface {
 	Type() string
 	Handle(context.Context, Handler) error
 }

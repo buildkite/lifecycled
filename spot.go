@@ -34,7 +34,7 @@ func (l *SpotListener) Type() string {
 }
 
 // Start the spot termination notice listener.
-func (l *SpotListener) Start(ctx context.Context, notices chan<- Notice) error {
+func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNotice) error {
 	if !l.metadata.Available() {
 		return errors.New("ec2 metadata is not available")
 	}
@@ -64,7 +64,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- Notice) error {
 				log.WithError(err).Error("Failed to parse termination time")
 				continue
 			}
-			notices <- &spotNotice{
+			notices <- &spotTerminationNotice{
 				noticeType:      l.Type(),
 				instanceID:      l.instanceID,
 				transition:      "ec2:SPOT_INSTANCE_TERMINATION",
@@ -75,17 +75,17 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- Notice) error {
 	}
 }
 
-type spotNotice struct {
+type spotTerminationNotice struct {
 	noticeType      string
 	instanceID      string
 	transition      string
 	terminationTime time.Time
 }
 
-func (n *spotNotice) Type() string {
+func (n *spotTerminationNotice) Type() string {
 	return n.noticeType
 }
 
-func (n *spotNotice) Handle(ctx context.Context, handler Handler) error {
+func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler) error {
 	return handler.Execute(ctx, n.instanceID, n.transition)
 }
