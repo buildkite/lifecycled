@@ -67,7 +67,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 		if err != nil {
 			log.WithField("duration", time.Since(start)).WithError(err).Error("Failed to execute handler")
 		}
-		log.WithField("duration", time.Since(start)).Error("Handler executed succesfully")
+		log.WithField("duration", time.Since(start)).Info("Handler executed succesfully")
 		return nil
 	}
 
