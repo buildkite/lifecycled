@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 
 	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
 	log "github.com/sirupsen/logrus"
@@ -139,7 +141,12 @@ func main() {
 		if snsTopic != "" {
 			daemon.AddListener(NewAutoscalingListener(
 				instanceID,
-				NewQueue(sess, generateQueueName(instanceID), snsTopic),
+				NewQueue(
+					generateQueueName(instanceID),
+					snsTopic,
+					sqs.New(sess),
+					sns.New(sess),
+				),
 				autoscaling.New(sess),
 			))
 		}

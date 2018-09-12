@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -58,12 +57,12 @@ type Queue struct {
 }
 
 // NewQueue returns a new... Queue.
-func NewQueue(sess *session.Session, queueName, topicArn string) *Queue {
+func NewQueue(queueName, topicArn string, sqsClient SQSClient, snsClient SNSClient) *Queue {
 	return &Queue{
 		name:      queueName,
 		topicArn:  topicArn,
-		sqsClient: sqs.New(sess),
-		snsClient: sns.New(sess),
+		sqsClient: sqsClient,
+		snsClient: snsClient,
 	}
 }
 
