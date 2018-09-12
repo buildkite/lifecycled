@@ -7,8 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
 	log "github.com/sirupsen/logrus"
 )
+
+// AutoscalingClient for testing purposes (TODO: Gomock).
+type AutoscalingClient autoscalingiface.AutoScalingAPI
 
 // Envelope ...
 type Envelope struct {
@@ -29,7 +33,7 @@ type Message struct {
 }
 
 // NewAutoscalingListener ...
-func NewAutoscalingListener(instanceID string, queue *Queue, autoscaling *autoscaling.AutoScaling) *AutoscalingListener {
+func NewAutoscalingListener(instanceID string, queue *Queue, autoscaling AutoscalingClient) *AutoscalingListener {
 	return &AutoscalingListener{
 		listenerType: "autoscaling",
 		instanceID:   instanceID,
@@ -43,7 +47,7 @@ type AutoscalingListener struct {
 	listenerType string
 	instanceID   string
 	queue        *Queue
-	autoscaling  *autoscaling.AutoScaling
+	autoscaling  AutoscalingClient
 }
 
 // Type returns a string describing the listener type.
@@ -129,7 +133,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 type autoscalingTerminationNotice struct {
 	noticeType  string
 	message     *Message
-	autoscaling *autoscaling.AutoScaling
+	autoscaling AutoscalingClient
 }
 
 func (n *autoscalingTerminationNotice) Type() string {
