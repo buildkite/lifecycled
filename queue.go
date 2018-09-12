@@ -17,7 +17,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const queuePolicy = `
+const (
+	longPollingWaitTimeSeconds = 20
+	queuePolicy                = `
 {
   "Version":"2012-10-17",
   "Statement":[
@@ -35,9 +37,6 @@ const queuePolicy = `
   ]
 }
 `
-
-const (
-	longPollingWaitTimeSeconds = 20
 )
 
 // SQSClient for testing purposes (TODO: Gomock).

@@ -21,10 +21,6 @@ var (
 	Version string
 )
 
-const (
-	metadataURLInstanceID = "http://169.254.169.254/latest/meta-data/instance-id"
-)
-
 func main() {
 	app := kingpin.New("lifecycled",
 		"Handle AWS autoscaling lifecycle events gracefully")
