@@ -40,19 +40,19 @@ func (d *Daemon) Start(ctx context.Context) error {
 	for _, listener := range d.listeners {
 		wg.Add(1)
 
+		l := log.WithField("listener", listener.Type())
+
 		go func() {
 			defer wg.Done()
 			defer stopListening()
 
-			t := listener.Type()
-
 			if err := listener.Start(listenerCtx, notices); err != nil {
-				log.WithError(err).Errorf("Failed to start listening for %s notices", t)
+				l.WithError(err).Error("Failed to start listener")
 			} else {
-				log.Infof("Stopped listening for %s termination notices", t)
+				l.Info("Stopped listener")
 			}
 		}()
-		log.Infof("Listening for %s termination notices", listener.Type())
+		l.Info("Starting listener")
 	}
 
 	go func() {
@@ -60,14 +60,17 @@ func (d *Daemon) Start(ctx context.Context) error {
 		close(notices)
 	}()
 
+	log.Info("Waiting for termination notices")
 	for n := range notices {
-		log.Infof("Received a %s termination notice: executing handler", n.Type())
+		l := log.WithField("notice", n.Type())
+		l.Info("Received termination notice: executing handler")
 
 		start, err := time.Now(), n.Handle(ctx, d.handler)
+		l = l.WithField("duration", time.Since(start).String())
 		if err != nil {
-			log.WithField("duration", time.Since(start)).WithError(err).Error("Failed to execute handler")
+			l.WithError(err).Error("Failed to execute handler")
 		}
-		log.WithField("duration", time.Since(start)).Info("Handler executed succesfully")
+		l.Info("Handler finished succesfully")
 		return nil
 	}
 

@@ -94,7 +94,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 
 				// unmarshal outer layer
 				if err := json.Unmarshal([]byte(*m.Body), &env); err != nil {
-					log.WithError(err).Warn("Failed to unmarshal envelope")
+					log.WithError(err).Error("Failed to unmarshal envelope")
 					continue
 				}
 
@@ -151,6 +151,8 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 		})
 		if err != nil {
 			log.WithError(err).Error("Failed to complete lifecycle action")
+		} else {
+			log.Info("Lifecycle action completed successfully")
 		}
 	}()
 

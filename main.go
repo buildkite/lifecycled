@@ -79,14 +79,14 @@ func main() {
 
 		sess, err := session.NewSession()
 		if err != nil {
-			log.WithError(err).Fatal("Failed to create new session")
+			log.WithError(err).Fatal("Failed to create new aws session")
 		}
 
 		if instanceID == "" {
-			log.Infof("Looking up instance id from metadata service")
+			log.Info("Looking up instance id from metadata service")
 			instanceID, err = ec2metadata.New(sess).GetMetadata("instance-id")
 			if err != nil {
-				log.Fatalf("Failed to lookup instance id: %v", err)
+				log.WithError(err).Fatal("Failed to lookup instance id")
 			}
 		}
 
@@ -100,9 +100,12 @@ func main() {
 				log.Fatal(err)
 			}
 
-			log.Infof("Writing logs to Cloudwatch Group %s, Stream %s", cloudwatchGroup, cloudwatchStream)
-			log.AddHook(hook)
+			log.WithFields(log.Fields{
+				"group":  cloudwatchGroup,
+				"stream": cloudwatchStream,
+			}).Info("Writing logs to CloudWatch")
 
+			log.AddHook(hook)
 			if !jsonLogging {
 				log.SetFormatter(&log.TextFormatter{
 					DisableColors:    true,
@@ -123,7 +126,7 @@ func main() {
 
 		go func() {
 			for signal := range sigs {
-				log.Infof("Received signal (%s) shutting down...", signal)
+				log.WithField("signal", signal.String()).Info("Received signal: shutting down...")
 				cancel()
 				break
 			}

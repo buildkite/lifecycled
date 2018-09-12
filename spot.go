@@ -42,7 +42,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNoti
 		case <-ctx.Done():
 			return nil
 		case <-time.NewTicker(time.Second * 5).C:
-			log.Debugf("Polling ec2 metadata for spot termination notices")
+			log.Debug("Polling ec2 metadata for spot termination notices")
 
 			out, err := l.metadata.GetMetadata("spot/termination-time")
 			if err != nil {
@@ -50,7 +50,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNoti
 					// Metadata returns 404 when there is no termination notice available
 					continue
 				} else {
-					log.WithError(err).Error("Failed to get spot termination")
+					log.WithError(err).Warn("Failed to get spot termination")
 					continue
 				}
 			}

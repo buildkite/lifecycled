@@ -68,7 +68,7 @@ func NewQueue(queueName, topicArn string, sqsClient SQSClient, snsClient SNSClie
 
 // Create the SQS queue.
 func (q *Queue) Create() error {
-	log.WithFields(log.Fields{"queue": q.name}).Debug("Creating sqs queue")
+	log.WithField("queue", q.name).Debug("Creating sqs queue")
 	out, err := q.sqsClient.CreateQueue(&sqs.CreateQueueInput{
 		QueueName: aws.String(q.name),
 		Attributes: map[string]*string{
@@ -86,7 +86,7 @@ func (q *Queue) Create() error {
 // GetArn for the SQS queue.
 func (q *Queue) getArn() (string, error) {
 	if q.arn == "" {
-		log.WithFields(log.Fields{"queue": q.name}).Debug("Looking up sqs queue arn")
+		log.WithField("queue", q.name).Debug("Looking up sqs queue arn")
 		out, err := q.sqsClient.GetQueueAttributes(&sqs.GetQueueAttributesInput{
 			AttributeNames: aws.StringSlice([]string{"QueueArn"}),
 			QueueUrl:       aws.String(q.url),
@@ -106,7 +106,6 @@ func (q *Queue) getArn() (string, error) {
 // Subscribe the queue to an SNS topic
 func (q *Queue) Subscribe() error {
 	log.WithFields(log.Fields{"queue": q.name, "topic": q.topicArn}).Debug("Subscribing queue to sns topic")
-
 	arn, err := q.getArn()
 	if err != nil {
 		return err
@@ -125,7 +124,7 @@ func (q *Queue) Subscribe() error {
 
 // GetMessages long polls for messages from the SQS queue.
 func (q *Queue) GetMessages(ctx context.Context) ([]*sqs.Message, error) {
-	log.WithFields(log.Fields{"queueURL": q.url}).Debugf("Polling sqs for messages")
+	log.WithField("queueURL", q.url).Debug("Polling sqs for messages")
 	out, err := q.sqsClient.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:            aws.String(q.url),
 		MaxNumberOfMessages: aws.Int64(1),
@@ -159,7 +158,7 @@ func (q *Queue) DeleteMessage(ctx context.Context, receiptHandle string) error {
 
 // Unsubscribe the queue from the SNS topic.
 func (q *Queue) Unsubscribe() error {
-	log.WithFields(log.Fields{"arn": q.subscriptionArn}).Debugf("Deleting sns subscription")
+	log.WithField("arn", q.subscriptionArn).Debug("Deleting sns subscription")
 	_, err := q.snsClient.Unsubscribe(&sns.UnsubscribeInput{
 		SubscriptionArn: aws.String(q.subscriptionArn),
 	})
@@ -168,7 +167,7 @@ func (q *Queue) Unsubscribe() error {
 
 // Delete the SQS queue.
 func (q *Queue) Delete() error {
-	log.WithFields(log.Fields{"url": q.url}).Debugf("Deleting sqs queue")
+	log.WithField("queue", q.name).Debug("Deleting sqs queue")
 	_, err := q.sqsClient.DeleteQueue(&sqs.DeleteQueueInput{
 		QueueUrl: aws.String(q.url),
 	})
