@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 
 	log "github.com/sirupsen/logrus"
@@ -47,13 +49,19 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- Notice) error {
 			return nil
 		case <-time.NewTicker(time.Second * 5).C:
 			log.Debugf("Polling ec2 metadata for spot termination notices")
+
 			out, err := l.metadata.GetMetadata("spot/termination-time")
 			if err != nil {
-				log.WithError(err).Error("Failed to get spot termination")
-				continue
+				if e, ok := err.(awserr.Error); ok && strings.Contains(e.OrigErr().Error(), "404") {
+					// Metadata returns 404 when there is no termination notice available
+					continue
+				} else {
+					log.WithError(err).Error("Failed to get spot termination")
+					continue
+				}
 			}
 			if out == "" {
-				log.WithError(err).Error("Empty response from metadata")
+				log.Error("Empty response from metadata")
 				continue
 			}
 			t, err := time.Parse(terminationTimeFormat, out)
