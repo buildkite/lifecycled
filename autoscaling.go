@@ -150,7 +150,7 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 			LifecycleActionResult: aws.String("CONTINUE"),
 		})
 		if err != nil {
-			log.WithError(err).Warn("Failed to complete lifecycle action")
+			log.WithError(err).Error("Failed to complete lifecycle action")
 		}
 	}()
 
