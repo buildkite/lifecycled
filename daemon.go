@@ -67,6 +67,9 @@ func (d *Daemon) Start(ctx context.Context) error {
 		case <-listenerCtx.Done():
 			return errors.New("an error occured")
 		case n := <-notices:
+			// Stop listeners immediately since we will not process any more notices
+			stopListening()
+
 			l := log.WithField("notice", n.Type())
 			l.Info("Received termination notice: executing handler")
 
