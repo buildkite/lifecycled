@@ -29,14 +29,18 @@ func NewDaemon(instanceID string, handler Handler, listeners ...Listener) *Daemo
 
 // Start the Daemon.
 func (d *Daemon) Start(ctx context.Context) error {
+	// Use a buffered channel to avoid deadlocking a goroutine when we stop listening
+	notices := make(chan TerminationNotice, len(d.listeners))
+	defer close(notices)
+
+	// Always wait for all listeners to exit before returning from this function
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	// Add a child context to stop all listeners when one has returned
 	listenerCtx, stopListening := context.WithCancel(ctx)
 	defer stopListening()
 
-	// Use a buffered channel to avoid deadlocking a goroutine when we stop listening
-	notices := make(chan TerminationNotice, 1)
-
-	var wg sync.WaitGroup
 	for _, listener := range d.listeners {
 		wg.Add(1)
 
@@ -44,10 +48,10 @@ func (d *Daemon) Start(ctx context.Context) error {
 
 		go func() {
 			defer wg.Done()
-			defer stopListening()
 
 			if err := listener.Start(listenerCtx, notices); err != nil {
 				l.WithError(err).Error("Failed to start listener")
+				stopListening()
 			} else {
 				l.Info("Stopped listener")
 			}
@@ -55,32 +59,26 @@ func (d *Daemon) Start(ctx context.Context) error {
 		l.Info("Starting listener")
 	}
 
-	go func() {
-		wg.Wait()
-		close(notices)
-	}()
-
 	log.Info("Waiting for termination notices")
-	for n := range notices {
-		l := log.WithField("notice", n.Type())
-		l.Info("Received termination notice: executing handler")
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-listenerCtx.Done():
+			return errors.New("an error occured")
+		case n := <-notices:
+			l := log.WithField("notice", n.Type())
+			l.Info("Received termination notice: executing handler")
 
-		start, err := time.Now(), n.Handle(ctx, d.handler)
-		l = l.WithField("duration", time.Since(start).String())
-		if err != nil {
-			l.WithError(err).Error("Failed to execute handler")
+			start, err := time.Now(), n.Handle(ctx, d.handler)
+			l = l.WithField("duration", time.Since(start).String())
+			if err != nil {
+				l.WithError(err).Error("Failed to execute handler")
+			}
+			l.Info("Handler finished succesfully")
+			return nil
 		}
-		l.Info("Handler finished succesfully")
-		return nil
 	}
-
-	// We should only reach this code if a notice was not received,
-	// which means we are either exiting because of an error or because
-	// the user context was interrupted (by e.g. SIGINT or SIGTERM).
-	if ctx.Err() == context.Canceled {
-		return nil
-	}
-	return errors.New("an error occured")
 }
 
 // AddListener to the Daemon.
