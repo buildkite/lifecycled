@@ -1,4 +1,4 @@
-package main
+package lifecycled
 
 import (
 	"context"
@@ -18,8 +18,8 @@ type Daemon struct {
 	listeners  []Listener
 }
 
-// NewDaemon creates a new Daemon.
-func NewDaemon(instanceID string, handler Handler, listeners ...Listener) *Daemon {
+// New creates a new lifecycle Daemon.
+func New(instanceID string, handler Handler, listeners ...Listener) *Daemon {
 	return &Daemon{
 		instanceID: instanceID,
 		handler:    handler,

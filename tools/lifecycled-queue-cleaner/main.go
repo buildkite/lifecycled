@@ -91,7 +91,7 @@ func listInstances(sess *session.Session) ([]string, error) {
 	// Only grab instances that are running or just started
 	params := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String(`instance-state-name`),
 				Values: aws.StringSlice([]string{"running", "pending"}),
 			},

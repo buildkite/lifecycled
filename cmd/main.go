@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/itsdalmo/lifecycled"
 
 	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
 	log "github.com/sirupsen/logrus"
@@ -132,19 +133,19 @@ func main() {
 			}
 		}()
 
-		daemon := NewDaemon(instanceID, NewFileHandler(handler))
+		daemon := lifecycled.New(instanceID, lifecycled.NewFileHandler(handler))
 
 		if spotListener {
-			daemon.AddListener(NewSpotListener(
+			daemon.AddListener(lifecycled.NewSpotListener(
 				instanceID,
 				ec2metadata.New(sess),
 			))
 		}
 
 		if snsTopic != "" {
-			daemon.AddListener(NewAutoscalingListener(
+			daemon.AddListener(lifecycled.NewAutoscalingListener(
 				instanceID,
-				NewQueue(
+				lifecycled.NewQueue(
 					generateQueueName(instanceID),
 					snsTopic,
 					sqs.New(sess),

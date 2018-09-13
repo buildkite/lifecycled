@@ -1,4 +1,4 @@
-package main
+package lifecycled
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 )
 
 // AutoscalingClient for testing purposes (TODO: Gomock).
+//go:generate mockgen -destination=mocks/mock_autoscaling_client.go -package=mocks github.com/itsdalmo/lifecycled AutoscalingClient
 type AutoscalingClient autoscalingiface.AutoScalingAPI
 
 // Envelope ...

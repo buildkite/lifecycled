@@ -1,4 +1,4 @@
-package main
+package lifecycled
 
 import (
 	"context"
@@ -58,7 +58,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNoti
 				log.Error("Empty response from metadata")
 				continue
 			}
-			t, err := time.Parse("2006-01-02T15:04:05Z", out)
+			t, err := time.Parse(time.RFC3339, out)
 			if out == "" {
 				log.WithError(err).Error("Failed to parse termination time")
 				continue
