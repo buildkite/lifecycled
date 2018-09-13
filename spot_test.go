@@ -21,16 +21,13 @@ func newMetadataStub(instanceID, terminationTime string) *httptest.Server {
 		case "/latest/meta-data/instance-id":
 			resp = instanceID
 		case "/latest/meta-data/spot/termination-time":
-			if terminationTime == "" {
-				http.Error(w, "not found", http.StatusNotFound)
-			} else {
-				resp = terminationTime
-			}
-		default:
+			resp = terminationTime
+		}
+
+		if resp == "" {
 			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
-
 		w.Write([]byte(resp))
 	})
 	return httptest.NewServer(handler)
@@ -42,6 +39,7 @@ func TestSpotListener(t *testing.T) {
 		instanceID      string
 		terminationTime string
 		expectNotice    bool
+		expectError     bool
 		interrupt       bool
 	}{
 		{
@@ -62,6 +60,11 @@ func TestSpotListener(t *testing.T) {
 			instanceID:      "i-00000000000",
 			terminationTime: "invalidtimeformat",
 			expectNotice:    false,
+		},
+		{
+			description:  "exits with an error if metadata is not available",
+			expectNotice: false,
+			expectError:  true,
 		},
 	}
 
@@ -98,12 +101,17 @@ func TestSpotListener(t *testing.T) {
 			}
 
 			listener := lifecycled.NewSpotListener(tc.instanceID, metadata)
-			if err := listener.Start(ctx, notices); err != nil {
+			err := listener.Start(ctx, notices)
+
+			if tc.expectError && err == nil {
+				t.Errorf("expected an error to occur")
+			}
+			if !tc.expectError && err != nil {
 				t.Errorf("unexpected error: %s", err)
 			}
 			close(notices)
-			wg.Wait()
 
+			wg.Wait()
 			if tc.expectNotice && !receivedNotice {
 				t.Errorf("expected to receive a notice")
 			}
