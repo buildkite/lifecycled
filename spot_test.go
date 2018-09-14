@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/itsdalmo/lifecycled"
+	logrus "github.com/sirupsen/logrus/hooks/test"
 )
 
 func newMetadataStub(instanceID, terminationTime string) *httptest.Server {
@@ -79,11 +80,10 @@ func TestSpotListener(t *testing.T) {
 			})
 
 			// Record whether or not a notice was recieved
-			var (
-				receivedNotice bool
-				wg             sync.WaitGroup
-			)
 			notices := make(chan lifecycled.TerminationNotice, 1)
+
+			var receivedNotice bool
+			var wg sync.WaitGroup
 
 			wg.Add(1)
 			go func() {
@@ -101,7 +101,8 @@ func TestSpotListener(t *testing.T) {
 			}
 
 			listener := lifecycled.NewSpotListener(tc.instanceID, metadata)
-			err := listener.Start(ctx, notices)
+			logger, _ := logrus.NewNullLogger()
+			err := listener.Start(ctx, notices, logger.WithField("test", "test"))
 
 			if tc.expectError && err == nil {
 				t.Errorf("expected an error to occur")

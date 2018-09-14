@@ -15,6 +15,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/itsdalmo/lifecycled"
 	"github.com/itsdalmo/lifecycled/mocks"
+	logrus "github.com/sirupsen/logrus/hooks/test"
 )
 
 func newSQSMessage(instanceID string) *sqs.Message {
@@ -126,7 +127,9 @@ func TestAutoscalingListener(t *testing.T) {
 				lifecycled.NewQueue("queue-name", "topic-arn", sq, sn),
 				as,
 			)
-			err := listener.Start(ctx, notices)
+			logger, _ := logrus.NewNullLogger()
+
+			err := listener.Start(ctx, notices, logger.WithField("test", "test"))
 			if err != nil {
 				t.Errorf("unexpected error: %s", err)
 
@@ -180,7 +183,9 @@ func TestAutoscalingQueueCleanup(t *testing.T) {
 				lifecycled.NewQueue("queue-name", "topic-arn", sq, sn),
 				mocks.NewMockAutoscalingClient(ctrl),
 			)
-			err := listener.Start(context.TODO(), notices)
+			logger, _ := logrus.NewNullLogger()
+
+			err := listener.Start(context.TODO(), notices, logger.WithField("test", "test"))
 			if err == nil {
 				t.Errorf("expected an error to occur")
 			}

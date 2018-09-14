@@ -17,7 +17,7 @@ import (
 	"github.com/itsdalmo/lifecycled"
 
 	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -68,26 +68,27 @@ func main() {
 		BoolVar(&debugLogging)
 
 	app.Action(func(c *kingpin.ParseContext) error {
+		logger := logrus.New()
 		if jsonLogging {
-			log.SetFormatter(&log.JSONFormatter{})
+			logger.SetFormatter(&logrus.JSONFormatter{})
 		} else {
-			log.SetFormatter(&log.TextFormatter{})
+			logger.SetFormatter(&logrus.TextFormatter{})
 		}
 
 		if debugLogging {
-			log.SetLevel(log.DebugLevel)
+			logger.SetLevel(logrus.DebugLevel)
 		}
 
 		sess, err := session.NewSession()
 		if err != nil {
-			log.WithError(err).Fatal("Failed to create new aws session")
+			logger.WithError(err).Fatal("Failed to create new aws session")
 		}
 
 		if instanceID == "" {
-			log.Info("Looking up instance id from metadata service")
+			logger.Info("Looking up instance id from metadata service")
 			instanceID, err = ec2metadata.New(sess).GetMetadata("instance-id")
 			if err != nil {
-				log.WithError(err).Fatal("Failed to lookup instance id")
+				logger.WithError(err).Fatal("Failed to lookup instance id")
 			}
 		}
 
@@ -98,17 +99,17 @@ func main() {
 		if cloudwatchGroup != "" {
 			hook, err := logrus_cloudwatchlogs.NewHook(cloudwatchGroup, cloudwatchStream, aws.NewConfig())
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 
-			log.WithFields(log.Fields{
+			logger.WithFields(logrus.Fields{
 				"group":  cloudwatchGroup,
 				"stream": cloudwatchStream,
 			}).Info("Writing logs to CloudWatch")
 
-			log.AddHook(hook)
+			logger.AddHook(hook)
 			if !jsonLogging {
-				log.SetFormatter(&log.TextFormatter{
+				logger.SetFormatter(&logrus.TextFormatter{
 					DisableColors:    true,
 					DisableTimestamp: true,
 				})
@@ -127,13 +128,13 @@ func main() {
 
 		go func() {
 			for signal := range sigs {
-				log.WithField("signal", signal.String()).Info("Received signal: shutting down...")
+				logger.WithField("signal", signal.String()).Info("Received signal: shutting down...")
 				cancel()
 				break
 			}
 		}()
 
-		daemon := lifecycled.New(instanceID, lifecycled.NewFileHandler(handler))
+		daemon := lifecycled.New(instanceID, lifecycled.NewFileHandler(handler), logger)
 
 		if spotListener {
 			daemon.AddListener(lifecycled.NewSpotListener(

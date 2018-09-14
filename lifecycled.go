@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // Daemon is what orchestrates the listening and execution of the handler on a termination notice.
@@ -16,19 +16,23 @@ type Daemon struct {
 	instanceID string
 	handler    Handler
 	listeners  []Listener
+	logger     *logrus.Logger
 }
 
 // New creates a new lifecycle Daemon.
-func New(instanceID string, handler Handler, listeners ...Listener) *Daemon {
+func New(instanceID string, handler Handler, logger *logrus.Logger, listeners ...Listener) *Daemon {
 	return &Daemon{
 		instanceID: instanceID,
 		handler:    handler,
 		listeners:  listeners,
+		logger:     logger,
 	}
 }
 
 // Start the Daemon.
 func (d *Daemon) Start(ctx context.Context) error {
+	log := d.logger.WithField("instanceId", d.instanceID)
+
 	// Use a buffered channel to avoid deadlocking a goroutine when we stop listening
 	notices := make(chan TerminationNotice, len(d.listeners))
 	defer close(notices)
@@ -49,7 +53,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 		go func() {
 			defer wg.Done()
 
-			if err := listener.Start(listenerCtx, notices); err != nil {
+			if err := listener.Start(listenerCtx, notices, l); err != nil {
 				l.WithError(err).Error("Failed to start listener")
 				stopListening()
 			} else {
@@ -73,7 +77,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 			l := log.WithField("notice", n.Type())
 			l.Info("Received termination notice: executing handler")
 
-			start, err := time.Now(), n.Handle(ctx, d.handler)
+			start, err := time.Now(), n.Handle(ctx, d.handler, l)
 			l = l.WithField("duration", time.Since(start).String())
 			if err != nil {
 				l.WithError(err).Error("Failed to execute handler")
@@ -92,13 +96,13 @@ func (d *Daemon) AddListener(l Listener) {
 // Listener ...
 type Listener interface {
 	Type() string
-	Start(context.Context, chan<- TerminationNotice) error
+	Start(context.Context, chan<- TerminationNotice, *logrus.Entry) error
 }
 
 // TerminationNotice ...
 type TerminationNotice interface {
 	Type() string
-	Handle(context.Context, Handler) error
+	Handle(context.Context, Handler, *logrus.Entry) error
 }
 
 // Handler ...
