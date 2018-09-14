@@ -43,7 +43,7 @@ func TestSpotListener(t *testing.T) {
 		interrupt       bool
 	}{
 		{
-			description:     "sends notice if a termination time is found",
+			description:     "sends notice if a termination notice is found",
 			instanceID:      "i-00000000000",
 			terminationTime: "2006-01-02T15:04:05Z01:00",
 			expectNotice:    true,
