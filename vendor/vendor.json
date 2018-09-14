@@ -215,8 +215,14 @@
 		{
 			"checksumSHA1": "P2+Mby00TG2KXcfhiVoNoqIT1Kc=",
 			"path": "github.com/aws/aws-sdk-go/service/autoscaling",
-			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
-			"revisionTime": "2018-08-28T19:42:26Z"
+			"revision": "08356ca48321d30b25ff97530d4a58fa3754322d",
+			"revisionTime": "2018-09-11T19:37:55Z"
+		},
+		{
+			"checksumSHA1": "4j/HcAfaGuMIJGy4AlWME47f+u0=",
+			"path": "github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface",
+			"revision": "08356ca48321d30b25ff97530d4a58fa3754322d",
+			"revisionTime": "2018-09-11T19:37:55Z"
 		},
 		{
 			"checksumSHA1": "nGSD4idK9hW8o3U4gLGLESYCpwE=",
@@ -293,6 +299,12 @@
 			"revisionTime": "2018-09-04T20:21:35Z"
 		},
 		{
+			"checksumSHA1": "KW0/P62Hm8oTOljdBqNWTyX5MEk=",
+			"path": "github.com/sirupsen/logrus/hooks/test",
+			"revision": "f3df9aeffda7c12bd9f5a03f9251d75d35993165",
+			"revisionTime": "2018-09-08T09:18:16Z"
+		},
+		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
 			"path": "golang.org/x/crypto/ssh/terminal",
 			"revision": "614d502a4dac94afa3a6ce146bd1736da82514c6",
@@ -311,5 +323,5 @@
 			"revisionTime": "2018-08-17T08:25:03Z"
 		}
 	],
-	"rootPath": "github.com/buildkite/lifecycled"
+	"rootPath": "github.com/itsdalmo/lifecycled"
 }

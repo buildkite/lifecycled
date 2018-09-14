@@ -3,27 +3,25 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/itsdalmo/lifecycled"
 
 	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 var (
 	Version string
-)
-
-const (
-	metadataURLInstanceID = "http://169.254.169.254/latest/meta-data/instance-id"
 )
 
 func main() {
@@ -37,6 +35,7 @@ func main() {
 	var (
 		instanceID       string
 		snsTopic         string
+		spotListener     bool
 		handler          *os.File
 		jsonLogging      bool
 		debugLogging     bool
@@ -48,8 +47,10 @@ func main() {
 		StringVar(&instanceID)
 
 	app.Flag("sns-topic", "The SNS topic that receives events").
-		Required().
 		StringVar(&snsTopic)
+
+	app.Flag("spot", "Listen for spot termination notices").
+		BoolVar(&spotListener)
 
 	app.Flag("handler", "The script to invoke to handle events").
 		FileVar(&handler)
@@ -67,23 +68,28 @@ func main() {
 		BoolVar(&debugLogging)
 
 	app.Action(func(c *kingpin.ParseContext) error {
+		logger := logrus.New()
 		if jsonLogging {
-			log.SetFormatter(&log.JSONFormatter{})
+			logger.SetFormatter(&logrus.JSONFormatter{})
 		} else {
-			log.SetFormatter(&log.TextFormatter{})
+			logger.SetFormatter(&logrus.TextFormatter{})
 		}
 
 		if debugLogging {
-			log.SetLevel(log.DebugLevel)
+			logger.SetLevel(logrus.DebugLevel)
+		}
+
+		sess, err := session.NewSession()
+		if err != nil {
+			logger.WithError(err).Fatal("Failed to create new aws session")
 		}
 
 		if instanceID == "" {
-			log.Infof("Looking up instance id from metadata service")
-			id, err := getInstanceID()
+			logger.Info("Looking up instance id from metadata service")
+			instanceID, err = ec2metadata.New(sess).GetMetadata("instance-id")
 			if err != nil {
-				log.Fatalf("Failed to lookup instance id: %v", err)
+				logger.WithError(err).Fatal("Failed to lookup instance id")
 			}
-			instanceID = id
 		}
 
 		if cloudwatchStream == "" {
@@ -93,34 +99,27 @@ func main() {
 		if cloudwatchGroup != "" {
 			hook, err := logrus_cloudwatchlogs.NewHook(cloudwatchGroup, cloudwatchStream, aws.NewConfig())
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 
-			log.Infof("Writing logs to Cloudwatch Group %s, Stream %s", cloudwatchGroup, cloudwatchStream)
-			log.AddHook(hook)
+			logger.WithFields(logrus.Fields{
+				"group":  cloudwatchGroup,
+				"stream": cloudwatchStream,
+			}).Info("Writing logs to CloudWatch")
 
+			logger.AddHook(hook)
 			if !jsonLogging {
-				log.SetFormatter(&log.TextFormatter{
+				logger.SetFormatter(&logrus.TextFormatter{
 					DisableColors:    true,
 					DisableTimestamp: true,
 				})
 			}
 		}
 
-		sess, err := session.NewSession()
-		if err != nil {
-			log.WithError(err).Fatal("Failed to create new session")
-		}
-
-		sigs := make(chan os.Signal, 2)
+		sigs := make(chan os.Signal)
 		defer close(sigs)
 
-		signal.Notify(sigs,
-			syscall.SIGHUP,
-			syscall.SIGINT,
-			syscall.SIGTERM,
-			syscall.SIGQUIT,
-			syscall.SIGPIPE)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		defer signal.Stop(sigs)
 
 		// Create an execution context for the daemon that can be cancelled on OS signal
@@ -129,45 +128,38 @@ func main() {
 
 		go func() {
 			for signal := range sigs {
-				log.Infof("Received signal (%s) shutting down...", signal)
+				logger.WithField("signal", signal.String()).Info("Received signal: shutting down...")
 				cancel()
 				break
 			}
 		}()
 
-		daemon := Daemon{
-			InstanceID:  instanceID,
-			AutoScaling: autoscaling.New(sess),
-			Handler:     handler,
-			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
+		daemon := lifecycled.New(instanceID, lifecycled.NewFileHandler(handler), logger)
+
+		if spotListener {
+			daemon.AddListener(lifecycled.NewSpotListener(
+				instanceID,
+				ec2metadata.New(sess),
+			))
 		}
 
-		err = daemon.Start(ctx)
-		if err != nil {
-			log.Error(err)
+		if snsTopic != "" {
+			daemon.AddListener(lifecycled.NewAutoscalingListener(
+				instanceID,
+				lifecycled.NewQueue(
+					generateQueueName(instanceID),
+					snsTopic,
+					sqs.New(sess),
+					sns.New(sess),
+				),
+				autoscaling.New(sess),
+			))
 		}
-		return err
+
+		return daemon.Start(ctx)
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
-}
-
-func getInstanceID() (string, error) {
-	res, err := http.Get(metadataURLInstanceID)
-	if err != nil {
-		return "", err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Got a %d response from metatadata service", res.StatusCode)
-	}
-
-	id, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
 }
 
 func generateQueueName(instanceID string) string {
