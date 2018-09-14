@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// AutoscalingClient for testing purposes (TODO: Gomock).
+// AutoscalingClient for testing purposes
 //go:generate mockgen -destination=mocks/mock_autoscaling_client.go -package=mocks github.com/itsdalmo/lifecycled AutoscalingClient
 type AutoscalingClient autoscalingiface.AutoScalingAPI
 
