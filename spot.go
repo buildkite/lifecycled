@@ -59,7 +59,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNoti
 				continue
 			}
 			t, err := time.Parse("2006-01-02T15:04:05Z", out)
-			if out == "" {
+			if err != nil {
 				log.WithError(err).Error("Failed to parse termination time")
 				continue
 			}
