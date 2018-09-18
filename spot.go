@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // NewSpotListener ...
@@ -33,7 +33,7 @@ func (l *SpotListener) Type() string {
 }
 
 // Start the spot termination notice listener.
-func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNotice) error {
+func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNotice, log *logrus.Entry) error {
 	if !l.metadata.Available() {
 		return errors.New("ec2 metadata is not available")
 	}
@@ -85,6 +85,6 @@ func (n *spotTerminationNotice) Type() string {
 	return n.noticeType
 }
 
-func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler) error {
+func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
 	return handler.Execute(ctx, n.instanceID, n.transition)
 }
