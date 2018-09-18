@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,9 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/buildkite/lifecycled"
 
 	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
@@ -135,35 +131,31 @@ func main() {
 			}
 		}()
 
-		daemon := lifecycled.NewDaemon(instanceID, lifecycled.NewFileHandler(handler), logger)
+		handler := lifecycled.NewFileHandler(handler)
+		daemon := lifecycled.New(&lifecycled.Config{
+			InstanceID:   instanceID,
+			SNSTopic:     snsTopic,
+			SpotListener: spotListener,
+		}, sess, logger)
 
-		if spotListener {
-			daemon.AddListener(lifecycled.NewSpotListener(
-				instanceID,
-				ec2metadata.New(sess),
-				5*time.Second,
-			))
+		notice, err := daemon.Start(ctx)
+		if err != nil {
+			return err
 		}
+		if notice != nil {
+			log := logger.WithFields(logrus.Fields{"instanceId": instanceID, "notice": notice.Type()})
+			log.Info("Executing handler")
 
-		if snsTopic != "" {
-			daemon.AddListener(lifecycled.NewAutoscalingListener(
-				instanceID,
-				lifecycled.NewQueue(
-					generateQueueName(instanceID),
-					snsTopic,
-					sqs.New(sess),
-					sns.New(sess),
-				),
-				autoscaling.New(sess),
-			))
+			start, err := time.Now(), notice.Handle(ctx, handler, log)
+			log = log.WithField("duration", time.Since(start).String())
+			if err != nil {
+				log.WithError(err).Error("Failed to execute handler")
+			}
+			log.Info("Handler finished succesfully")
+
 		}
-
-		return daemon.Start(ctx)
+		return nil
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
-}
-
-func generateQueueName(instanceID string) string {
-	return fmt.Sprintf("lifecycled-%s", instanceID)
 }
