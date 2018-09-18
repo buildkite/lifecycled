@@ -12,11 +12,12 @@ import (
 )
 
 // NewSpotListener ...
-func NewSpotListener(instanceID string, metadata *ec2metadata.EC2Metadata) *SpotListener {
+func NewSpotListener(instanceID string, metadata *ec2metadata.EC2Metadata, interval time.Duration) *SpotListener {
 	return &SpotListener{
 		listenerType: "spot",
 		instanceID:   instanceID,
 		metadata:     metadata,
+		interval:     interval,
 	}
 }
 
@@ -25,6 +26,7 @@ type SpotListener struct {
 	listenerType string
 	instanceID   string
 	metadata     *ec2metadata.EC2Metadata
+	interval     time.Duration
 }
 
 // Type returns a string describing the listener type.
@@ -41,7 +43,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNoti
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-time.NewTicker(time.Second * 5).C:
+		case <-time.NewTicker(l.interval).C:
 			log.Debug("Polling ec2 metadata for spot termination notices")
 
 			out, err := l.metadata.GetMetadata("spot/termination-time")

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/aws/aws-sdk-go/aws"
@@ -140,6 +141,7 @@ func main() {
 			daemon.AddListener(lifecycled.NewSpotListener(
 				instanceID,
 				ec2metadata.New(sess),
+				5*time.Second,
 			))
 		}
 
