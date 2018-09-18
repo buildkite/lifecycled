@@ -11,6 +11,10 @@ test:
 	go vet -v ./...
 	go test -race -v ./...
 
+.PHONY: generate
+generate:
+	go generate ./...
+
 .PHONY: clean
 clean:
 	rm -f lifecycled

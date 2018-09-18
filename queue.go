@@ -37,10 +37,12 @@ const (
 `
 )
 
-// SQSClient for testing purposes (TODO: Gomock).
+// SQSClient for testing purposes
+//go:generate mockgen -destination=mocks/mock_sqs_client.go -package=mocks github.com/buildkite/lifecycled SQSClient
 type SQSClient sqsiface.SQSAPI
 
-// SNSClient for testing purposes (TODO: Gomock).
+// SNSClient for testing purposes
+//go:generate mockgen -destination=mocks/mock_sns_client.go -package=mocks github.com/buildkite/lifecycled SNSClient
 type SNSClient snsiface.SNSAPI
 
 // Queue manages the SQS queue and SNS subscription.
