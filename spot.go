@@ -2,65 +2,89 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
-	"net/http"
+	"errors"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	metadataURLTerminationTime = "http://169.254.169.254/latest/meta-data/spot/termination-time"
-	terminationTransition      = "ec2:SPOT_INSTANCE_TERMINATION"
-	terminationTimeFormat      = "2006-01-02T15:04:05Z"
-)
+// NewSpotListener ...
+func NewSpotListener(instanceID string, metadata *ec2metadata.EC2Metadata) *SpotListener {
+	return &SpotListener{
+		listenerType: "spot",
+		instanceID:   instanceID,
+		metadata:     metadata,
+	}
+}
 
-func pollSpotTermination(ctx context.Context) chan time.Time {
-	ch := make(chan time.Time)
+// SpotListener ...
+type SpotListener struct {
+	listenerType string
+	instanceID   string
+	metadata     *ec2metadata.EC2Metadata
+}
 
-	log.Debugf("Polling metadata service for spot termination notices")
+// Type returns a string describing the listener type.
+func (l *SpotListener) Type() string {
+	return l.listenerType
+}
 
-	go func() {
-		// Close channel before returning since this (goroutine) is the sending side.
-		defer close(ch)
-		retry := time.NewTicker(time.Second * 5).C
-	Loop:
-		for {
-			select {
-			case <-ctx.Done():
-				break Loop
-			case <-retry:
-				res, err := http.Get(metadataURLTerminationTime)
-				if err != nil {
-					log.WithError(err).Info("Failed to query metadata service")
+// Start the spot termination notice listener.
+func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNotice) error {
+	if !l.metadata.Available() {
+		return errors.New("ec2 metadata is not available")
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.NewTicker(time.Second * 5).C:
+			log.Debug("Polling ec2 metadata for spot termination notices")
+
+			out, err := l.metadata.GetMetadata("spot/termination-time")
+			if err != nil {
+				if e, ok := err.(awserr.Error); ok && strings.Contains(e.OrigErr().Error(), "404") {
+					// Metadata returns 404 when there is no termination notice available
+					continue
+				} else {
+					log.WithError(err).Warn("Failed to get spot termination")
 					continue
 				}
-
-				// We read the body immediately so that we can close the body in one place
-				// and still use 'continue' if any of our conditions are false.
-				body, err := ioutil.ReadAll(res.Body)
-				res.Body.Close()
-				if err != nil {
-					log.WithError(err).Info("Failed to read response from metadata service")
-					continue
-				}
-
-				// will return 200 OK with termination notice
-				if res.StatusCode != http.StatusOK {
-					continue
-				}
-
-				// if 200 OK, expect a body like 2015-01-05T18:02:00Z
-				t, err := time.Parse(terminationTimeFormat, string(body))
-				if err != nil {
-					log.WithError(err).Info("Failed to parse time in termination notice")
-					continue
-				}
-
-				ch <- t
 			}
+			if out == "" {
+				log.Error("Empty response from metadata")
+				continue
+			}
+			t, err := time.Parse("2006-01-02T15:04:05Z", out)
+			if err != nil {
+				log.WithError(err).Error("Failed to parse termination time")
+				continue
+			}
+			notices <- &spotTerminationNotice{
+				noticeType:      l.Type(),
+				instanceID:      l.instanceID,
+				transition:      "ec2:SPOT_INSTANCE_TERMINATION",
+				terminationTime: t,
+			}
+			return nil
 		}
-	}()
+	}
+}
 
-	return ch
+type spotTerminationNotice struct {
+	noticeType      string
+	instanceID      string
+	transition      string
+	terminationTime time.Time
+}
+
+func (n *spotTerminationNotice) Type() string {
+	return n.noticeType
+}
+
+func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler) error {
+	return handler.Execute(ctx, n.instanceID, n.transition)
 }

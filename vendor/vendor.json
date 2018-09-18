@@ -215,8 +215,14 @@
 		{
 			"checksumSHA1": "P2+Mby00TG2KXcfhiVoNoqIT1Kc=",
 			"path": "github.com/aws/aws-sdk-go/service/autoscaling",
-			"revision": "46ffe7480c9d567070fab0ed39912241bbc77449",
-			"revisionTime": "2018-08-28T19:42:26Z"
+			"revision": "08356ca48321d30b25ff97530d4a58fa3754322d",
+			"revisionTime": "2018-09-11T19:37:55Z"
+		},
+		{
+			"checksumSHA1": "4j/HcAfaGuMIJGy4AlWME47f+u0=",
+			"path": "github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface",
+			"revision": "08356ca48321d30b25ff97530d4a58fa3754322d",
+			"revisionTime": "2018-09-11T19:37:55Z"
 		},
 		{
 			"checksumSHA1": "nGSD4idK9hW8o3U4gLGLESYCpwE=",

@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 
 	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
 	log "github.com/sirupsen/logrus"
@@ -20,10 +21,6 @@ import (
 
 var (
 	Version string
-)
-
-const (
-	metadataURLInstanceID = "http://169.254.169.254/latest/meta-data/instance-id"
 )
 
 func main() {
@@ -37,6 +34,7 @@ func main() {
 	var (
 		instanceID       string
 		snsTopic         string
+		spotListener     bool
 		handler          *os.File
 		jsonLogging      bool
 		debugLogging     bool
@@ -48,8 +46,10 @@ func main() {
 		StringVar(&instanceID)
 
 	app.Flag("sns-topic", "The SNS topic that receives events").
-		Required().
 		StringVar(&snsTopic)
+
+	app.Flag("spot", "Listen for spot termination notices").
+		BoolVar(&spotListener)
 
 	app.Flag("handler", "The script to invoke to handle events").
 		FileVar(&handler)
@@ -77,13 +77,17 @@ func main() {
 			log.SetLevel(log.DebugLevel)
 		}
 
+		sess, err := session.NewSession()
+		if err != nil {
+			log.WithError(err).Fatal("Failed to create new aws session")
+		}
+
 		if instanceID == "" {
-			log.Infof("Looking up instance id from metadata service")
-			id, err := getInstanceID()
+			log.Info("Looking up instance id from metadata service")
+			instanceID, err = ec2metadata.New(sess).GetMetadata("instance-id")
 			if err != nil {
-				log.Fatalf("Failed to lookup instance id: %v", err)
+				log.WithError(err).Fatal("Failed to lookup instance id")
 			}
-			instanceID = id
 		}
 
 		if cloudwatchStream == "" {
@@ -96,9 +100,12 @@ func main() {
 				log.Fatal(err)
 			}
 
-			log.Infof("Writing logs to Cloudwatch Group %s, Stream %s", cloudwatchGroup, cloudwatchStream)
-			log.AddHook(hook)
+			log.WithFields(log.Fields{
+				"group":  cloudwatchGroup,
+				"stream": cloudwatchStream,
+			}).Info("Writing logs to CloudWatch")
 
+			log.AddHook(hook)
 			if !jsonLogging {
 				log.SetFormatter(&log.TextFormatter{
 					DisableColors:    true,
@@ -107,20 +114,10 @@ func main() {
 			}
 		}
 
-		sess, err := session.NewSession()
-		if err != nil {
-			log.WithError(err).Fatal("Failed to create new session")
-		}
-
-		sigs := make(chan os.Signal, 2)
+		sigs := make(chan os.Signal)
 		defer close(sigs)
 
-		signal.Notify(sigs,
-			syscall.SIGHUP,
-			syscall.SIGINT,
-			syscall.SIGTERM,
-			syscall.SIGQUIT,
-			syscall.SIGPIPE)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		defer signal.Stop(sigs)
 
 		// Create an execution context for the daemon that can be cancelled on OS signal
@@ -129,45 +126,38 @@ func main() {
 
 		go func() {
 			for signal := range sigs {
-				log.Infof("Received signal (%s) shutting down...", signal)
+				log.WithField("signal", signal.String()).Info("Received signal: shutting down...")
 				cancel()
 				break
 			}
 		}()
 
-		daemon := Daemon{
-			InstanceID:  instanceID,
-			AutoScaling: autoscaling.New(sess),
-			Handler:     handler,
-			Queue:       NewQueue(sess, generateQueueName(instanceID), snsTopic),
+		daemon := NewDaemon(instanceID, NewFileHandler(handler))
+
+		if spotListener {
+			daemon.AddListener(NewSpotListener(
+				instanceID,
+				ec2metadata.New(sess),
+			))
 		}
 
-		err = daemon.Start(ctx)
-		if err != nil {
-			log.Error(err)
+		if snsTopic != "" {
+			daemon.AddListener(NewAutoscalingListener(
+				instanceID,
+				NewQueue(
+					generateQueueName(instanceID),
+					snsTopic,
+					sqs.New(sess),
+					sns.New(sess),
+				),
+				autoscaling.New(sess),
+			))
 		}
-		return err
+
+		return daemon.Start(ctx)
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
-}
-
-func getInstanceID() (string, error) {
-	res, err := http.Get(metadataURLInstanceID)
-	if err != nil {
-		return "", err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Got a %d response from metatadata service", res.StatusCode)
-	}
-
-	id, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
 }
 
 func generateQueueName(instanceID string) string {

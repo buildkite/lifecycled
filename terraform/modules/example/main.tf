@@ -79,12 +79,23 @@ data "aws_iam_policy_document" "permissions" {
 
     actions = [
       "logs:CreateLogStream",
-      "logs:CreateLogGroup",
       "logs:PutLogEvents",
     ]
 
     resources = [
       "${aws_cloudwatch_log_group.main.arn}",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "logs:DescribeLogStreams",
+    ]
+
+    resources = [
+      "*",
     ]
   }
 
