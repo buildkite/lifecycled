@@ -133,9 +133,10 @@ func main() {
 
 		handler := lifecycled.NewFileHandler(handler)
 		daemon := lifecycled.New(&lifecycled.Config{
-			InstanceID:   instanceID,
-			SNSTopic:     snsTopic,
-			SpotListener: spotListener,
+			InstanceID:           instanceID,
+			SNSTopic:             snsTopic,
+			SpotListener:         spotListener,
+			SpotListenerInterval: 5 * time.Second,
 		}, sess, logger)
 
 		notice, err := daemon.Start(ctx)
