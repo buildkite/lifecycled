@@ -3,7 +3,7 @@ FLAGS=-s -w -X main.Version=$(VERSION)
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 lifecycled: *.go
-	go build -o lifecycled -ldflags="$(FLAGS)" -v cmd/main.go
+	go build -o lifecycled -ldflags="$(FLAGS)" -v ./cmd/lifecycled
 
 .PHONY: test
 test:
@@ -22,4 +22,4 @@ clean:
 .PHONY: release
 release:
 	go get github.com/mitchellh/gox
-	gox -ldflags="$(FLAGS)" -output="build/{{.Dir}}-{{.OS}}-{{.Arch}}" -osarch="linux/amd64 windows/amd64" ./cmd
+	gox -ldflags="$(FLAGS)" -output="build/{{.Dir}}-{{.OS}}-{{.Arch}}" -osarch="linux/amd64 windows/amd64" ./cmd/lifecycled
