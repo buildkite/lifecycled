@@ -59,11 +59,10 @@ func NewDaemon(
 
 // Config for the Lifecycled Daemon.
 type Config struct {
-	InstanceID                 string
-	SNSTopic                   string
-	LifecycleHeartbeatInterval time.Duration
-	SpotListener               bool
-	SpotListenerInterval       time.Duration
+	InstanceID           string
+	SNSTopic             string
+	SpotListener         bool
+	SpotListenerInterval time.Duration
 }
 
 // Daemon is what orchestrates the listening and execution of the handler on a termination notice.
