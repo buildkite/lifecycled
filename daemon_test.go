@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -151,7 +152,7 @@ func TestDaemon(t *testing.T) {
 			})
 
 			// Create and start the daemon
-			logger, _ := logrus.NewNullLogger()
+			logger, hook := logrus.NewNullLogger()
 			ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
 			defer cancel()
 
@@ -167,7 +168,18 @@ func TestDaemon(t *testing.T) {
 
 			if err != nil {
 				if !tc.expectDaemonError {
-					t.Errorf("unexpected error occured: %s", err)
+					// Include log entries (that are unique)
+					logs := make(map[string]string)
+					for _, e := range hook.AllEntries() {
+						if _, ok := logs[e.Message]; !ok {
+							logs[e.Message] = e.Level.String()
+						}
+					}
+					var messages strings.Builder
+					for k, v := range logs {
+						fmt.Fprintf(&messages, "%s - %s\n", v, k)
+					}
+					t.Errorf("unexpected error occured: %s: unique logs entries:\n%s", err, messages.String())
 				}
 			} else {
 				if tc.expectDaemonError {
