@@ -1,4 +1,4 @@
-package main
+package lifecycled
 
 import (
 	"context"
@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
-// AutoscalingClient for testing purposes (TODO: Gomock).
+// AutoscalingClient for testing purposes
+//go:generate mockgen -destination=mocks/mock_autoscaling_client.go -package=mocks github.com/buildkite/lifecycled AutoscalingClient
 type AutoscalingClient autoscalingiface.AutoScalingAPI
 
 // Envelope ...
@@ -56,20 +57,24 @@ func (l *AutoscalingListener) Type() string {
 }
 
 // Start the autoscaling lifecycle hook listener.
-func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- TerminationNotice) error {
+func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- TerminationNotice, log *logrus.Entry) error {
+	log.WithField("queue", l.queue.name).Debug("Creating sqs queue")
 	if err := l.queue.Create(); err != nil {
 		return err
 	}
 	defer func() {
+		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
 		if err := l.queue.Delete(); err != nil {
 			log.WithError(err).Error("Failed to delete queue")
 		}
 	}()
 
+	log.WithField("topic", l.queue.topicArn).Debug("Subscribing queue to sns topic")
 	if err := l.queue.Subscribe(); err != nil {
 		return err
 	}
 	defer func() {
+		log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
 		if err := l.queue.Unsubscribe(); err != nil {
 			log.WithError(err).Error("Failed to unsubscribe from sns topic")
 		}
@@ -80,6 +85,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 		case <-ctx.Done():
 			return nil
 		default:
+			log.WithField("queueURL", l.queue.url).Debug("Polling sqs for messages")
 			messages, err := l.queue.GetMessages(ctx)
 			if err != nil {
 				log.WithError(err).Warn("Failed to get messages from SQS")
@@ -98,7 +104,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 					continue
 				}
 
-				log.WithFields(log.Fields{
+				log.WithFields(logrus.Fields{
 					"type":    env.Type,
 					"subject": env.Subject,
 				}).Debug("Received an SQS message")
@@ -140,7 +146,7 @@ func (n *autoscalingTerminationNotice) Type() string {
 	return n.noticeType
 }
 
-func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handler) error {
+func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
 	defer func() {
 		_, err := n.autoscaling.CompleteLifecycleAction(&autoscaling.CompleteLifecycleActionInput{
 			AutoScalingGroupName:  aws.String(n.message.GroupName),

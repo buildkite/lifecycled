@@ -1,34 +1,81 @@
-package main
+package lifecycled
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/sirupsen/logrus"
 )
+
+// New creates a new lifecycle Daemon.
+func New(config *Config, sess *session.Session, logger *logrus.Logger) *Daemon {
+	return NewDaemon(
+		config,
+		sqs.New(sess),
+		sns.New(sess),
+		autoscaling.New(sess),
+		ec2metadata.New(sess),
+		logger,
+	)
+}
+
+// NewDaemon creates a new Daemon.
+func NewDaemon(
+	config *Config,
+	sqsClient SQSClient,
+	snsClient SNSClient,
+	asgClient AutoscalingClient,
+	metadata *ec2metadata.EC2Metadata,
+	logger *logrus.Logger,
+) *Daemon {
+	daemon := &Daemon{
+		instanceID: config.InstanceID,
+		logger:     logger,
+	}
+	if config.SpotListener {
+		daemon.AddListener(NewSpotListener(config.InstanceID, metadata, config.SpotListenerInterval))
+	}
+	if config.SNSTopic != "" {
+		queue := NewQueue(
+			fmt.Sprintf("lifecycled-%s", config.InstanceID),
+			config.SNSTopic,
+			sqsClient,
+			snsClient,
+		)
+		daemon.AddListener(NewAutoscalingListener(config.InstanceID, queue, asgClient))
+	}
+	return daemon
+}
+
+// Config for the Lifecycled Daemon.
+type Config struct {
+	InstanceID           string
+	SNSTopic             string
+	SpotListener         bool
+	SpotListenerInterval time.Duration
+}
 
 // Daemon is what orchestrates the listening and execution of the handler on a termination notice.
 type Daemon struct {
 	instanceID string
-	handler    Handler
 	listeners  []Listener
-}
-
-// NewDaemon creates a new Daemon.
-func NewDaemon(instanceID string, handler Handler, listeners ...Listener) *Daemon {
-	return &Daemon{
-		instanceID: instanceID,
-		handler:    handler,
-		listeners:  listeners,
-	}
+	logger     *logrus.Logger
 }
 
 // Start the Daemon.
-func (d *Daemon) Start(ctx context.Context) error {
+func (d *Daemon) Start(ctx context.Context) (notice TerminationNotice, err error) {
+	log := d.logger.WithField("instanceId", d.instanceID)
+
 	// Use a buffered channel to avoid deadlocking a goroutine when we stop listening
 	notices := make(chan TerminationNotice, len(d.listeners))
 	defer close(notices)
@@ -49,7 +96,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 		go func() {
 			defer wg.Done()
 
-			if err := listener.Start(listenerCtx, notices); err != nil {
+			if err := listener.Start(listenerCtx, notices, l); err != nil {
 				l.WithError(err).Error("Failed to start listener")
 				stopListening()
 			} else {
@@ -60,28 +107,23 @@ func (d *Daemon) Start(ctx context.Context) error {
 	}
 
 	log.Info("Waiting for termination notices")
+
+Listener:
 	for {
 		select {
-		case <-ctx.Done():
-			return nil
 		case <-listenerCtx.Done():
-			return errors.New("an error occured")
-		case n := <-notices:
-			// Stop listeners immediately since we will not process any more notices
-			stopListening()
-
-			l := log.WithField("notice", n.Type())
-			l.Info("Received termination notice: executing handler")
-
-			start, err := time.Now(), n.Handle(ctx, d.handler)
-			l = l.WithField("duration", time.Since(start).String())
-			if err != nil {
-				l.WithError(err).Error("Failed to execute handler")
+			// Make sure the underlying context was not cancelled
+			if ctx.Err() != context.Canceled {
+				err = errors.New("an error occured")
 			}
-			l.Info("Handler finished succesfully")
-			return nil
+			break Listener
+		case n := <-notices:
+			log.WithField("notice", n.Type()).Info("Received termination notice")
+			notice = n
+			break Listener
 		}
 	}
+	return notice, err
 }
 
 // AddListener to the Daemon.
@@ -92,13 +134,13 @@ func (d *Daemon) AddListener(l Listener) {
 // Listener ...
 type Listener interface {
 	Type() string
-	Start(context.Context, chan<- TerminationNotice) error
+	Start(context.Context, chan<- TerminationNotice, *logrus.Entry) error
 }
 
 // TerminationNotice ...
 type TerminationNotice interface {
 	Type() string
-	Handle(context.Context, Handler) error
+	Handle(context.Context, Handler, *logrus.Entry) error
 }
 
 // Handler ...

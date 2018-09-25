@@ -2,21 +2,19 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/buildkite/lifecycled"
 
 	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -67,26 +65,27 @@ func main() {
 		BoolVar(&debugLogging)
 
 	app.Action(func(c *kingpin.ParseContext) error {
+		logger := logrus.New()
 		if jsonLogging {
-			log.SetFormatter(&log.JSONFormatter{})
+			logger.SetFormatter(&logrus.JSONFormatter{})
 		} else {
-			log.SetFormatter(&log.TextFormatter{})
+			logger.SetFormatter(&logrus.TextFormatter{})
 		}
 
 		if debugLogging {
-			log.SetLevel(log.DebugLevel)
+			logger.SetLevel(logrus.DebugLevel)
 		}
 
 		sess, err := session.NewSession()
 		if err != nil {
-			log.WithError(err).Fatal("Failed to create new aws session")
+			logger.WithError(err).Fatal("Failed to create new aws session")
 		}
 
 		if instanceID == "" {
-			log.Info("Looking up instance id from metadata service")
+			logger.Info("Looking up instance id from metadata service")
 			instanceID, err = ec2metadata.New(sess).GetMetadata("instance-id")
 			if err != nil {
-				log.WithError(err).Fatal("Failed to lookup instance id")
+				logger.WithError(err).Fatal("Failed to lookup instance id")
 			}
 		}
 
@@ -97,17 +96,17 @@ func main() {
 		if cloudwatchGroup != "" {
 			hook, err := logrus_cloudwatchlogs.NewHook(cloudwatchGroup, cloudwatchStream, aws.NewConfig())
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 
-			log.WithFields(log.Fields{
+			logger.WithFields(logrus.Fields{
 				"group":  cloudwatchGroup,
 				"stream": cloudwatchStream,
 			}).Info("Writing logs to CloudWatch")
 
-			log.AddHook(hook)
+			logger.AddHook(hook)
 			if !jsonLogging {
-				log.SetFormatter(&log.TextFormatter{
+				logger.SetFormatter(&logrus.TextFormatter{
 					DisableColors:    true,
 					DisableTimestamp: true,
 				})
@@ -126,40 +125,38 @@ func main() {
 
 		go func() {
 			for signal := range sigs {
-				log.WithField("signal", signal.String()).Info("Received signal: shutting down...")
+				logger.WithField("signal", signal.String()).Info("Received signal: shutting down...")
 				cancel()
 				break
 			}
 		}()
 
-		daemon := NewDaemon(instanceID, NewFileHandler(handler))
+		handler := lifecycled.NewFileHandler(handler)
+		daemon := lifecycled.New(&lifecycled.Config{
+			InstanceID:           instanceID,
+			SNSTopic:             snsTopic,
+			SpotListener:         spotListener,
+			SpotListenerInterval: 5 * time.Second,
+		}, sess, logger)
 
-		if spotListener {
-			daemon.AddListener(NewSpotListener(
-				instanceID,
-				ec2metadata.New(sess),
-			))
+		notice, err := daemon.Start(ctx)
+		if err != nil {
+			return err
 		}
+		if notice != nil {
+			log := logger.WithFields(logrus.Fields{"instanceId": instanceID, "notice": notice.Type()})
+			log.Info("Executing handler")
 
-		if snsTopic != "" {
-			daemon.AddListener(NewAutoscalingListener(
-				instanceID,
-				NewQueue(
-					generateQueueName(instanceID),
-					snsTopic,
-					sqs.New(sess),
-					sns.New(sess),
-				),
-				autoscaling.New(sess),
-			))
+			start, err := time.Now(), notice.Handle(ctx, handler, log)
+			log = log.WithField("duration", time.Since(start).String())
+			if err != nil {
+				log.WithError(err).Error("Failed to execute handler")
+			}
+			log.Info("Handler finished succesfully")
+
 		}
-
-		return daemon.Start(ctx)
+		return nil
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
-}
-
-func generateQueueName(instanceID string) string {
-	return fmt.Sprintf("lifecycled-%s", instanceID)
 }

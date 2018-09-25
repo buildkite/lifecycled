@@ -1,6 +1,6 @@
 /handler.sh
 build/
-lifecycled
+/lifecycled
 
 # Terraform
 **/.terraform

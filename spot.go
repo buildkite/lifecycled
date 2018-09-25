@@ -1,4 +1,4 @@
-package main
+package lifecycled
 
 import (
 	"context"
@@ -8,15 +8,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // NewSpotListener ...
-func NewSpotListener(instanceID string, metadata *ec2metadata.EC2Metadata) *SpotListener {
+func NewSpotListener(instanceID string, metadata *ec2metadata.EC2Metadata, interval time.Duration) *SpotListener {
 	return &SpotListener{
 		listenerType: "spot",
 		instanceID:   instanceID,
 		metadata:     metadata,
+		interval:     interval,
 	}
 }
 
@@ -25,6 +26,7 @@ type SpotListener struct {
 	listenerType string
 	instanceID   string
 	metadata     *ec2metadata.EC2Metadata
+	interval     time.Duration
 }
 
 // Type returns a string describing the listener type.
@@ -33,7 +35,7 @@ func (l *SpotListener) Type() string {
 }
 
 // Start the spot termination notice listener.
-func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNotice) error {
+func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNotice, log *logrus.Entry) error {
 	if !l.metadata.Available() {
 		return errors.New("ec2 metadata is not available")
 	}
@@ -41,7 +43,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNoti
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-time.NewTicker(time.Second * 5).C:
+		case <-time.NewTicker(l.interval).C:
 			log.Debug("Polling ec2 metadata for spot termination notices")
 
 			out, err := l.metadata.GetMetadata("spot/termination-time")
@@ -58,7 +60,7 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNoti
 				log.Error("Empty response from metadata")
 				continue
 			}
-			t, err := time.Parse("2006-01-02T15:04:05Z", out)
+			t, err := time.Parse(time.RFC3339, out)
 			if err != nil {
 				log.WithError(err).Error("Failed to parse termination time")
 				continue
@@ -85,6 +87,6 @@ func (n *spotTerminationNotice) Type() string {
 	return n.noticeType
 }
 
-func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler) error {
+func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
 	return handler.Execute(ctx, n.instanceID, n.transition)
 }
