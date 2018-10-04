@@ -182,5 +182,5 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 		}
 	}()
 
-	return handler.Execute(ctx, n.message.InstanceID, n.message.Transition)
+	return handler.Execute(ctx, n.message.Transition, n.message.InstanceID)
 }

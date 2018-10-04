@@ -145,7 +145,7 @@ type TerminationNotice interface {
 
 // Handler ...
 type Handler interface {
-	Execute(ctx context.Context, instanceID, transition string) error
+	Execute(ctx context.Context, args ...string) error
 }
 
 // NewFileHandler ...
@@ -159,8 +159,8 @@ type FileHandler struct {
 }
 
 // Execute the file handler.
-func (h *FileHandler) Execute(ctx context.Context, instanceID, transition string) error {
-	cmd := exec.CommandContext(ctx, h.file.Name(), instanceID, transition)
+func (h *FileHandler) Execute(ctx context.Context, args ...string) error {
+	cmd := exec.CommandContext(ctx, h.file.Name(), args...)
 	cmd.Env = os.Environ()
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
