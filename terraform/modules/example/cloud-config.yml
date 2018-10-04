@@ -1,7 +1,4 @@
 #cloud-config
-package_update: true
-packages:
-  - aws-cfn-bootstrap
 write_files:
   - path: "/etc/systemd/system/lifecycled.service"
     permissions: "0644"
@@ -23,23 +20,6 @@ write_files:
 
       [Install]
       WantedBy=multi-user.target
-  - path: "/usr/local/scripts/cloudformation-signal.sh"
-    permissions: "0744"
-    owner: "root"
-    content: |
-      #! /usr/bin/bash
-
-      set -euo pipefail
-
-      function await_unit() {
-        echo -n "Waiting for $1..."
-        while ! systemctl is-active $1 > /dev/null; do
-            sleep 1
-        done
-        echo "Done!"
-      }
-
-      await_unit lifecycled.service
   - path: "/usr/local/scripts/lifecycle-handler.sh"
     permissions: "0744"
     owner: "root"
@@ -52,13 +32,10 @@ write_files:
       sleep 120
       echo "goodbye from the handler"
 runcmd:
-  - | 
+  - |
     aws s3 cp s3://${artifact_bucket}/${artifact_key} /usr/local/bin/lifecycled
     chmod +x /usr/local/bin/lifecycled
     chown root:root /usr/local/bin/lifecycled
     echo "lifecycled ${artifact_etag} installed"
   - |
     systemctl enable lifecycled.service --now
-  - |
-    /usr/local/scripts/cloudformation-signal.sh
-    /opt/aws/bin/cfn-signal -e $? --stack ${stack_name} --resource AutoScalingGroup --region ${region}

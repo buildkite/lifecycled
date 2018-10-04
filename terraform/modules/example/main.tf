@@ -37,12 +37,12 @@ data "template_file" "main" {
 }
 
 resource "aws_launch_configuration" "main" {
-  name_prefix            = "${var.name_prefix}"
-  image_id               = "${var.instance_ami}"
-  instance_type          = "${var.instance_type}"
-  key_name               = "${var.instance_key}"
-  iam_instance_profile   = "${aws_iam_instance_profile.lifecycle.name}"
-  security_groups        = ["${aws_security_group.main.id}"]
+  name_prefix          = "${var.name_prefix}"
+  image_id             = "${var.instance_ami}"
+  instance_type        = "${var.instance_type}"
+  key_name             = "${var.instance_key}"
+  iam_instance_profile = "${aws_iam_instance_profile.lifecycle.name}"
+  security_groups      = ["${aws_security_group.main.id}"]
 
   user_data = "${data.template_file.main.rendered}"
 
@@ -59,7 +59,6 @@ resource "aws_autoscaling_group" "main" {
   min_size         = "0"
   desired_capacity = "${var.instance_count}"
   max_size         = "1"
-  tags              = ["${var.tags}"]
 
   lifecycle {
     create_before_destroy = true
@@ -70,6 +69,13 @@ resource "aws_security_group" "main" {
   name        = "${var.name_prefix}-sg"
   description = "Allow access to lifecycled instances"
   vpc_id      = "${var.vpc_id}"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 # Allow SSH ingress if a EC2 key pair is specified.
@@ -187,23 +193,29 @@ resource "aws_iam_instance_profile" "lifecycle" {
 # Execution role and policies for the lifecycle hook
 resource "aws_iam_role" "lifecycle" {
   name               = "${var.name_prefix}-lifecycle-role"
-  assume_role_policy = "${data.aws_iam_policy_document.asg_assume.json}"
+  assume_role_policy = "${data.aws_iam_policy_document.assume.json}"
+}
+
+resource "aws_iam_role_policy" "lifecycle-asg" {
+  name   = "${var.name_prefix}-lifecycle-asg-permissions"
+  role   = "${aws_iam_role.lifecycle.id}"
+  policy = "${data.aws_iam_policy_document.asg_permissions.json}"
 }
 
 resource "aws_iam_role_policy" "lifecycle" {
   name   = "${var.name_prefix}-lifecycle-permissions"
   role   = "${aws_iam_role.lifecycle.id}"
-  policy = "${data.aws_iam_policy_document.asg_permissions.json}"
+  policy = "${data.aws_iam_policy_document.permissions.json}"
 }
 
-data "aws_iam_policy_document" "asg_assume" {
+data "aws_iam_policy_document" "assume" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
     principals {
       type        = "Service"
-      identifiers = ["autoscaling.amazonaws.com"]
+      identifiers = ["ec2.amazonaws.com", "autoscaling.amazonaws.com"]
     }
   }
 }

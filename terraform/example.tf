@@ -2,6 +2,10 @@ terraform {
   required_version = "0.11.8"
 }
 
+provider "aws" {
+  version = "1.34.0"
+}
+
 # Use the default VPC and subnets
 data "aws_vpc" "main" {
   default = true
@@ -39,7 +43,7 @@ data "aws_ami" "linux2" {
 
 variable "instance_key" {
   description = "Name of EC2 Keypair"
-  default = "lifecycled-example"
+  default     = "lifecycled-example"
 }
 
 module "example" {
