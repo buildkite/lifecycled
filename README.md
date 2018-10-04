@@ -48,13 +48,13 @@ Handler scripts are used for things like shutting down services that need some t
 set -euo pipefail
 function await_shutdown() {
   echo -n "Waiting for $1..."
-  while ! systemctl is-active $1 > /dev/null; do
+  while systemctl is-active $1 > /dev/null; do
     sleep 1
   done
   echo "Done!"
 }
 systemctl stop myservice.service
-await_unit myservice.service
+await_shutdown myservice.service
 ```
 
 The handler script is passed the event that was received and the instance id, e.g `autoscaling:EC2_INSTANCE_TERMINATING i-001405f0fc67e3b12` for lifecycle events, or `ec2:SPOT_INSTANCE_TERMINATION i-001405f0fc67e3b12 2015-01-05T18:02:00Z` in the case of a spot termination.
