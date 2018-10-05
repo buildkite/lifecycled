@@ -41,7 +41,7 @@ resource "aws_launch_configuration" "main" {
   image_id             = "${var.instance_ami}"
   instance_type        = "${var.instance_type}"
   key_name             = "${var.instance_key}"
-  iam_instance_profile = "${aws_iam_instance_profile.lifecycle.name}"
+  iam_instance_profile = "${aws_iam_instance_profile.ec2.name}"
   security_groups      = ["${aws_security_group.main.id}"]
 
   user_data = "${data.template_file.main.rendered}"
@@ -62,6 +62,15 @@ resource "aws_autoscaling_group" "main" {
 
   lifecycle {
     create_before_destroy = true
+  }
+
+  initial_lifecycle_hook {
+    name                 = "${var.name_prefix}-lifecycle"
+    default_result       = "CONTINUE"
+    heartbeat_timeout    = 60
+    lifecycle_transition = "autoscaling:EC2_INSTANCE_TERMINATING"
+    notification_target_arn = "${aws_sns_topic.main.arn}"
+    role_arn                = "${aws_iam_role.lifecycle_hook.arn}"
   }
 }
 
@@ -169,53 +178,59 @@ data "aws_iam_policy_document" "permissions" {
   }
 }
 
-# SNS topic for the lifecycle hook
-resource "aws_sns_topic" "main" {
-  name = "${var.name_prefix}-lifecycle"
+resource "aws_iam_instance_profile" "ec2" {
+  name = "${var.name_prefix}-ec2-instance-profile"
+  role = "${aws_iam_role.ec2.name}"
 }
 
-# Lifecycle hook
-resource "aws_autoscaling_lifecycle_hook" "main" {
-  name                    = "${var.name_prefix}-lifecycle"
-  autoscaling_group_name  = "${aws_autoscaling_group.main.id}"
-  lifecycle_transition    = "autoscaling:EC2_INSTANCE_TERMINATING"
-  default_result          = "CONTINUE"
-  heartbeat_timeout       = "60"
-  notification_target_arn = "${aws_sns_topic.main.arn}"
-  role_arn                = "${aws_iam_role.lifecycle.arn}"
+resource "aws_iam_role" "ec2" {
+  name               = "${var.name_prefix}-ec2-role"
+  assume_role_policy = "${data.aws_iam_policy_document.ec2_assume.json}"
 }
 
-resource "aws_iam_instance_profile" "lifecycle" {
-  name = "${var.name_prefix}-lifecycle-instance-profile"
-  role = "${aws_iam_role.lifecycle.name}"
-}
-
-# Execution role and policies for the lifecycle hook
-resource "aws_iam_role" "lifecycle" {
-  name               = "${var.name_prefix}-lifecycle-role"
-  assume_role_policy = "${data.aws_iam_policy_document.assume.json}"
-}
-
-resource "aws_iam_role_policy" "lifecycle-asg" {
-  name   = "${var.name_prefix}-lifecycle-asg-permissions"
-  role   = "${aws_iam_role.lifecycle.id}"
-  policy = "${data.aws_iam_policy_document.asg_permissions.json}"
-}
-
-resource "aws_iam_role_policy" "lifecycle" {
-  name   = "${var.name_prefix}-lifecycle-permissions"
-  role   = "${aws_iam_role.lifecycle.id}"
+resource "aws_iam_role_policy" "ec2" {
+  name   = "${var.name_prefix}-ec2-permissions"
+  role   = "${aws_iam_role.ec2.id}"
   policy = "${data.aws_iam_policy_document.permissions.json}"
 }
 
-data "aws_iam_policy_document" "assume" {
+data "aws_iam_policy_document" "ec2_assume" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.amazonaws.com", "autoscaling.amazonaws.com"]
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# SNS topic for the lifecycle hook
+resource "aws_sns_topic" "main" {
+  name = "${var.name_prefix}-lifecycle"
+}
+
+# Execution role and policies for the lifecycle hook
+resource "aws_iam_role" "lifecycle_hook" {
+  name               = "${var.name_prefix}-lifecycle-role"
+  assume_role_policy = "${data.aws_iam_policy_document.asg_assume.json}"
+}
+
+resource "aws_iam_role_policy" "lifecycle_hook" {
+  name   = "${var.name_prefix}-lifecycle-asg-permissions"
+  role   = "${aws_iam_role.lifecycle_hook.id}"
+  policy = "${data.aws_iam_policy_document.asg_permissions.json}"
+}
+
+data "aws_iam_policy_document" "asg_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["autoscaling.amazonaws.com"]
     }
   }
 }
