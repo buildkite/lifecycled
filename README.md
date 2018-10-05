@@ -68,6 +68,15 @@ go get -u github.com/buildkite/lifecycled/tools/lifecycled-queue-cleaner
 lifecycled-queue-cleaner
 ```
 
+## Development
+
+Lifecycled is built with Golang 1.11 and modules.
+
+```bash
+export GO111MODULE=on
+go run ./cmd/lifecycled
+```
+
 ## Licence
 
 See [Licence.md](Licence.md) (MIT)
