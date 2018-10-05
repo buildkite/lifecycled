@@ -30,14 +30,14 @@ func main() {
 	app.DefaultEnvars()
 
 	var (
-		instanceID       string
-		snsTopic         string
-		spotListener     bool
-		handler          *os.File
-		jsonLogging      bool
-		debugLogging     bool
-		cloudwatchGroup  string
-		cloudwatchStream string
+		instanceID          string
+		snsTopic            string
+		disableSpotListener bool
+		handler             *os.File
+		jsonLogging         bool
+		debugLogging        bool
+		cloudwatchGroup     string
+		cloudwatchStream    string
 	)
 
 	app.Flag("instance-id", "The instance id to listen for events for").
@@ -46,8 +46,8 @@ func main() {
 	app.Flag("sns-topic", "The SNS topic that receives events").
 		StringVar(&snsTopic)
 
-	app.Flag("spot", "Listen for spot termination notices").
-		BoolVar(&spotListener)
+	app.Flag("no-spot", "Disable the spot termination listener").
+		BoolVar(&disableSpotListener)
 
 	app.Flag("handler", "The script to invoke to handle events").
 		FileVar(&handler)
@@ -135,7 +135,7 @@ func main() {
 		daemon := lifecycled.New(&lifecycled.Config{
 			InstanceID:           instanceID,
 			SNSTopic:             snsTopic,
-			SpotListener:         spotListener,
+			SpotListener:         !disableSpotListener,
 			SpotListenerInterval: 5 * time.Second,
 		}, sess, logger)
 

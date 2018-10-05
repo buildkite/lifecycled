@@ -88,5 +88,5 @@ func (n *spotTerminationNotice) Type() string {
 }
 
 func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
-	return handler.Execute(ctx, n.instanceID, n.transition)
+	return handler.Execute(ctx, n.transition, n.instanceID, n.terminationTime.Format(time.RFC3339))
 }
