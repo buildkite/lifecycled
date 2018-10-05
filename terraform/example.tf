@@ -43,7 +43,7 @@ data "aws_ami" "linux2" {
 
 variable "instance_key" {
   description = "Name of EC2 Keypair"
-  default = "lifecycled-example"
+  default     = "lifecycled-example"
 }
 
 module "example" {
