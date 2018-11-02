@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -219,6 +220,9 @@ func listInactiveSubscriptions(sess *session.Session) ([]string, error) {
 		func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {
 			count = count + len(page.Subscriptions)
 			for _, s := range page.Subscriptions {
+				if !strings.Contains(*s.Endpoint, "lifecycled-i") {
+					continue
+				}
 				if exists, ok := topics[*s.TopicArn]; ok {
 					if !exists {
 						subs = append(subs, *s.SubscriptionArn)
@@ -247,9 +251,10 @@ func deleteInactiveSubscriptions(sess *session.Session) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	log.Printf("Found %d inactive subscriptions", len(subs))
 	var deleted int
 	for idx, s := range subs {
-		log.Printf("Deleting SNS Subscription %s (%d of %d)", s, idx+1, len(subs))
+		log.Printf("Deleting sns subscription %s (%d of %d)", s, idx+1, len(subs))
 		_, err := sns.New(sess).Unsubscribe(&sns.UnsubscribeInput{
 			SubscriptionArn: aws.String(s),
 		})
