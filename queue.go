@@ -74,6 +74,7 @@ func (q *Queue) Create() error {
 		Attributes: map[string]*string{
 			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, q.topicArn)),
 			"ReceiveMessageWaitTimeSeconds": aws.String(strconv.Itoa(longPollingWaitTimeSeconds)),
+			"KmsMasterKeyId":                aws.String("alias/aws/sqs"),
 		},
 	})
 	if err != nil {
