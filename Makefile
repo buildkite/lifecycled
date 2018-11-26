@@ -2,6 +2,8 @@ VERSION=$(shell git describe --tags --candidates=1 --dirty 2>/dev/null || echo "
 FLAGS=-s -w -X main.Version=$(VERSION)
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
+export GO111MODULE=on
+
 lifecycled: *.go
 	go build -o lifecycled -ldflags="$(FLAGS)" -v ./cmd/lifecycled
 
