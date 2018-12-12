@@ -1,0 +1,9 @@
+steps:
+  - label: "🔎"
+    command: go test ./...
+    plugins:
+      - golang#v2.0.0:
+          version: 1.11.1
+          import: github.com/buildkite/lifecycled
+          environment:
+            - GO111MODULE=on
