@@ -23,5 +23,5 @@ clean:
 
 .PHONY: release
 release:
-	go get github.com/mitchellh/gox
+# 	go get github.com/mitchellh/gox
 	gox -ldflags="$(FLAGS)" -output="build/{{.Dir}}-{{.OS}}-{{.Arch}}" -osarch="linux/amd64 windows/amd64" ./cmd/lifecycled

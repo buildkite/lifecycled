@@ -10,8 +10,6 @@ require (
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/kdar/gtest v0.0.0-20171003232747-b20da4453579 // indirect
 	github.com/kdar/logrus-cloudwatchlogs v0.0.0-20180208175244-c4ba9db972a4
-	github.com/mitchellh/gox v0.4.0 // indirect
-	github.com/mitchellh/iochan v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.2.0
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	golang.org/x/crypto v0.0.0-20181030102418-4d3f4d9ffa16 // indirect
