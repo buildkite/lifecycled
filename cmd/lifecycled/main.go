@@ -50,6 +50,7 @@ func main() {
 		BoolVar(&disableSpotListener)
 
 	app.Flag("handler", "The script to invoke to handle events").
+		Required().
 		FileVar(&handler)
 
 	app.Flag("json", "Enable JSON logging").
