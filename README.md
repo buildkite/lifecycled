@@ -70,8 +70,8 @@ lifecycled-queue-cleaner
 
 ## FAQ
 
-1. What is the required environment variables?
-
+Q: What is the required environment variables?\
+A:
 ```bash
 LIFECYCLED_HANDLER
 LIFECYCLED_SNS_TOPIC
@@ -80,8 +80,8 @@ AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY
 ```
 
-2. How to run on Windows?\
-    Set up environment variables.
+Q: How to run on Windows?\
+A: Set up environment variables.
 
 ## Licence
 
