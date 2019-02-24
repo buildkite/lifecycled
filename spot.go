@@ -39,11 +39,14 @@ func (l *SpotListener) Start(ctx context.Context, notices chan<- TerminationNoti
 	if !l.metadata.Available() {
 		return errors.New("ec2 metadata is not available")
 	}
+	
+	tockChan := time.NewTicker(l.interval).C
+	
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-time.NewTicker(l.interval).C:
+		case <-tockChan:
 			log.Debug("Polling ec2 metadata for spot termination notices")
 
 			out, err := l.metadata.GetMetadata("spot/termination-time")
