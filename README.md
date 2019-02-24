@@ -72,13 +72,14 @@ lifecycled-queue-cleaner
 
 Q: What is the required environment variables?\
 A:
-```bash
-LIFECYCLED_HANDLER
-LIFECYCLED_SNS_TOPIC
-AWS_REGION
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-```
+
+|Variable            |Value|
+|--------------------|-----|
+LIFECYCLED_HANDLER   | Your handler script, eg: _/home/ubuntu/autoscalling_terminate.sh_ |
+LIFECYCLED_SNS_TOPIC | You AWS ARN of SNS Topic, eg: _arn:aws:sns:*_ |
+AWS_REGION           | You AWS Region, eg: _us-east-1_ |
+AWS_ACCESS_KEY_ID    | Your AWS Access Key ID |
+AWS_SECRET_ACCESS_KEY| Your AWS Secret Access Key |
 
 Q: How to run on Windows?\
 A: Set up environment variables.
