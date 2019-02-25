@@ -73,7 +73,7 @@ lifecycled-queue-cleaner
 Q: How can i start up lifecycled?\
 A: You can config enviroment variables or set command line flags, eg:
 ```bash
-./_lifecycled-linux-amd64 --handler=HANDLER --sns-topic=SNS-TOPIC
+./lifecycled-linux-amd64 --handler=HANDLER --sns-topic=SNS-TOPIC
 ```
 
 
