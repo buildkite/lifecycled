@@ -70,19 +70,26 @@ lifecycled-queue-cleaner
 
 ## FAQ
 
-Q: What is the required environment variables?\
+Q: How can i start up lifecycled?\
+A: You can config enviroment variables or set command line flags, eg:
+```bash
+./_lifecycled-linux-amd64 --handler=HANDLER --sns-topic=SNS-TOPIC
+```
+
+
+Q: What is the environment variables?\
 A:
 
-|Variable            |Value|
-|--------------------|-----|
-LIFECYCLED_HANDLER   | Your handler script, eg: _/home/ubuntu/autoscalling_terminate.sh_ |
-LIFECYCLED_SNS_TOPIC | You AWS ARN of SNS Topic, eg: _arn:aws:sns:*_ |
-AWS_REGION           | You AWS Region, eg: _us-east-1_ |
-AWS_ACCESS_KEY_ID    | Your AWS Access Key ID |
-AWS_SECRET_ACCESS_KEY| Your AWS Secret Access Key |
+|Variable             |Value|
+|---------------------|-----|
+|LIFECYCLED_HANDLER   | The script to invoke to handle events, eg: _/home/ubuntu/autoscalling_terminate.sh_ |
+|LIFECYCLED_SNS_TOPIC | The SNS topic that receives events, eg: _arn:aws:sns:*_ |
+|AWS_REGION           | You AWS Region, eg: _us-east-1_ |
+|AWS_ACCESS_KEY_ID    | Your AWS Access Key ID |
+|AWS_SECRET_ACCESS_KEY| Your AWS Secret Access Key |
 
 Q: How to run on Windows?\
-A: Set up environment variables.
+A: Set up environment variables or pass command line flags.
 
 ## Licence
 
