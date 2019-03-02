@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -106,6 +107,7 @@ func main() {
 			}).Info("Writing logs to CloudWatch")
 
 			logger.AddHook(hook)
+			logger.Out = ioutil.Discard
 			if !jsonLogging {
 				logger.SetFormatter(&logrus.TextFormatter{
 					DisableColors:    true,
