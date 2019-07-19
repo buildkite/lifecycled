@@ -59,15 +59,6 @@ await_shutdown myservice.service
 
 The handler script is passed the event that was received and the instance id, e.g `autoscaling:EC2_INSTANCE_TERMINATING i-001405f0fc67e3b12` for lifecycle events, or `ec2:SPOT_INSTANCE_TERMINATION i-001405f0fc67e3b12 2015-01-05T18:02:00Z` in the case of a spot termination.
 
-## Cleaning up Leftover SQS Queues
-
-The `lifecycled` daemon should clean up the per-instance SQS queues that are created when it shuts down, but there has been a bug where this does not happen (See https://github.com/buildkite/lifecycled/issues/12). To mitigate this, you can run a cleanup tool:
-
-```
-go get -u github.com/buildkite/lifecycled/tools/lifecycled-queue-cleaner
-lifecycled-queue-cleaner
-```
-
 ## Licence
 
 See [Licence.md](Licence.md) (MIT)
