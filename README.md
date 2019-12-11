@@ -28,6 +28,7 @@ Assuming your custom handler script is in `/usr/local/bin/my_graceful_shutdown.s
 ```bash
 LIFECYCLED_HANDLER=/usr/local/bin/my_graceful_shutdown.sh
 LIFECYCLED_SNS_TOPIC=arn:aws:sns:us-east-1:11111111:my-lifecycle-topic
+AWS_REGION=us-east-1
 ```
 
 Then start the daemon with:
