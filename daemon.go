@@ -93,7 +93,7 @@ func (d *Daemon) Start(ctx context.Context) (notice TerminationNotice, err error
 
 		l := log.WithField("listener", listener.Type())
 
-		go func() {
+		go func(listener Listener) {
 			defer wg.Done()
 
 			if err := listener.Start(listenerCtx, notices, l); err != nil {
@@ -102,7 +102,7 @@ func (d *Daemon) Start(ctx context.Context) (notice TerminationNotice, err error
 			} else {
 				l.Info("Stopped listener")
 			}
-		}()
+		}(listener)
 		l.Info("Starting listener")
 	}
 
