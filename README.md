@@ -1,6 +1,6 @@
-# Lifecycled - Gracefully handle EC2 scaling events
+# Lifecycled [![Build status](https://badge.buildkite.com/59427d66eb5576325ded875cae10b6cfcc0a63c6dd49ec4ec8.svg?branch=master)](https://buildkite.com/buildkite/lifecycled)
 
-Lifecycled is designed to run on an AWS EC2 instance and listen for various state change mechanisms:
+Gracefully handles EC2 scaling events. Lifecycled is designed to run on an AWS EC2 instance and listen for various state change mechanisms:
 
  * [AWS AutoScaling](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/lifecycle-hooks.html)
  * [Spot Instance Termination Notices](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html)
