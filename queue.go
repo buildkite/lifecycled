@@ -95,7 +95,7 @@ func (q *Queue) getArn() (string, error) {
 		}
 		arn, ok := out.Attributes["QueueArn"]
 		if !ok {
-			return "", errors.New("No attribute QueueArn")
+			return "", errors.New("no attribute QueueArn")
 		}
 		q.arn = aws.StringValue(arn)
 	}

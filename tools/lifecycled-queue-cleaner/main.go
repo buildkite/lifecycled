@@ -4,17 +4,17 @@ import (
 	"flag"
 	"log"
 	"regexp"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 func main() {
@@ -213,7 +213,7 @@ func topicExists(sess *session.Session, snsTopic string) (bool, error) {
 
 func listInactiveSubscriptions(sess *session.Session) ([]string, error) {
 	var subs []string
-	var topics = make(map[string]bool,0)
+	var topics = make(map[string]bool, 0)
 	var count int
 
 	err := sns.New(sess).ListSubscriptionsPages(&sns.ListSubscriptionsInput{},
@@ -265,4 +265,3 @@ func deleteInactiveSubscriptions(sess *session.Session) (int, error) {
 	}
 	return deleted, nil
 }
-

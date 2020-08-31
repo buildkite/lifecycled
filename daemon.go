@@ -114,7 +114,7 @@ Listener:
 		case <-listenerCtx.Done():
 			// Make sure the underlying context was not cancelled
 			if ctx.Err() != context.Canceled {
-				err = errors.New("an error occured")
+				err = errors.New("an error occurred")
 			}
 			break Listener
 		case n := <-notices:

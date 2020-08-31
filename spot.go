@@ -91,6 +91,6 @@ func (n *spotTerminationNotice) Type() string {
 	return n.noticeType
 }
 
-func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
+func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler, _ *logrus.Entry) error {
 	return handler.Execute(ctx, n.transition, n.instanceID, n.terminationTime.Format(time.RFC3339))
 }
