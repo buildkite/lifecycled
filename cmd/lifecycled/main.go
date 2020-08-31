@@ -8,12 +8,11 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/buildkite/lifecycled"
 
-	logrus_cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
+	cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,7 +25,6 @@ func main() {
 		"Handle AWS autoscaling lifecycle events gracefully")
 
 	app.Version(Version)
-	app.Writer(os.Stdout)
 	app.DefaultEnvars()
 
 	var (
@@ -95,7 +93,7 @@ func main() {
 		}
 
 		if cloudwatchGroup != "" {
-			hook, err := logrus_cloudwatchlogs.NewHook(cloudwatchGroup, cloudwatchStream, aws.NewConfig())
+			hook, err := cloudwatchlogs.NewHook(cloudwatchGroup, cloudwatchStream, sess)
 			if err != nil {
 				logger.Fatal(err)
 			}
@@ -125,8 +123,8 @@ func main() {
 		defer cancel()
 
 		go func() {
-			for signal := range sigs {
-				logger.WithField("signal", signal.String()).Info("Received signal: shutting down...")
+			for sig := range sigs {
+				logger.WithField("signal", sig.String()).Info("Received signal: shutting down...")
 				cancel()
 				break
 			}
@@ -153,7 +151,7 @@ func main() {
 			if err != nil {
 				log.WithError(err).Error("Failed to execute handler")
 			}
-			log.Info("Handler finished succesfully")
+			log.Info("Handler finished successfully")
 
 		}
 		return nil

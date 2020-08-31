@@ -62,4 +62,4 @@ The handler script is passed the event that was received and the instance id, e.
 
 ## Licence
 
-See [Licence.md](Licence.md) (MIT)
+See [Licence](LICENSE) (MIT)

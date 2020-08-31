@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	for {
-		count, err := deleteInactiveSubscriptions(session.New())
+		count, err := deleteInactiveSubscriptions(session.Must(session.NewSession()))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -36,7 +36,7 @@ func main() {
 	}
 
 	for {
-		count, err := deleteInactiveQueues(session.New(), *parallel)
+		count, err := deleteInactiveQueues(session.Must(session.NewSession()), *parallel)
 		if err != nil {
 			log.Fatal(err)
 		}
