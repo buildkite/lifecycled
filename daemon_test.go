@@ -37,7 +37,10 @@ func newMetadataStub(instanceID, terminationTime string) *httptest.Server {
 			http.Error(w, "404 - not found", http.StatusNotFound)
 			return
 		}
-		w.Write([]byte(resp))
+		if _, err := w.Write([]byte(resp)); err != nil {
+			http.Error(w, "500 - internal server error", http.StatusInternalServerError)
+			return
+		}
 	})
 	return httptest.NewServer(handler)
 }
@@ -146,7 +149,7 @@ func TestDaemon(t *testing.T) {
 			server := newMetadataStub(instanceID, spotTerminationTime)
 			defer server.Close()
 
-			metadata := ec2metadata.New(session.New(), &aws.Config{
+			metadata := ec2metadata.New(session.Must(session.NewSession()), &aws.Config{
 				Endpoint:   aws.String(server.URL + "/latest"),
 				DisableSSL: aws.Bool(true),
 			})
@@ -177,7 +180,9 @@ func TestDaemon(t *testing.T) {
 					}
 					var messages strings.Builder
 					for k, v := range logs {
-						fmt.Fprintf(&messages, "%s - %s\n", v, k)
+						if _, err := fmt.Fprintf(&messages, "%s - %s\n", v, k); err != nil {
+							t.Errorf("unable to write log entry: %v\n", err)
+						}
 					}
 					t.Errorf("unexpected error occured: %s: unique logs entries:\n%s", err, messages.String())
 				}
