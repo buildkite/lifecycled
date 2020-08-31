@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	aws "github.com/aws/aws-sdk-go/aws"
+	context "context"
 	request "github.com/aws/aws-sdk-go/aws/request"
 	autoscaling "github.com/aws/aws-sdk-go/service/autoscaling"
 	gomock "github.com/golang/mock/gomock"
@@ -37,6 +37,7 @@ func (m *MockAutoscalingClient) EXPECT() *MockAutoscalingClientMockRecorder {
 
 // AttachInstances mocks base method
 func (m *MockAutoscalingClient) AttachInstances(arg0 *autoscaling.AttachInstancesInput) (*autoscaling.AttachInstancesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AttachInstances", arg0)
 	ret0, _ := ret[0].(*autoscaling.AttachInstancesOutput)
 	ret1, _ := ret[1].(error)
@@ -45,11 +46,13 @@ func (m *MockAutoscalingClient) AttachInstances(arg0 *autoscaling.AttachInstance
 
 // AttachInstances indicates an expected call of AttachInstances
 func (mr *MockAutoscalingClientMockRecorder) AttachInstances(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachInstances", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachInstances), arg0)
 }
 
 // AttachInstancesRequest mocks base method
 func (m *MockAutoscalingClient) AttachInstancesRequest(arg0 *autoscaling.AttachInstancesInput) (*request.Request, *autoscaling.AttachInstancesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AttachInstancesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.AttachInstancesOutput)
@@ -58,11 +61,13 @@ func (m *MockAutoscalingClient) AttachInstancesRequest(arg0 *autoscaling.AttachI
 
 // AttachInstancesRequest indicates an expected call of AttachInstancesRequest
 func (mr *MockAutoscalingClientMockRecorder) AttachInstancesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachInstancesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachInstancesRequest), arg0)
 }
 
 // AttachInstancesWithContext mocks base method
-func (m *MockAutoscalingClient) AttachInstancesWithContext(arg0 aws.Context, arg1 *autoscaling.AttachInstancesInput, arg2 ...request.Option) (*autoscaling.AttachInstancesOutput, error) {
+func (m *MockAutoscalingClient) AttachInstancesWithContext(arg0 context.Context, arg1 *autoscaling.AttachInstancesInput, arg2 ...request.Option) (*autoscaling.AttachInstancesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -75,12 +80,14 @@ func (m *MockAutoscalingClient) AttachInstancesWithContext(arg0 aws.Context, arg
 
 // AttachInstancesWithContext indicates an expected call of AttachInstancesWithContext
 func (mr *MockAutoscalingClientMockRecorder) AttachInstancesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachInstancesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachInstancesWithContext), varargs...)
 }
 
 // AttachLoadBalancerTargetGroups mocks base method
 func (m *MockAutoscalingClient) AttachLoadBalancerTargetGroups(arg0 *autoscaling.AttachLoadBalancerTargetGroupsInput) (*autoscaling.AttachLoadBalancerTargetGroupsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AttachLoadBalancerTargetGroups", arg0)
 	ret0, _ := ret[0].(*autoscaling.AttachLoadBalancerTargetGroupsOutput)
 	ret1, _ := ret[1].(error)
@@ -89,11 +96,13 @@ func (m *MockAutoscalingClient) AttachLoadBalancerTargetGroups(arg0 *autoscaling
 
 // AttachLoadBalancerTargetGroups indicates an expected call of AttachLoadBalancerTargetGroups
 func (mr *MockAutoscalingClientMockRecorder) AttachLoadBalancerTargetGroups(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachLoadBalancerTargetGroups", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachLoadBalancerTargetGroups), arg0)
 }
 
 // AttachLoadBalancerTargetGroupsRequest mocks base method
 func (m *MockAutoscalingClient) AttachLoadBalancerTargetGroupsRequest(arg0 *autoscaling.AttachLoadBalancerTargetGroupsInput) (*request.Request, *autoscaling.AttachLoadBalancerTargetGroupsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AttachLoadBalancerTargetGroupsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.AttachLoadBalancerTargetGroupsOutput)
@@ -102,11 +111,13 @@ func (m *MockAutoscalingClient) AttachLoadBalancerTargetGroupsRequest(arg0 *auto
 
 // AttachLoadBalancerTargetGroupsRequest indicates an expected call of AttachLoadBalancerTargetGroupsRequest
 func (mr *MockAutoscalingClientMockRecorder) AttachLoadBalancerTargetGroupsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachLoadBalancerTargetGroupsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachLoadBalancerTargetGroupsRequest), arg0)
 }
 
 // AttachLoadBalancerTargetGroupsWithContext mocks base method
-func (m *MockAutoscalingClient) AttachLoadBalancerTargetGroupsWithContext(arg0 aws.Context, arg1 *autoscaling.AttachLoadBalancerTargetGroupsInput, arg2 ...request.Option) (*autoscaling.AttachLoadBalancerTargetGroupsOutput, error) {
+func (m *MockAutoscalingClient) AttachLoadBalancerTargetGroupsWithContext(arg0 context.Context, arg1 *autoscaling.AttachLoadBalancerTargetGroupsInput, arg2 ...request.Option) (*autoscaling.AttachLoadBalancerTargetGroupsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -119,12 +130,14 @@ func (m *MockAutoscalingClient) AttachLoadBalancerTargetGroupsWithContext(arg0 a
 
 // AttachLoadBalancerTargetGroupsWithContext indicates an expected call of AttachLoadBalancerTargetGroupsWithContext
 func (mr *MockAutoscalingClientMockRecorder) AttachLoadBalancerTargetGroupsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachLoadBalancerTargetGroupsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachLoadBalancerTargetGroupsWithContext), varargs...)
 }
 
 // AttachLoadBalancers mocks base method
 func (m *MockAutoscalingClient) AttachLoadBalancers(arg0 *autoscaling.AttachLoadBalancersInput) (*autoscaling.AttachLoadBalancersOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AttachLoadBalancers", arg0)
 	ret0, _ := ret[0].(*autoscaling.AttachLoadBalancersOutput)
 	ret1, _ := ret[1].(error)
@@ -133,11 +146,13 @@ func (m *MockAutoscalingClient) AttachLoadBalancers(arg0 *autoscaling.AttachLoad
 
 // AttachLoadBalancers indicates an expected call of AttachLoadBalancers
 func (mr *MockAutoscalingClientMockRecorder) AttachLoadBalancers(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachLoadBalancers", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachLoadBalancers), arg0)
 }
 
 // AttachLoadBalancersRequest mocks base method
 func (m *MockAutoscalingClient) AttachLoadBalancersRequest(arg0 *autoscaling.AttachLoadBalancersInput) (*request.Request, *autoscaling.AttachLoadBalancersOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AttachLoadBalancersRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.AttachLoadBalancersOutput)
@@ -146,11 +161,13 @@ func (m *MockAutoscalingClient) AttachLoadBalancersRequest(arg0 *autoscaling.Att
 
 // AttachLoadBalancersRequest indicates an expected call of AttachLoadBalancersRequest
 func (mr *MockAutoscalingClientMockRecorder) AttachLoadBalancersRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachLoadBalancersRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachLoadBalancersRequest), arg0)
 }
 
 // AttachLoadBalancersWithContext mocks base method
-func (m *MockAutoscalingClient) AttachLoadBalancersWithContext(arg0 aws.Context, arg1 *autoscaling.AttachLoadBalancersInput, arg2 ...request.Option) (*autoscaling.AttachLoadBalancersOutput, error) {
+func (m *MockAutoscalingClient) AttachLoadBalancersWithContext(arg0 context.Context, arg1 *autoscaling.AttachLoadBalancersInput, arg2 ...request.Option) (*autoscaling.AttachLoadBalancersOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -163,12 +180,14 @@ func (m *MockAutoscalingClient) AttachLoadBalancersWithContext(arg0 aws.Context,
 
 // AttachLoadBalancersWithContext indicates an expected call of AttachLoadBalancersWithContext
 func (mr *MockAutoscalingClientMockRecorder) AttachLoadBalancersWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AttachLoadBalancersWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).AttachLoadBalancersWithContext), varargs...)
 }
 
 // BatchDeleteScheduledAction mocks base method
 func (m *MockAutoscalingClient) BatchDeleteScheduledAction(arg0 *autoscaling.BatchDeleteScheduledActionInput) (*autoscaling.BatchDeleteScheduledActionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BatchDeleteScheduledAction", arg0)
 	ret0, _ := ret[0].(*autoscaling.BatchDeleteScheduledActionOutput)
 	ret1, _ := ret[1].(error)
@@ -177,11 +196,13 @@ func (m *MockAutoscalingClient) BatchDeleteScheduledAction(arg0 *autoscaling.Bat
 
 // BatchDeleteScheduledAction indicates an expected call of BatchDeleteScheduledAction
 func (mr *MockAutoscalingClientMockRecorder) BatchDeleteScheduledAction(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchDeleteScheduledAction", reflect.TypeOf((*MockAutoscalingClient)(nil).BatchDeleteScheduledAction), arg0)
 }
 
 // BatchDeleteScheduledActionRequest mocks base method
 func (m *MockAutoscalingClient) BatchDeleteScheduledActionRequest(arg0 *autoscaling.BatchDeleteScheduledActionInput) (*request.Request, *autoscaling.BatchDeleteScheduledActionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BatchDeleteScheduledActionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.BatchDeleteScheduledActionOutput)
@@ -190,11 +211,13 @@ func (m *MockAutoscalingClient) BatchDeleteScheduledActionRequest(arg0 *autoscal
 
 // BatchDeleteScheduledActionRequest indicates an expected call of BatchDeleteScheduledActionRequest
 func (mr *MockAutoscalingClientMockRecorder) BatchDeleteScheduledActionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchDeleteScheduledActionRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).BatchDeleteScheduledActionRequest), arg0)
 }
 
 // BatchDeleteScheduledActionWithContext mocks base method
-func (m *MockAutoscalingClient) BatchDeleteScheduledActionWithContext(arg0 aws.Context, arg1 *autoscaling.BatchDeleteScheduledActionInput, arg2 ...request.Option) (*autoscaling.BatchDeleteScheduledActionOutput, error) {
+func (m *MockAutoscalingClient) BatchDeleteScheduledActionWithContext(arg0 context.Context, arg1 *autoscaling.BatchDeleteScheduledActionInput, arg2 ...request.Option) (*autoscaling.BatchDeleteScheduledActionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -207,12 +230,14 @@ func (m *MockAutoscalingClient) BatchDeleteScheduledActionWithContext(arg0 aws.C
 
 // BatchDeleteScheduledActionWithContext indicates an expected call of BatchDeleteScheduledActionWithContext
 func (mr *MockAutoscalingClientMockRecorder) BatchDeleteScheduledActionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchDeleteScheduledActionWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).BatchDeleteScheduledActionWithContext), varargs...)
 }
 
 // BatchPutScheduledUpdateGroupAction mocks base method
 func (m *MockAutoscalingClient) BatchPutScheduledUpdateGroupAction(arg0 *autoscaling.BatchPutScheduledUpdateGroupActionInput) (*autoscaling.BatchPutScheduledUpdateGroupActionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BatchPutScheduledUpdateGroupAction", arg0)
 	ret0, _ := ret[0].(*autoscaling.BatchPutScheduledUpdateGroupActionOutput)
 	ret1, _ := ret[1].(error)
@@ -221,11 +246,13 @@ func (m *MockAutoscalingClient) BatchPutScheduledUpdateGroupAction(arg0 *autosca
 
 // BatchPutScheduledUpdateGroupAction indicates an expected call of BatchPutScheduledUpdateGroupAction
 func (mr *MockAutoscalingClientMockRecorder) BatchPutScheduledUpdateGroupAction(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchPutScheduledUpdateGroupAction", reflect.TypeOf((*MockAutoscalingClient)(nil).BatchPutScheduledUpdateGroupAction), arg0)
 }
 
 // BatchPutScheduledUpdateGroupActionRequest mocks base method
 func (m *MockAutoscalingClient) BatchPutScheduledUpdateGroupActionRequest(arg0 *autoscaling.BatchPutScheduledUpdateGroupActionInput) (*request.Request, *autoscaling.BatchPutScheduledUpdateGroupActionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BatchPutScheduledUpdateGroupActionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.BatchPutScheduledUpdateGroupActionOutput)
@@ -234,11 +261,13 @@ func (m *MockAutoscalingClient) BatchPutScheduledUpdateGroupActionRequest(arg0 *
 
 // BatchPutScheduledUpdateGroupActionRequest indicates an expected call of BatchPutScheduledUpdateGroupActionRequest
 func (mr *MockAutoscalingClientMockRecorder) BatchPutScheduledUpdateGroupActionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchPutScheduledUpdateGroupActionRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).BatchPutScheduledUpdateGroupActionRequest), arg0)
 }
 
 // BatchPutScheduledUpdateGroupActionWithContext mocks base method
-func (m *MockAutoscalingClient) BatchPutScheduledUpdateGroupActionWithContext(arg0 aws.Context, arg1 *autoscaling.BatchPutScheduledUpdateGroupActionInput, arg2 ...request.Option) (*autoscaling.BatchPutScheduledUpdateGroupActionOutput, error) {
+func (m *MockAutoscalingClient) BatchPutScheduledUpdateGroupActionWithContext(arg0 context.Context, arg1 *autoscaling.BatchPutScheduledUpdateGroupActionInput, arg2 ...request.Option) (*autoscaling.BatchPutScheduledUpdateGroupActionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -251,12 +280,64 @@ func (m *MockAutoscalingClient) BatchPutScheduledUpdateGroupActionWithContext(ar
 
 // BatchPutScheduledUpdateGroupActionWithContext indicates an expected call of BatchPutScheduledUpdateGroupActionWithContext
 func (mr *MockAutoscalingClientMockRecorder) BatchPutScheduledUpdateGroupActionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchPutScheduledUpdateGroupActionWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).BatchPutScheduledUpdateGroupActionWithContext), varargs...)
 }
 
+// CancelInstanceRefresh mocks base method
+func (m *MockAutoscalingClient) CancelInstanceRefresh(arg0 *autoscaling.CancelInstanceRefreshInput) (*autoscaling.CancelInstanceRefreshOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelInstanceRefresh", arg0)
+	ret0, _ := ret[0].(*autoscaling.CancelInstanceRefreshOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CancelInstanceRefresh indicates an expected call of CancelInstanceRefresh
+func (mr *MockAutoscalingClientMockRecorder) CancelInstanceRefresh(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelInstanceRefresh", reflect.TypeOf((*MockAutoscalingClient)(nil).CancelInstanceRefresh), arg0)
+}
+
+// CancelInstanceRefreshRequest mocks base method
+func (m *MockAutoscalingClient) CancelInstanceRefreshRequest(arg0 *autoscaling.CancelInstanceRefreshInput) (*request.Request, *autoscaling.CancelInstanceRefreshOutput) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelInstanceRefreshRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*autoscaling.CancelInstanceRefreshOutput)
+	return ret0, ret1
+}
+
+// CancelInstanceRefreshRequest indicates an expected call of CancelInstanceRefreshRequest
+func (mr *MockAutoscalingClientMockRecorder) CancelInstanceRefreshRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelInstanceRefreshRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).CancelInstanceRefreshRequest), arg0)
+}
+
+// CancelInstanceRefreshWithContext mocks base method
+func (m *MockAutoscalingClient) CancelInstanceRefreshWithContext(arg0 context.Context, arg1 *autoscaling.CancelInstanceRefreshInput, arg2 ...request.Option) (*autoscaling.CancelInstanceRefreshOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CancelInstanceRefreshWithContext", varargs...)
+	ret0, _ := ret[0].(*autoscaling.CancelInstanceRefreshOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CancelInstanceRefreshWithContext indicates an expected call of CancelInstanceRefreshWithContext
+func (mr *MockAutoscalingClientMockRecorder) CancelInstanceRefreshWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelInstanceRefreshWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).CancelInstanceRefreshWithContext), varargs...)
+}
+
 // CompleteLifecycleAction mocks base method
 func (m *MockAutoscalingClient) CompleteLifecycleAction(arg0 *autoscaling.CompleteLifecycleActionInput) (*autoscaling.CompleteLifecycleActionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CompleteLifecycleAction", arg0)
 	ret0, _ := ret[0].(*autoscaling.CompleteLifecycleActionOutput)
 	ret1, _ := ret[1].(error)
@@ -265,11 +346,13 @@ func (m *MockAutoscalingClient) CompleteLifecycleAction(arg0 *autoscaling.Comple
 
 // CompleteLifecycleAction indicates an expected call of CompleteLifecycleAction
 func (mr *MockAutoscalingClientMockRecorder) CompleteLifecycleAction(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteLifecycleAction", reflect.TypeOf((*MockAutoscalingClient)(nil).CompleteLifecycleAction), arg0)
 }
 
 // CompleteLifecycleActionRequest mocks base method
 func (m *MockAutoscalingClient) CompleteLifecycleActionRequest(arg0 *autoscaling.CompleteLifecycleActionInput) (*request.Request, *autoscaling.CompleteLifecycleActionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CompleteLifecycleActionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.CompleteLifecycleActionOutput)
@@ -278,11 +361,13 @@ func (m *MockAutoscalingClient) CompleteLifecycleActionRequest(arg0 *autoscaling
 
 // CompleteLifecycleActionRequest indicates an expected call of CompleteLifecycleActionRequest
 func (mr *MockAutoscalingClientMockRecorder) CompleteLifecycleActionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteLifecycleActionRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).CompleteLifecycleActionRequest), arg0)
 }
 
 // CompleteLifecycleActionWithContext mocks base method
-func (m *MockAutoscalingClient) CompleteLifecycleActionWithContext(arg0 aws.Context, arg1 *autoscaling.CompleteLifecycleActionInput, arg2 ...request.Option) (*autoscaling.CompleteLifecycleActionOutput, error) {
+func (m *MockAutoscalingClient) CompleteLifecycleActionWithContext(arg0 context.Context, arg1 *autoscaling.CompleteLifecycleActionInput, arg2 ...request.Option) (*autoscaling.CompleteLifecycleActionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -295,12 +380,14 @@ func (m *MockAutoscalingClient) CompleteLifecycleActionWithContext(arg0 aws.Cont
 
 // CompleteLifecycleActionWithContext indicates an expected call of CompleteLifecycleActionWithContext
 func (mr *MockAutoscalingClientMockRecorder) CompleteLifecycleActionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteLifecycleActionWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).CompleteLifecycleActionWithContext), varargs...)
 }
 
 // CreateAutoScalingGroup mocks base method
 func (m *MockAutoscalingClient) CreateAutoScalingGroup(arg0 *autoscaling.CreateAutoScalingGroupInput) (*autoscaling.CreateAutoScalingGroupOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAutoScalingGroup", arg0)
 	ret0, _ := ret[0].(*autoscaling.CreateAutoScalingGroupOutput)
 	ret1, _ := ret[1].(error)
@@ -309,11 +396,13 @@ func (m *MockAutoscalingClient) CreateAutoScalingGroup(arg0 *autoscaling.CreateA
 
 // CreateAutoScalingGroup indicates an expected call of CreateAutoScalingGroup
 func (mr *MockAutoscalingClientMockRecorder) CreateAutoScalingGroup(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAutoScalingGroup", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateAutoScalingGroup), arg0)
 }
 
 // CreateAutoScalingGroupRequest mocks base method
 func (m *MockAutoscalingClient) CreateAutoScalingGroupRequest(arg0 *autoscaling.CreateAutoScalingGroupInput) (*request.Request, *autoscaling.CreateAutoScalingGroupOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAutoScalingGroupRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.CreateAutoScalingGroupOutput)
@@ -322,11 +411,13 @@ func (m *MockAutoscalingClient) CreateAutoScalingGroupRequest(arg0 *autoscaling.
 
 // CreateAutoScalingGroupRequest indicates an expected call of CreateAutoScalingGroupRequest
 func (mr *MockAutoscalingClientMockRecorder) CreateAutoScalingGroupRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAutoScalingGroupRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateAutoScalingGroupRequest), arg0)
 }
 
 // CreateAutoScalingGroupWithContext mocks base method
-func (m *MockAutoscalingClient) CreateAutoScalingGroupWithContext(arg0 aws.Context, arg1 *autoscaling.CreateAutoScalingGroupInput, arg2 ...request.Option) (*autoscaling.CreateAutoScalingGroupOutput, error) {
+func (m *MockAutoscalingClient) CreateAutoScalingGroupWithContext(arg0 context.Context, arg1 *autoscaling.CreateAutoScalingGroupInput, arg2 ...request.Option) (*autoscaling.CreateAutoScalingGroupOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -339,12 +430,14 @@ func (m *MockAutoscalingClient) CreateAutoScalingGroupWithContext(arg0 aws.Conte
 
 // CreateAutoScalingGroupWithContext indicates an expected call of CreateAutoScalingGroupWithContext
 func (mr *MockAutoscalingClientMockRecorder) CreateAutoScalingGroupWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAutoScalingGroupWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateAutoScalingGroupWithContext), varargs...)
 }
 
 // CreateLaunchConfiguration mocks base method
 func (m *MockAutoscalingClient) CreateLaunchConfiguration(arg0 *autoscaling.CreateLaunchConfigurationInput) (*autoscaling.CreateLaunchConfigurationOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateLaunchConfiguration", arg0)
 	ret0, _ := ret[0].(*autoscaling.CreateLaunchConfigurationOutput)
 	ret1, _ := ret[1].(error)
@@ -353,11 +446,13 @@ func (m *MockAutoscalingClient) CreateLaunchConfiguration(arg0 *autoscaling.Crea
 
 // CreateLaunchConfiguration indicates an expected call of CreateLaunchConfiguration
 func (mr *MockAutoscalingClientMockRecorder) CreateLaunchConfiguration(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateLaunchConfiguration", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateLaunchConfiguration), arg0)
 }
 
 // CreateLaunchConfigurationRequest mocks base method
 func (m *MockAutoscalingClient) CreateLaunchConfigurationRequest(arg0 *autoscaling.CreateLaunchConfigurationInput) (*request.Request, *autoscaling.CreateLaunchConfigurationOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateLaunchConfigurationRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.CreateLaunchConfigurationOutput)
@@ -366,11 +461,13 @@ func (m *MockAutoscalingClient) CreateLaunchConfigurationRequest(arg0 *autoscali
 
 // CreateLaunchConfigurationRequest indicates an expected call of CreateLaunchConfigurationRequest
 func (mr *MockAutoscalingClientMockRecorder) CreateLaunchConfigurationRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateLaunchConfigurationRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateLaunchConfigurationRequest), arg0)
 }
 
 // CreateLaunchConfigurationWithContext mocks base method
-func (m *MockAutoscalingClient) CreateLaunchConfigurationWithContext(arg0 aws.Context, arg1 *autoscaling.CreateLaunchConfigurationInput, arg2 ...request.Option) (*autoscaling.CreateLaunchConfigurationOutput, error) {
+func (m *MockAutoscalingClient) CreateLaunchConfigurationWithContext(arg0 context.Context, arg1 *autoscaling.CreateLaunchConfigurationInput, arg2 ...request.Option) (*autoscaling.CreateLaunchConfigurationOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -383,12 +480,14 @@ func (m *MockAutoscalingClient) CreateLaunchConfigurationWithContext(arg0 aws.Co
 
 // CreateLaunchConfigurationWithContext indicates an expected call of CreateLaunchConfigurationWithContext
 func (mr *MockAutoscalingClientMockRecorder) CreateLaunchConfigurationWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateLaunchConfigurationWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateLaunchConfigurationWithContext), varargs...)
 }
 
 // CreateOrUpdateTags mocks base method
 func (m *MockAutoscalingClient) CreateOrUpdateTags(arg0 *autoscaling.CreateOrUpdateTagsInput) (*autoscaling.CreateOrUpdateTagsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrUpdateTags", arg0)
 	ret0, _ := ret[0].(*autoscaling.CreateOrUpdateTagsOutput)
 	ret1, _ := ret[1].(error)
@@ -397,11 +496,13 @@ func (m *MockAutoscalingClient) CreateOrUpdateTags(arg0 *autoscaling.CreateOrUpd
 
 // CreateOrUpdateTags indicates an expected call of CreateOrUpdateTags
 func (mr *MockAutoscalingClientMockRecorder) CreateOrUpdateTags(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateTags", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateOrUpdateTags), arg0)
 }
 
 // CreateOrUpdateTagsRequest mocks base method
 func (m *MockAutoscalingClient) CreateOrUpdateTagsRequest(arg0 *autoscaling.CreateOrUpdateTagsInput) (*request.Request, *autoscaling.CreateOrUpdateTagsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrUpdateTagsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.CreateOrUpdateTagsOutput)
@@ -410,11 +511,13 @@ func (m *MockAutoscalingClient) CreateOrUpdateTagsRequest(arg0 *autoscaling.Crea
 
 // CreateOrUpdateTagsRequest indicates an expected call of CreateOrUpdateTagsRequest
 func (mr *MockAutoscalingClientMockRecorder) CreateOrUpdateTagsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateTagsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateOrUpdateTagsRequest), arg0)
 }
 
 // CreateOrUpdateTagsWithContext mocks base method
-func (m *MockAutoscalingClient) CreateOrUpdateTagsWithContext(arg0 aws.Context, arg1 *autoscaling.CreateOrUpdateTagsInput, arg2 ...request.Option) (*autoscaling.CreateOrUpdateTagsOutput, error) {
+func (m *MockAutoscalingClient) CreateOrUpdateTagsWithContext(arg0 context.Context, arg1 *autoscaling.CreateOrUpdateTagsInput, arg2 ...request.Option) (*autoscaling.CreateOrUpdateTagsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -427,12 +530,14 @@ func (m *MockAutoscalingClient) CreateOrUpdateTagsWithContext(arg0 aws.Context, 
 
 // CreateOrUpdateTagsWithContext indicates an expected call of CreateOrUpdateTagsWithContext
 func (mr *MockAutoscalingClientMockRecorder) CreateOrUpdateTagsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateTagsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).CreateOrUpdateTagsWithContext), varargs...)
 }
 
 // DeleteAutoScalingGroup mocks base method
 func (m *MockAutoscalingClient) DeleteAutoScalingGroup(arg0 *autoscaling.DeleteAutoScalingGroupInput) (*autoscaling.DeleteAutoScalingGroupOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAutoScalingGroup", arg0)
 	ret0, _ := ret[0].(*autoscaling.DeleteAutoScalingGroupOutput)
 	ret1, _ := ret[1].(error)
@@ -441,11 +546,13 @@ func (m *MockAutoscalingClient) DeleteAutoScalingGroup(arg0 *autoscaling.DeleteA
 
 // DeleteAutoScalingGroup indicates an expected call of DeleteAutoScalingGroup
 func (mr *MockAutoscalingClientMockRecorder) DeleteAutoScalingGroup(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAutoScalingGroup", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteAutoScalingGroup), arg0)
 }
 
 // DeleteAutoScalingGroupRequest mocks base method
 func (m *MockAutoscalingClient) DeleteAutoScalingGroupRequest(arg0 *autoscaling.DeleteAutoScalingGroupInput) (*request.Request, *autoscaling.DeleteAutoScalingGroupOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAutoScalingGroupRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DeleteAutoScalingGroupOutput)
@@ -454,11 +561,13 @@ func (m *MockAutoscalingClient) DeleteAutoScalingGroupRequest(arg0 *autoscaling.
 
 // DeleteAutoScalingGroupRequest indicates an expected call of DeleteAutoScalingGroupRequest
 func (mr *MockAutoscalingClientMockRecorder) DeleteAutoScalingGroupRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAutoScalingGroupRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteAutoScalingGroupRequest), arg0)
 }
 
 // DeleteAutoScalingGroupWithContext mocks base method
-func (m *MockAutoscalingClient) DeleteAutoScalingGroupWithContext(arg0 aws.Context, arg1 *autoscaling.DeleteAutoScalingGroupInput, arg2 ...request.Option) (*autoscaling.DeleteAutoScalingGroupOutput, error) {
+func (m *MockAutoscalingClient) DeleteAutoScalingGroupWithContext(arg0 context.Context, arg1 *autoscaling.DeleteAutoScalingGroupInput, arg2 ...request.Option) (*autoscaling.DeleteAutoScalingGroupOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -471,12 +580,14 @@ func (m *MockAutoscalingClient) DeleteAutoScalingGroupWithContext(arg0 aws.Conte
 
 // DeleteAutoScalingGroupWithContext indicates an expected call of DeleteAutoScalingGroupWithContext
 func (mr *MockAutoscalingClientMockRecorder) DeleteAutoScalingGroupWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAutoScalingGroupWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteAutoScalingGroupWithContext), varargs...)
 }
 
 // DeleteLaunchConfiguration mocks base method
 func (m *MockAutoscalingClient) DeleteLaunchConfiguration(arg0 *autoscaling.DeleteLaunchConfigurationInput) (*autoscaling.DeleteLaunchConfigurationOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteLaunchConfiguration", arg0)
 	ret0, _ := ret[0].(*autoscaling.DeleteLaunchConfigurationOutput)
 	ret1, _ := ret[1].(error)
@@ -485,11 +596,13 @@ func (m *MockAutoscalingClient) DeleteLaunchConfiguration(arg0 *autoscaling.Dele
 
 // DeleteLaunchConfiguration indicates an expected call of DeleteLaunchConfiguration
 func (mr *MockAutoscalingClientMockRecorder) DeleteLaunchConfiguration(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLaunchConfiguration", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteLaunchConfiguration), arg0)
 }
 
 // DeleteLaunchConfigurationRequest mocks base method
 func (m *MockAutoscalingClient) DeleteLaunchConfigurationRequest(arg0 *autoscaling.DeleteLaunchConfigurationInput) (*request.Request, *autoscaling.DeleteLaunchConfigurationOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteLaunchConfigurationRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DeleteLaunchConfigurationOutput)
@@ -498,11 +611,13 @@ func (m *MockAutoscalingClient) DeleteLaunchConfigurationRequest(arg0 *autoscali
 
 // DeleteLaunchConfigurationRequest indicates an expected call of DeleteLaunchConfigurationRequest
 func (mr *MockAutoscalingClientMockRecorder) DeleteLaunchConfigurationRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLaunchConfigurationRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteLaunchConfigurationRequest), arg0)
 }
 
 // DeleteLaunchConfigurationWithContext mocks base method
-func (m *MockAutoscalingClient) DeleteLaunchConfigurationWithContext(arg0 aws.Context, arg1 *autoscaling.DeleteLaunchConfigurationInput, arg2 ...request.Option) (*autoscaling.DeleteLaunchConfigurationOutput, error) {
+func (m *MockAutoscalingClient) DeleteLaunchConfigurationWithContext(arg0 context.Context, arg1 *autoscaling.DeleteLaunchConfigurationInput, arg2 ...request.Option) (*autoscaling.DeleteLaunchConfigurationOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -515,12 +630,14 @@ func (m *MockAutoscalingClient) DeleteLaunchConfigurationWithContext(arg0 aws.Co
 
 // DeleteLaunchConfigurationWithContext indicates an expected call of DeleteLaunchConfigurationWithContext
 func (mr *MockAutoscalingClientMockRecorder) DeleteLaunchConfigurationWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLaunchConfigurationWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteLaunchConfigurationWithContext), varargs...)
 }
 
 // DeleteLifecycleHook mocks base method
 func (m *MockAutoscalingClient) DeleteLifecycleHook(arg0 *autoscaling.DeleteLifecycleHookInput) (*autoscaling.DeleteLifecycleHookOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteLifecycleHook", arg0)
 	ret0, _ := ret[0].(*autoscaling.DeleteLifecycleHookOutput)
 	ret1, _ := ret[1].(error)
@@ -529,11 +646,13 @@ func (m *MockAutoscalingClient) DeleteLifecycleHook(arg0 *autoscaling.DeleteLife
 
 // DeleteLifecycleHook indicates an expected call of DeleteLifecycleHook
 func (mr *MockAutoscalingClientMockRecorder) DeleteLifecycleHook(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLifecycleHook", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteLifecycleHook), arg0)
 }
 
 // DeleteLifecycleHookRequest mocks base method
 func (m *MockAutoscalingClient) DeleteLifecycleHookRequest(arg0 *autoscaling.DeleteLifecycleHookInput) (*request.Request, *autoscaling.DeleteLifecycleHookOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteLifecycleHookRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DeleteLifecycleHookOutput)
@@ -542,11 +661,13 @@ func (m *MockAutoscalingClient) DeleteLifecycleHookRequest(arg0 *autoscaling.Del
 
 // DeleteLifecycleHookRequest indicates an expected call of DeleteLifecycleHookRequest
 func (mr *MockAutoscalingClientMockRecorder) DeleteLifecycleHookRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLifecycleHookRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteLifecycleHookRequest), arg0)
 }
 
 // DeleteLifecycleHookWithContext mocks base method
-func (m *MockAutoscalingClient) DeleteLifecycleHookWithContext(arg0 aws.Context, arg1 *autoscaling.DeleteLifecycleHookInput, arg2 ...request.Option) (*autoscaling.DeleteLifecycleHookOutput, error) {
+func (m *MockAutoscalingClient) DeleteLifecycleHookWithContext(arg0 context.Context, arg1 *autoscaling.DeleteLifecycleHookInput, arg2 ...request.Option) (*autoscaling.DeleteLifecycleHookOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -559,12 +680,14 @@ func (m *MockAutoscalingClient) DeleteLifecycleHookWithContext(arg0 aws.Context,
 
 // DeleteLifecycleHookWithContext indicates an expected call of DeleteLifecycleHookWithContext
 func (mr *MockAutoscalingClientMockRecorder) DeleteLifecycleHookWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLifecycleHookWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteLifecycleHookWithContext), varargs...)
 }
 
 // DeleteNotificationConfiguration mocks base method
 func (m *MockAutoscalingClient) DeleteNotificationConfiguration(arg0 *autoscaling.DeleteNotificationConfigurationInput) (*autoscaling.DeleteNotificationConfigurationOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteNotificationConfiguration", arg0)
 	ret0, _ := ret[0].(*autoscaling.DeleteNotificationConfigurationOutput)
 	ret1, _ := ret[1].(error)
@@ -573,11 +696,13 @@ func (m *MockAutoscalingClient) DeleteNotificationConfiguration(arg0 *autoscalin
 
 // DeleteNotificationConfiguration indicates an expected call of DeleteNotificationConfiguration
 func (mr *MockAutoscalingClientMockRecorder) DeleteNotificationConfiguration(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotificationConfiguration", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteNotificationConfiguration), arg0)
 }
 
 // DeleteNotificationConfigurationRequest mocks base method
 func (m *MockAutoscalingClient) DeleteNotificationConfigurationRequest(arg0 *autoscaling.DeleteNotificationConfigurationInput) (*request.Request, *autoscaling.DeleteNotificationConfigurationOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteNotificationConfigurationRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DeleteNotificationConfigurationOutput)
@@ -586,11 +711,13 @@ func (m *MockAutoscalingClient) DeleteNotificationConfigurationRequest(arg0 *aut
 
 // DeleteNotificationConfigurationRequest indicates an expected call of DeleteNotificationConfigurationRequest
 func (mr *MockAutoscalingClientMockRecorder) DeleteNotificationConfigurationRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotificationConfigurationRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteNotificationConfigurationRequest), arg0)
 }
 
 // DeleteNotificationConfigurationWithContext mocks base method
-func (m *MockAutoscalingClient) DeleteNotificationConfigurationWithContext(arg0 aws.Context, arg1 *autoscaling.DeleteNotificationConfigurationInput, arg2 ...request.Option) (*autoscaling.DeleteNotificationConfigurationOutput, error) {
+func (m *MockAutoscalingClient) DeleteNotificationConfigurationWithContext(arg0 context.Context, arg1 *autoscaling.DeleteNotificationConfigurationInput, arg2 ...request.Option) (*autoscaling.DeleteNotificationConfigurationOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -603,12 +730,14 @@ func (m *MockAutoscalingClient) DeleteNotificationConfigurationWithContext(arg0 
 
 // DeleteNotificationConfigurationWithContext indicates an expected call of DeleteNotificationConfigurationWithContext
 func (mr *MockAutoscalingClientMockRecorder) DeleteNotificationConfigurationWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotificationConfigurationWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteNotificationConfigurationWithContext), varargs...)
 }
 
 // DeletePolicy mocks base method
 func (m *MockAutoscalingClient) DeletePolicy(arg0 *autoscaling.DeletePolicyInput) (*autoscaling.DeletePolicyOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePolicy", arg0)
 	ret0, _ := ret[0].(*autoscaling.DeletePolicyOutput)
 	ret1, _ := ret[1].(error)
@@ -617,11 +746,13 @@ func (m *MockAutoscalingClient) DeletePolicy(arg0 *autoscaling.DeletePolicyInput
 
 // DeletePolicy indicates an expected call of DeletePolicy
 func (mr *MockAutoscalingClientMockRecorder) DeletePolicy(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePolicy", reflect.TypeOf((*MockAutoscalingClient)(nil).DeletePolicy), arg0)
 }
 
 // DeletePolicyRequest mocks base method
 func (m *MockAutoscalingClient) DeletePolicyRequest(arg0 *autoscaling.DeletePolicyInput) (*request.Request, *autoscaling.DeletePolicyOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePolicyRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DeletePolicyOutput)
@@ -630,11 +761,13 @@ func (m *MockAutoscalingClient) DeletePolicyRequest(arg0 *autoscaling.DeletePoli
 
 // DeletePolicyRequest indicates an expected call of DeletePolicyRequest
 func (mr *MockAutoscalingClientMockRecorder) DeletePolicyRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePolicyRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DeletePolicyRequest), arg0)
 }
 
 // DeletePolicyWithContext mocks base method
-func (m *MockAutoscalingClient) DeletePolicyWithContext(arg0 aws.Context, arg1 *autoscaling.DeletePolicyInput, arg2 ...request.Option) (*autoscaling.DeletePolicyOutput, error) {
+func (m *MockAutoscalingClient) DeletePolicyWithContext(arg0 context.Context, arg1 *autoscaling.DeletePolicyInput, arg2 ...request.Option) (*autoscaling.DeletePolicyOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -647,12 +780,14 @@ func (m *MockAutoscalingClient) DeletePolicyWithContext(arg0 aws.Context, arg1 *
 
 // DeletePolicyWithContext indicates an expected call of DeletePolicyWithContext
 func (mr *MockAutoscalingClientMockRecorder) DeletePolicyWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePolicyWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DeletePolicyWithContext), varargs...)
 }
 
 // DeleteScheduledAction mocks base method
 func (m *MockAutoscalingClient) DeleteScheduledAction(arg0 *autoscaling.DeleteScheduledActionInput) (*autoscaling.DeleteScheduledActionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteScheduledAction", arg0)
 	ret0, _ := ret[0].(*autoscaling.DeleteScheduledActionOutput)
 	ret1, _ := ret[1].(error)
@@ -661,11 +796,13 @@ func (m *MockAutoscalingClient) DeleteScheduledAction(arg0 *autoscaling.DeleteSc
 
 // DeleteScheduledAction indicates an expected call of DeleteScheduledAction
 func (mr *MockAutoscalingClientMockRecorder) DeleteScheduledAction(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteScheduledAction", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteScheduledAction), arg0)
 }
 
 // DeleteScheduledActionRequest mocks base method
 func (m *MockAutoscalingClient) DeleteScheduledActionRequest(arg0 *autoscaling.DeleteScheduledActionInput) (*request.Request, *autoscaling.DeleteScheduledActionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteScheduledActionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DeleteScheduledActionOutput)
@@ -674,11 +811,13 @@ func (m *MockAutoscalingClient) DeleteScheduledActionRequest(arg0 *autoscaling.D
 
 // DeleteScheduledActionRequest indicates an expected call of DeleteScheduledActionRequest
 func (mr *MockAutoscalingClientMockRecorder) DeleteScheduledActionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteScheduledActionRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteScheduledActionRequest), arg0)
 }
 
 // DeleteScheduledActionWithContext mocks base method
-func (m *MockAutoscalingClient) DeleteScheduledActionWithContext(arg0 aws.Context, arg1 *autoscaling.DeleteScheduledActionInput, arg2 ...request.Option) (*autoscaling.DeleteScheduledActionOutput, error) {
+func (m *MockAutoscalingClient) DeleteScheduledActionWithContext(arg0 context.Context, arg1 *autoscaling.DeleteScheduledActionInput, arg2 ...request.Option) (*autoscaling.DeleteScheduledActionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -691,12 +830,14 @@ func (m *MockAutoscalingClient) DeleteScheduledActionWithContext(arg0 aws.Contex
 
 // DeleteScheduledActionWithContext indicates an expected call of DeleteScheduledActionWithContext
 func (mr *MockAutoscalingClientMockRecorder) DeleteScheduledActionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteScheduledActionWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteScheduledActionWithContext), varargs...)
 }
 
 // DeleteTags mocks base method
 func (m *MockAutoscalingClient) DeleteTags(arg0 *autoscaling.DeleteTagsInput) (*autoscaling.DeleteTagsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteTags", arg0)
 	ret0, _ := ret[0].(*autoscaling.DeleteTagsOutput)
 	ret1, _ := ret[1].(error)
@@ -705,11 +846,13 @@ func (m *MockAutoscalingClient) DeleteTags(arg0 *autoscaling.DeleteTagsInput) (*
 
 // DeleteTags indicates an expected call of DeleteTags
 func (mr *MockAutoscalingClientMockRecorder) DeleteTags(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTags", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteTags), arg0)
 }
 
 // DeleteTagsRequest mocks base method
 func (m *MockAutoscalingClient) DeleteTagsRequest(arg0 *autoscaling.DeleteTagsInput) (*request.Request, *autoscaling.DeleteTagsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteTagsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DeleteTagsOutput)
@@ -718,11 +861,13 @@ func (m *MockAutoscalingClient) DeleteTagsRequest(arg0 *autoscaling.DeleteTagsIn
 
 // DeleteTagsRequest indicates an expected call of DeleteTagsRequest
 func (mr *MockAutoscalingClientMockRecorder) DeleteTagsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTagsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteTagsRequest), arg0)
 }
 
 // DeleteTagsWithContext mocks base method
-func (m *MockAutoscalingClient) DeleteTagsWithContext(arg0 aws.Context, arg1 *autoscaling.DeleteTagsInput, arg2 ...request.Option) (*autoscaling.DeleteTagsOutput, error) {
+func (m *MockAutoscalingClient) DeleteTagsWithContext(arg0 context.Context, arg1 *autoscaling.DeleteTagsInput, arg2 ...request.Option) (*autoscaling.DeleteTagsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -735,12 +880,14 @@ func (m *MockAutoscalingClient) DeleteTagsWithContext(arg0 aws.Context, arg1 *au
 
 // DeleteTagsWithContext indicates an expected call of DeleteTagsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DeleteTagsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTagsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DeleteTagsWithContext), varargs...)
 }
 
 // DescribeAccountLimits mocks base method
 func (m *MockAutoscalingClient) DescribeAccountLimits(arg0 *autoscaling.DescribeAccountLimitsInput) (*autoscaling.DescribeAccountLimitsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAccountLimits", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeAccountLimitsOutput)
 	ret1, _ := ret[1].(error)
@@ -749,11 +896,13 @@ func (m *MockAutoscalingClient) DescribeAccountLimits(arg0 *autoscaling.Describe
 
 // DescribeAccountLimits indicates an expected call of DescribeAccountLimits
 func (mr *MockAutoscalingClientMockRecorder) DescribeAccountLimits(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAccountLimits", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAccountLimits), arg0)
 }
 
 // DescribeAccountLimitsRequest mocks base method
 func (m *MockAutoscalingClient) DescribeAccountLimitsRequest(arg0 *autoscaling.DescribeAccountLimitsInput) (*request.Request, *autoscaling.DescribeAccountLimitsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAccountLimitsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeAccountLimitsOutput)
@@ -762,11 +911,13 @@ func (m *MockAutoscalingClient) DescribeAccountLimitsRequest(arg0 *autoscaling.D
 
 // DescribeAccountLimitsRequest indicates an expected call of DescribeAccountLimitsRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeAccountLimitsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAccountLimitsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAccountLimitsRequest), arg0)
 }
 
 // DescribeAccountLimitsWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeAccountLimitsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAccountLimitsInput, arg2 ...request.Option) (*autoscaling.DescribeAccountLimitsOutput, error) {
+func (m *MockAutoscalingClient) DescribeAccountLimitsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAccountLimitsInput, arg2 ...request.Option) (*autoscaling.DescribeAccountLimitsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -779,12 +930,14 @@ func (m *MockAutoscalingClient) DescribeAccountLimitsWithContext(arg0 aws.Contex
 
 // DescribeAccountLimitsWithContext indicates an expected call of DescribeAccountLimitsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeAccountLimitsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAccountLimitsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAccountLimitsWithContext), varargs...)
 }
 
 // DescribeAdjustmentTypes mocks base method
 func (m *MockAutoscalingClient) DescribeAdjustmentTypes(arg0 *autoscaling.DescribeAdjustmentTypesInput) (*autoscaling.DescribeAdjustmentTypesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAdjustmentTypes", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeAdjustmentTypesOutput)
 	ret1, _ := ret[1].(error)
@@ -793,11 +946,13 @@ func (m *MockAutoscalingClient) DescribeAdjustmentTypes(arg0 *autoscaling.Descri
 
 // DescribeAdjustmentTypes indicates an expected call of DescribeAdjustmentTypes
 func (mr *MockAutoscalingClientMockRecorder) DescribeAdjustmentTypes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAdjustmentTypes", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAdjustmentTypes), arg0)
 }
 
 // DescribeAdjustmentTypesRequest mocks base method
 func (m *MockAutoscalingClient) DescribeAdjustmentTypesRequest(arg0 *autoscaling.DescribeAdjustmentTypesInput) (*request.Request, *autoscaling.DescribeAdjustmentTypesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAdjustmentTypesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeAdjustmentTypesOutput)
@@ -806,11 +961,13 @@ func (m *MockAutoscalingClient) DescribeAdjustmentTypesRequest(arg0 *autoscaling
 
 // DescribeAdjustmentTypesRequest indicates an expected call of DescribeAdjustmentTypesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeAdjustmentTypesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAdjustmentTypesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAdjustmentTypesRequest), arg0)
 }
 
 // DescribeAdjustmentTypesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeAdjustmentTypesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAdjustmentTypesInput, arg2 ...request.Option) (*autoscaling.DescribeAdjustmentTypesOutput, error) {
+func (m *MockAutoscalingClient) DescribeAdjustmentTypesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAdjustmentTypesInput, arg2 ...request.Option) (*autoscaling.DescribeAdjustmentTypesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -823,12 +980,14 @@ func (m *MockAutoscalingClient) DescribeAdjustmentTypesWithContext(arg0 aws.Cont
 
 // DescribeAdjustmentTypesWithContext indicates an expected call of DescribeAdjustmentTypesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeAdjustmentTypesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAdjustmentTypesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAdjustmentTypesWithContext), varargs...)
 }
 
 // DescribeAutoScalingGroups mocks base method
 func (m *MockAutoscalingClient) DescribeAutoScalingGroups(arg0 *autoscaling.DescribeAutoScalingGroupsInput) (*autoscaling.DescribeAutoScalingGroupsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAutoScalingGroups", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeAutoScalingGroupsOutput)
 	ret1, _ := ret[1].(error)
@@ -837,11 +996,13 @@ func (m *MockAutoscalingClient) DescribeAutoScalingGroups(arg0 *autoscaling.Desc
 
 // DescribeAutoScalingGroups indicates an expected call of DescribeAutoScalingGroups
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingGroups(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingGroups", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingGroups), arg0)
 }
 
 // DescribeAutoScalingGroupsPages mocks base method
 func (m *MockAutoscalingClient) DescribeAutoScalingGroupsPages(arg0 *autoscaling.DescribeAutoScalingGroupsInput, arg1 func(*autoscaling.DescribeAutoScalingGroupsOutput, bool) bool) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAutoScalingGroupsPages", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -849,11 +1010,13 @@ func (m *MockAutoscalingClient) DescribeAutoScalingGroupsPages(arg0 *autoscaling
 
 // DescribeAutoScalingGroupsPages indicates an expected call of DescribeAutoScalingGroupsPages
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingGroupsPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingGroupsPages", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingGroupsPages), arg0, arg1)
 }
 
 // DescribeAutoScalingGroupsPagesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeAutoScalingGroupsPagesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 func(*autoscaling.DescribeAutoScalingGroupsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockAutoscalingClient) DescribeAutoScalingGroupsPagesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 func(*autoscaling.DescribeAutoScalingGroupsOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2}
 	for _, a := range arg3 {
 		varargs = append(varargs, a)
@@ -865,12 +1028,14 @@ func (m *MockAutoscalingClient) DescribeAutoScalingGroupsPagesWithContext(arg0 a
 
 // DescribeAutoScalingGroupsPagesWithContext indicates an expected call of DescribeAutoScalingGroupsPagesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingGroupsPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingGroupsPagesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingGroupsPagesWithContext), varargs...)
 }
 
 // DescribeAutoScalingGroupsRequest mocks base method
 func (m *MockAutoscalingClient) DescribeAutoScalingGroupsRequest(arg0 *autoscaling.DescribeAutoScalingGroupsInput) (*request.Request, *autoscaling.DescribeAutoScalingGroupsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAutoScalingGroupsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeAutoScalingGroupsOutput)
@@ -879,11 +1044,13 @@ func (m *MockAutoscalingClient) DescribeAutoScalingGroupsRequest(arg0 *autoscali
 
 // DescribeAutoScalingGroupsRequest indicates an expected call of DescribeAutoScalingGroupsRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingGroupsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingGroupsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingGroupsRequest), arg0)
 }
 
 // DescribeAutoScalingGroupsWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeAutoScalingGroupsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 ...request.Option) (*autoscaling.DescribeAutoScalingGroupsOutput, error) {
+func (m *MockAutoscalingClient) DescribeAutoScalingGroupsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 ...request.Option) (*autoscaling.DescribeAutoScalingGroupsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -896,12 +1063,14 @@ func (m *MockAutoscalingClient) DescribeAutoScalingGroupsWithContext(arg0 aws.Co
 
 // DescribeAutoScalingGroupsWithContext indicates an expected call of DescribeAutoScalingGroupsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingGroupsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingGroupsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingGroupsWithContext), varargs...)
 }
 
 // DescribeAutoScalingInstances mocks base method
 func (m *MockAutoscalingClient) DescribeAutoScalingInstances(arg0 *autoscaling.DescribeAutoScalingInstancesInput) (*autoscaling.DescribeAutoScalingInstancesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAutoScalingInstances", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeAutoScalingInstancesOutput)
 	ret1, _ := ret[1].(error)
@@ -910,11 +1079,13 @@ func (m *MockAutoscalingClient) DescribeAutoScalingInstances(arg0 *autoscaling.D
 
 // DescribeAutoScalingInstances indicates an expected call of DescribeAutoScalingInstances
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingInstances(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingInstances", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingInstances), arg0)
 }
 
 // DescribeAutoScalingInstancesPages mocks base method
 func (m *MockAutoscalingClient) DescribeAutoScalingInstancesPages(arg0 *autoscaling.DescribeAutoScalingInstancesInput, arg1 func(*autoscaling.DescribeAutoScalingInstancesOutput, bool) bool) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAutoScalingInstancesPages", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -922,11 +1093,13 @@ func (m *MockAutoscalingClient) DescribeAutoScalingInstancesPages(arg0 *autoscal
 
 // DescribeAutoScalingInstancesPages indicates an expected call of DescribeAutoScalingInstancesPages
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingInstancesPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingInstancesPages", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingInstancesPages), arg0, arg1)
 }
 
 // DescribeAutoScalingInstancesPagesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeAutoScalingInstancesPagesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAutoScalingInstancesInput, arg2 func(*autoscaling.DescribeAutoScalingInstancesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockAutoscalingClient) DescribeAutoScalingInstancesPagesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAutoScalingInstancesInput, arg2 func(*autoscaling.DescribeAutoScalingInstancesOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2}
 	for _, a := range arg3 {
 		varargs = append(varargs, a)
@@ -938,12 +1111,14 @@ func (m *MockAutoscalingClient) DescribeAutoScalingInstancesPagesWithContext(arg
 
 // DescribeAutoScalingInstancesPagesWithContext indicates an expected call of DescribeAutoScalingInstancesPagesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingInstancesPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingInstancesPagesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingInstancesPagesWithContext), varargs...)
 }
 
 // DescribeAutoScalingInstancesRequest mocks base method
 func (m *MockAutoscalingClient) DescribeAutoScalingInstancesRequest(arg0 *autoscaling.DescribeAutoScalingInstancesInput) (*request.Request, *autoscaling.DescribeAutoScalingInstancesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAutoScalingInstancesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeAutoScalingInstancesOutput)
@@ -952,11 +1127,13 @@ func (m *MockAutoscalingClient) DescribeAutoScalingInstancesRequest(arg0 *autosc
 
 // DescribeAutoScalingInstancesRequest indicates an expected call of DescribeAutoScalingInstancesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingInstancesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingInstancesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingInstancesRequest), arg0)
 }
 
 // DescribeAutoScalingInstancesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeAutoScalingInstancesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAutoScalingInstancesInput, arg2 ...request.Option) (*autoscaling.DescribeAutoScalingInstancesOutput, error) {
+func (m *MockAutoscalingClient) DescribeAutoScalingInstancesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAutoScalingInstancesInput, arg2 ...request.Option) (*autoscaling.DescribeAutoScalingInstancesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -969,12 +1146,14 @@ func (m *MockAutoscalingClient) DescribeAutoScalingInstancesWithContext(arg0 aws
 
 // DescribeAutoScalingInstancesWithContext indicates an expected call of DescribeAutoScalingInstancesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingInstancesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingInstancesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingInstancesWithContext), varargs...)
 }
 
 // DescribeAutoScalingNotificationTypes mocks base method
 func (m *MockAutoscalingClient) DescribeAutoScalingNotificationTypes(arg0 *autoscaling.DescribeAutoScalingNotificationTypesInput) (*autoscaling.DescribeAutoScalingNotificationTypesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAutoScalingNotificationTypes", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeAutoScalingNotificationTypesOutput)
 	ret1, _ := ret[1].(error)
@@ -983,11 +1162,13 @@ func (m *MockAutoscalingClient) DescribeAutoScalingNotificationTypes(arg0 *autos
 
 // DescribeAutoScalingNotificationTypes indicates an expected call of DescribeAutoScalingNotificationTypes
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingNotificationTypes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingNotificationTypes", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingNotificationTypes), arg0)
 }
 
 // DescribeAutoScalingNotificationTypesRequest mocks base method
 func (m *MockAutoscalingClient) DescribeAutoScalingNotificationTypesRequest(arg0 *autoscaling.DescribeAutoScalingNotificationTypesInput) (*request.Request, *autoscaling.DescribeAutoScalingNotificationTypesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeAutoScalingNotificationTypesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeAutoScalingNotificationTypesOutput)
@@ -996,11 +1177,13 @@ func (m *MockAutoscalingClient) DescribeAutoScalingNotificationTypesRequest(arg0
 
 // DescribeAutoScalingNotificationTypesRequest indicates an expected call of DescribeAutoScalingNotificationTypesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingNotificationTypesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingNotificationTypesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingNotificationTypesRequest), arg0)
 }
 
 // DescribeAutoScalingNotificationTypesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeAutoScalingNotificationTypesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAutoScalingNotificationTypesInput, arg2 ...request.Option) (*autoscaling.DescribeAutoScalingNotificationTypesOutput, error) {
+func (m *MockAutoscalingClient) DescribeAutoScalingNotificationTypesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAutoScalingNotificationTypesInput, arg2 ...request.Option) (*autoscaling.DescribeAutoScalingNotificationTypesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1013,12 +1196,64 @@ func (m *MockAutoscalingClient) DescribeAutoScalingNotificationTypesWithContext(
 
 // DescribeAutoScalingNotificationTypesWithContext indicates an expected call of DescribeAutoScalingNotificationTypesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeAutoScalingNotificationTypesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeAutoScalingNotificationTypesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeAutoScalingNotificationTypesWithContext), varargs...)
 }
 
+// DescribeInstanceRefreshes mocks base method
+func (m *MockAutoscalingClient) DescribeInstanceRefreshes(arg0 *autoscaling.DescribeInstanceRefreshesInput) (*autoscaling.DescribeInstanceRefreshesOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DescribeInstanceRefreshes", arg0)
+	ret0, _ := ret[0].(*autoscaling.DescribeInstanceRefreshesOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DescribeInstanceRefreshes indicates an expected call of DescribeInstanceRefreshes
+func (mr *MockAutoscalingClientMockRecorder) DescribeInstanceRefreshes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeInstanceRefreshes", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeInstanceRefreshes), arg0)
+}
+
+// DescribeInstanceRefreshesRequest mocks base method
+func (m *MockAutoscalingClient) DescribeInstanceRefreshesRequest(arg0 *autoscaling.DescribeInstanceRefreshesInput) (*request.Request, *autoscaling.DescribeInstanceRefreshesOutput) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DescribeInstanceRefreshesRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*autoscaling.DescribeInstanceRefreshesOutput)
+	return ret0, ret1
+}
+
+// DescribeInstanceRefreshesRequest indicates an expected call of DescribeInstanceRefreshesRequest
+func (mr *MockAutoscalingClientMockRecorder) DescribeInstanceRefreshesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeInstanceRefreshesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeInstanceRefreshesRequest), arg0)
+}
+
+// DescribeInstanceRefreshesWithContext mocks base method
+func (m *MockAutoscalingClient) DescribeInstanceRefreshesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeInstanceRefreshesInput, arg2 ...request.Option) (*autoscaling.DescribeInstanceRefreshesOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DescribeInstanceRefreshesWithContext", varargs...)
+	ret0, _ := ret[0].(*autoscaling.DescribeInstanceRefreshesOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DescribeInstanceRefreshesWithContext indicates an expected call of DescribeInstanceRefreshesWithContext
+func (mr *MockAutoscalingClientMockRecorder) DescribeInstanceRefreshesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeInstanceRefreshesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeInstanceRefreshesWithContext), varargs...)
+}
+
 // DescribeLaunchConfigurations mocks base method
 func (m *MockAutoscalingClient) DescribeLaunchConfigurations(arg0 *autoscaling.DescribeLaunchConfigurationsInput) (*autoscaling.DescribeLaunchConfigurationsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLaunchConfigurations", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeLaunchConfigurationsOutput)
 	ret1, _ := ret[1].(error)
@@ -1027,11 +1262,13 @@ func (m *MockAutoscalingClient) DescribeLaunchConfigurations(arg0 *autoscaling.D
 
 // DescribeLaunchConfigurations indicates an expected call of DescribeLaunchConfigurations
 func (mr *MockAutoscalingClientMockRecorder) DescribeLaunchConfigurations(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLaunchConfigurations", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLaunchConfigurations), arg0)
 }
 
 // DescribeLaunchConfigurationsPages mocks base method
 func (m *MockAutoscalingClient) DescribeLaunchConfigurationsPages(arg0 *autoscaling.DescribeLaunchConfigurationsInput, arg1 func(*autoscaling.DescribeLaunchConfigurationsOutput, bool) bool) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLaunchConfigurationsPages", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -1039,11 +1276,13 @@ func (m *MockAutoscalingClient) DescribeLaunchConfigurationsPages(arg0 *autoscal
 
 // DescribeLaunchConfigurationsPages indicates an expected call of DescribeLaunchConfigurationsPages
 func (mr *MockAutoscalingClientMockRecorder) DescribeLaunchConfigurationsPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLaunchConfigurationsPages", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLaunchConfigurationsPages), arg0, arg1)
 }
 
 // DescribeLaunchConfigurationsPagesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeLaunchConfigurationsPagesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeLaunchConfigurationsInput, arg2 func(*autoscaling.DescribeLaunchConfigurationsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockAutoscalingClient) DescribeLaunchConfigurationsPagesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeLaunchConfigurationsInput, arg2 func(*autoscaling.DescribeLaunchConfigurationsOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2}
 	for _, a := range arg3 {
 		varargs = append(varargs, a)
@@ -1055,12 +1294,14 @@ func (m *MockAutoscalingClient) DescribeLaunchConfigurationsPagesWithContext(arg
 
 // DescribeLaunchConfigurationsPagesWithContext indicates an expected call of DescribeLaunchConfigurationsPagesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeLaunchConfigurationsPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLaunchConfigurationsPagesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLaunchConfigurationsPagesWithContext), varargs...)
 }
 
 // DescribeLaunchConfigurationsRequest mocks base method
 func (m *MockAutoscalingClient) DescribeLaunchConfigurationsRequest(arg0 *autoscaling.DescribeLaunchConfigurationsInput) (*request.Request, *autoscaling.DescribeLaunchConfigurationsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLaunchConfigurationsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeLaunchConfigurationsOutput)
@@ -1069,11 +1310,13 @@ func (m *MockAutoscalingClient) DescribeLaunchConfigurationsRequest(arg0 *autosc
 
 // DescribeLaunchConfigurationsRequest indicates an expected call of DescribeLaunchConfigurationsRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeLaunchConfigurationsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLaunchConfigurationsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLaunchConfigurationsRequest), arg0)
 }
 
 // DescribeLaunchConfigurationsWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeLaunchConfigurationsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeLaunchConfigurationsInput, arg2 ...request.Option) (*autoscaling.DescribeLaunchConfigurationsOutput, error) {
+func (m *MockAutoscalingClient) DescribeLaunchConfigurationsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeLaunchConfigurationsInput, arg2 ...request.Option) (*autoscaling.DescribeLaunchConfigurationsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1086,12 +1329,14 @@ func (m *MockAutoscalingClient) DescribeLaunchConfigurationsWithContext(arg0 aws
 
 // DescribeLaunchConfigurationsWithContext indicates an expected call of DescribeLaunchConfigurationsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeLaunchConfigurationsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLaunchConfigurationsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLaunchConfigurationsWithContext), varargs...)
 }
 
 // DescribeLifecycleHookTypes mocks base method
 func (m *MockAutoscalingClient) DescribeLifecycleHookTypes(arg0 *autoscaling.DescribeLifecycleHookTypesInput) (*autoscaling.DescribeLifecycleHookTypesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLifecycleHookTypes", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeLifecycleHookTypesOutput)
 	ret1, _ := ret[1].(error)
@@ -1100,11 +1345,13 @@ func (m *MockAutoscalingClient) DescribeLifecycleHookTypes(arg0 *autoscaling.Des
 
 // DescribeLifecycleHookTypes indicates an expected call of DescribeLifecycleHookTypes
 func (mr *MockAutoscalingClientMockRecorder) DescribeLifecycleHookTypes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLifecycleHookTypes", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLifecycleHookTypes), arg0)
 }
 
 // DescribeLifecycleHookTypesRequest mocks base method
 func (m *MockAutoscalingClient) DescribeLifecycleHookTypesRequest(arg0 *autoscaling.DescribeLifecycleHookTypesInput) (*request.Request, *autoscaling.DescribeLifecycleHookTypesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLifecycleHookTypesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeLifecycleHookTypesOutput)
@@ -1113,11 +1360,13 @@ func (m *MockAutoscalingClient) DescribeLifecycleHookTypesRequest(arg0 *autoscal
 
 // DescribeLifecycleHookTypesRequest indicates an expected call of DescribeLifecycleHookTypesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeLifecycleHookTypesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLifecycleHookTypesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLifecycleHookTypesRequest), arg0)
 }
 
 // DescribeLifecycleHookTypesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeLifecycleHookTypesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeLifecycleHookTypesInput, arg2 ...request.Option) (*autoscaling.DescribeLifecycleHookTypesOutput, error) {
+func (m *MockAutoscalingClient) DescribeLifecycleHookTypesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeLifecycleHookTypesInput, arg2 ...request.Option) (*autoscaling.DescribeLifecycleHookTypesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1130,12 +1379,14 @@ func (m *MockAutoscalingClient) DescribeLifecycleHookTypesWithContext(arg0 aws.C
 
 // DescribeLifecycleHookTypesWithContext indicates an expected call of DescribeLifecycleHookTypesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeLifecycleHookTypesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLifecycleHookTypesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLifecycleHookTypesWithContext), varargs...)
 }
 
 // DescribeLifecycleHooks mocks base method
 func (m *MockAutoscalingClient) DescribeLifecycleHooks(arg0 *autoscaling.DescribeLifecycleHooksInput) (*autoscaling.DescribeLifecycleHooksOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLifecycleHooks", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeLifecycleHooksOutput)
 	ret1, _ := ret[1].(error)
@@ -1144,11 +1395,13 @@ func (m *MockAutoscalingClient) DescribeLifecycleHooks(arg0 *autoscaling.Describ
 
 // DescribeLifecycleHooks indicates an expected call of DescribeLifecycleHooks
 func (mr *MockAutoscalingClientMockRecorder) DescribeLifecycleHooks(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLifecycleHooks", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLifecycleHooks), arg0)
 }
 
 // DescribeLifecycleHooksRequest mocks base method
 func (m *MockAutoscalingClient) DescribeLifecycleHooksRequest(arg0 *autoscaling.DescribeLifecycleHooksInput) (*request.Request, *autoscaling.DescribeLifecycleHooksOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLifecycleHooksRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeLifecycleHooksOutput)
@@ -1157,11 +1410,13 @@ func (m *MockAutoscalingClient) DescribeLifecycleHooksRequest(arg0 *autoscaling.
 
 // DescribeLifecycleHooksRequest indicates an expected call of DescribeLifecycleHooksRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeLifecycleHooksRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLifecycleHooksRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLifecycleHooksRequest), arg0)
 }
 
 // DescribeLifecycleHooksWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeLifecycleHooksWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeLifecycleHooksInput, arg2 ...request.Option) (*autoscaling.DescribeLifecycleHooksOutput, error) {
+func (m *MockAutoscalingClient) DescribeLifecycleHooksWithContext(arg0 context.Context, arg1 *autoscaling.DescribeLifecycleHooksInput, arg2 ...request.Option) (*autoscaling.DescribeLifecycleHooksOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1174,12 +1429,14 @@ func (m *MockAutoscalingClient) DescribeLifecycleHooksWithContext(arg0 aws.Conte
 
 // DescribeLifecycleHooksWithContext indicates an expected call of DescribeLifecycleHooksWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeLifecycleHooksWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLifecycleHooksWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLifecycleHooksWithContext), varargs...)
 }
 
 // DescribeLoadBalancerTargetGroups mocks base method
 func (m *MockAutoscalingClient) DescribeLoadBalancerTargetGroups(arg0 *autoscaling.DescribeLoadBalancerTargetGroupsInput) (*autoscaling.DescribeLoadBalancerTargetGroupsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLoadBalancerTargetGroups", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeLoadBalancerTargetGroupsOutput)
 	ret1, _ := ret[1].(error)
@@ -1188,11 +1445,13 @@ func (m *MockAutoscalingClient) DescribeLoadBalancerTargetGroups(arg0 *autoscali
 
 // DescribeLoadBalancerTargetGroups indicates an expected call of DescribeLoadBalancerTargetGroups
 func (mr *MockAutoscalingClientMockRecorder) DescribeLoadBalancerTargetGroups(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLoadBalancerTargetGroups", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLoadBalancerTargetGroups), arg0)
 }
 
 // DescribeLoadBalancerTargetGroupsRequest mocks base method
 func (m *MockAutoscalingClient) DescribeLoadBalancerTargetGroupsRequest(arg0 *autoscaling.DescribeLoadBalancerTargetGroupsInput) (*request.Request, *autoscaling.DescribeLoadBalancerTargetGroupsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLoadBalancerTargetGroupsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeLoadBalancerTargetGroupsOutput)
@@ -1201,11 +1460,13 @@ func (m *MockAutoscalingClient) DescribeLoadBalancerTargetGroupsRequest(arg0 *au
 
 // DescribeLoadBalancerTargetGroupsRequest indicates an expected call of DescribeLoadBalancerTargetGroupsRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeLoadBalancerTargetGroupsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLoadBalancerTargetGroupsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLoadBalancerTargetGroupsRequest), arg0)
 }
 
 // DescribeLoadBalancerTargetGroupsWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeLoadBalancerTargetGroupsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeLoadBalancerTargetGroupsInput, arg2 ...request.Option) (*autoscaling.DescribeLoadBalancerTargetGroupsOutput, error) {
+func (m *MockAutoscalingClient) DescribeLoadBalancerTargetGroupsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeLoadBalancerTargetGroupsInput, arg2 ...request.Option) (*autoscaling.DescribeLoadBalancerTargetGroupsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1218,12 +1479,14 @@ func (m *MockAutoscalingClient) DescribeLoadBalancerTargetGroupsWithContext(arg0
 
 // DescribeLoadBalancerTargetGroupsWithContext indicates an expected call of DescribeLoadBalancerTargetGroupsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeLoadBalancerTargetGroupsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLoadBalancerTargetGroupsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLoadBalancerTargetGroupsWithContext), varargs...)
 }
 
 // DescribeLoadBalancers mocks base method
 func (m *MockAutoscalingClient) DescribeLoadBalancers(arg0 *autoscaling.DescribeLoadBalancersInput) (*autoscaling.DescribeLoadBalancersOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLoadBalancers", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeLoadBalancersOutput)
 	ret1, _ := ret[1].(error)
@@ -1232,11 +1495,13 @@ func (m *MockAutoscalingClient) DescribeLoadBalancers(arg0 *autoscaling.Describe
 
 // DescribeLoadBalancers indicates an expected call of DescribeLoadBalancers
 func (mr *MockAutoscalingClientMockRecorder) DescribeLoadBalancers(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLoadBalancers", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLoadBalancers), arg0)
 }
 
 // DescribeLoadBalancersRequest mocks base method
 func (m *MockAutoscalingClient) DescribeLoadBalancersRequest(arg0 *autoscaling.DescribeLoadBalancersInput) (*request.Request, *autoscaling.DescribeLoadBalancersOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeLoadBalancersRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeLoadBalancersOutput)
@@ -1245,11 +1510,13 @@ func (m *MockAutoscalingClient) DescribeLoadBalancersRequest(arg0 *autoscaling.D
 
 // DescribeLoadBalancersRequest indicates an expected call of DescribeLoadBalancersRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeLoadBalancersRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLoadBalancersRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLoadBalancersRequest), arg0)
 }
 
 // DescribeLoadBalancersWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeLoadBalancersWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeLoadBalancersInput, arg2 ...request.Option) (*autoscaling.DescribeLoadBalancersOutput, error) {
+func (m *MockAutoscalingClient) DescribeLoadBalancersWithContext(arg0 context.Context, arg1 *autoscaling.DescribeLoadBalancersInput, arg2 ...request.Option) (*autoscaling.DescribeLoadBalancersOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1262,12 +1529,14 @@ func (m *MockAutoscalingClient) DescribeLoadBalancersWithContext(arg0 aws.Contex
 
 // DescribeLoadBalancersWithContext indicates an expected call of DescribeLoadBalancersWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeLoadBalancersWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLoadBalancersWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeLoadBalancersWithContext), varargs...)
 }
 
 // DescribeMetricCollectionTypes mocks base method
 func (m *MockAutoscalingClient) DescribeMetricCollectionTypes(arg0 *autoscaling.DescribeMetricCollectionTypesInput) (*autoscaling.DescribeMetricCollectionTypesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeMetricCollectionTypes", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeMetricCollectionTypesOutput)
 	ret1, _ := ret[1].(error)
@@ -1276,11 +1545,13 @@ func (m *MockAutoscalingClient) DescribeMetricCollectionTypes(arg0 *autoscaling.
 
 // DescribeMetricCollectionTypes indicates an expected call of DescribeMetricCollectionTypes
 func (mr *MockAutoscalingClientMockRecorder) DescribeMetricCollectionTypes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeMetricCollectionTypes", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeMetricCollectionTypes), arg0)
 }
 
 // DescribeMetricCollectionTypesRequest mocks base method
 func (m *MockAutoscalingClient) DescribeMetricCollectionTypesRequest(arg0 *autoscaling.DescribeMetricCollectionTypesInput) (*request.Request, *autoscaling.DescribeMetricCollectionTypesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeMetricCollectionTypesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeMetricCollectionTypesOutput)
@@ -1289,11 +1560,13 @@ func (m *MockAutoscalingClient) DescribeMetricCollectionTypesRequest(arg0 *autos
 
 // DescribeMetricCollectionTypesRequest indicates an expected call of DescribeMetricCollectionTypesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeMetricCollectionTypesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeMetricCollectionTypesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeMetricCollectionTypesRequest), arg0)
 }
 
 // DescribeMetricCollectionTypesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeMetricCollectionTypesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeMetricCollectionTypesInput, arg2 ...request.Option) (*autoscaling.DescribeMetricCollectionTypesOutput, error) {
+func (m *MockAutoscalingClient) DescribeMetricCollectionTypesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeMetricCollectionTypesInput, arg2 ...request.Option) (*autoscaling.DescribeMetricCollectionTypesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1306,12 +1579,14 @@ func (m *MockAutoscalingClient) DescribeMetricCollectionTypesWithContext(arg0 aw
 
 // DescribeMetricCollectionTypesWithContext indicates an expected call of DescribeMetricCollectionTypesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeMetricCollectionTypesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeMetricCollectionTypesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeMetricCollectionTypesWithContext), varargs...)
 }
 
 // DescribeNotificationConfigurations mocks base method
 func (m *MockAutoscalingClient) DescribeNotificationConfigurations(arg0 *autoscaling.DescribeNotificationConfigurationsInput) (*autoscaling.DescribeNotificationConfigurationsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeNotificationConfigurations", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeNotificationConfigurationsOutput)
 	ret1, _ := ret[1].(error)
@@ -1320,11 +1595,13 @@ func (m *MockAutoscalingClient) DescribeNotificationConfigurations(arg0 *autosca
 
 // DescribeNotificationConfigurations indicates an expected call of DescribeNotificationConfigurations
 func (mr *MockAutoscalingClientMockRecorder) DescribeNotificationConfigurations(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeNotificationConfigurations", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeNotificationConfigurations), arg0)
 }
 
 // DescribeNotificationConfigurationsPages mocks base method
 func (m *MockAutoscalingClient) DescribeNotificationConfigurationsPages(arg0 *autoscaling.DescribeNotificationConfigurationsInput, arg1 func(*autoscaling.DescribeNotificationConfigurationsOutput, bool) bool) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeNotificationConfigurationsPages", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -1332,11 +1609,13 @@ func (m *MockAutoscalingClient) DescribeNotificationConfigurationsPages(arg0 *au
 
 // DescribeNotificationConfigurationsPages indicates an expected call of DescribeNotificationConfigurationsPages
 func (mr *MockAutoscalingClientMockRecorder) DescribeNotificationConfigurationsPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeNotificationConfigurationsPages", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeNotificationConfigurationsPages), arg0, arg1)
 }
 
 // DescribeNotificationConfigurationsPagesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeNotificationConfigurationsPagesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeNotificationConfigurationsInput, arg2 func(*autoscaling.DescribeNotificationConfigurationsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockAutoscalingClient) DescribeNotificationConfigurationsPagesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeNotificationConfigurationsInput, arg2 func(*autoscaling.DescribeNotificationConfigurationsOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2}
 	for _, a := range arg3 {
 		varargs = append(varargs, a)
@@ -1348,12 +1627,14 @@ func (m *MockAutoscalingClient) DescribeNotificationConfigurationsPagesWithConte
 
 // DescribeNotificationConfigurationsPagesWithContext indicates an expected call of DescribeNotificationConfigurationsPagesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeNotificationConfigurationsPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeNotificationConfigurationsPagesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeNotificationConfigurationsPagesWithContext), varargs...)
 }
 
 // DescribeNotificationConfigurationsRequest mocks base method
 func (m *MockAutoscalingClient) DescribeNotificationConfigurationsRequest(arg0 *autoscaling.DescribeNotificationConfigurationsInput) (*request.Request, *autoscaling.DescribeNotificationConfigurationsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeNotificationConfigurationsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeNotificationConfigurationsOutput)
@@ -1362,11 +1643,13 @@ func (m *MockAutoscalingClient) DescribeNotificationConfigurationsRequest(arg0 *
 
 // DescribeNotificationConfigurationsRequest indicates an expected call of DescribeNotificationConfigurationsRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeNotificationConfigurationsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeNotificationConfigurationsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeNotificationConfigurationsRequest), arg0)
 }
 
 // DescribeNotificationConfigurationsWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeNotificationConfigurationsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeNotificationConfigurationsInput, arg2 ...request.Option) (*autoscaling.DescribeNotificationConfigurationsOutput, error) {
+func (m *MockAutoscalingClient) DescribeNotificationConfigurationsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeNotificationConfigurationsInput, arg2 ...request.Option) (*autoscaling.DescribeNotificationConfigurationsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1379,12 +1662,14 @@ func (m *MockAutoscalingClient) DescribeNotificationConfigurationsWithContext(ar
 
 // DescribeNotificationConfigurationsWithContext indicates an expected call of DescribeNotificationConfigurationsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeNotificationConfigurationsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeNotificationConfigurationsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeNotificationConfigurationsWithContext), varargs...)
 }
 
 // DescribePolicies mocks base method
 func (m *MockAutoscalingClient) DescribePolicies(arg0 *autoscaling.DescribePoliciesInput) (*autoscaling.DescribePoliciesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribePolicies", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribePoliciesOutput)
 	ret1, _ := ret[1].(error)
@@ -1393,11 +1678,13 @@ func (m *MockAutoscalingClient) DescribePolicies(arg0 *autoscaling.DescribePolic
 
 // DescribePolicies indicates an expected call of DescribePolicies
 func (mr *MockAutoscalingClientMockRecorder) DescribePolicies(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribePolicies", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribePolicies), arg0)
 }
 
 // DescribePoliciesPages mocks base method
 func (m *MockAutoscalingClient) DescribePoliciesPages(arg0 *autoscaling.DescribePoliciesInput, arg1 func(*autoscaling.DescribePoliciesOutput, bool) bool) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribePoliciesPages", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -1405,11 +1692,13 @@ func (m *MockAutoscalingClient) DescribePoliciesPages(arg0 *autoscaling.Describe
 
 // DescribePoliciesPages indicates an expected call of DescribePoliciesPages
 func (mr *MockAutoscalingClientMockRecorder) DescribePoliciesPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribePoliciesPages", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribePoliciesPages), arg0, arg1)
 }
 
 // DescribePoliciesPagesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribePoliciesPagesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribePoliciesInput, arg2 func(*autoscaling.DescribePoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockAutoscalingClient) DescribePoliciesPagesWithContext(arg0 context.Context, arg1 *autoscaling.DescribePoliciesInput, arg2 func(*autoscaling.DescribePoliciesOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2}
 	for _, a := range arg3 {
 		varargs = append(varargs, a)
@@ -1421,12 +1710,14 @@ func (m *MockAutoscalingClient) DescribePoliciesPagesWithContext(arg0 aws.Contex
 
 // DescribePoliciesPagesWithContext indicates an expected call of DescribePoliciesPagesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribePoliciesPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribePoliciesPagesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribePoliciesPagesWithContext), varargs...)
 }
 
 // DescribePoliciesRequest mocks base method
 func (m *MockAutoscalingClient) DescribePoliciesRequest(arg0 *autoscaling.DescribePoliciesInput) (*request.Request, *autoscaling.DescribePoliciesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribePoliciesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribePoliciesOutput)
@@ -1435,11 +1726,13 @@ func (m *MockAutoscalingClient) DescribePoliciesRequest(arg0 *autoscaling.Descri
 
 // DescribePoliciesRequest indicates an expected call of DescribePoliciesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribePoliciesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribePoliciesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribePoliciesRequest), arg0)
 }
 
 // DescribePoliciesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribePoliciesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribePoliciesInput, arg2 ...request.Option) (*autoscaling.DescribePoliciesOutput, error) {
+func (m *MockAutoscalingClient) DescribePoliciesWithContext(arg0 context.Context, arg1 *autoscaling.DescribePoliciesInput, arg2 ...request.Option) (*autoscaling.DescribePoliciesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1452,12 +1745,14 @@ func (m *MockAutoscalingClient) DescribePoliciesWithContext(arg0 aws.Context, ar
 
 // DescribePoliciesWithContext indicates an expected call of DescribePoliciesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribePoliciesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribePoliciesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribePoliciesWithContext), varargs...)
 }
 
 // DescribeScalingActivities mocks base method
 func (m *MockAutoscalingClient) DescribeScalingActivities(arg0 *autoscaling.DescribeScalingActivitiesInput) (*autoscaling.DescribeScalingActivitiesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeScalingActivities", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeScalingActivitiesOutput)
 	ret1, _ := ret[1].(error)
@@ -1466,11 +1761,13 @@ func (m *MockAutoscalingClient) DescribeScalingActivities(arg0 *autoscaling.Desc
 
 // DescribeScalingActivities indicates an expected call of DescribeScalingActivities
 func (mr *MockAutoscalingClientMockRecorder) DescribeScalingActivities(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScalingActivities", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScalingActivities), arg0)
 }
 
 // DescribeScalingActivitiesPages mocks base method
 func (m *MockAutoscalingClient) DescribeScalingActivitiesPages(arg0 *autoscaling.DescribeScalingActivitiesInput, arg1 func(*autoscaling.DescribeScalingActivitiesOutput, bool) bool) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeScalingActivitiesPages", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -1478,11 +1775,13 @@ func (m *MockAutoscalingClient) DescribeScalingActivitiesPages(arg0 *autoscaling
 
 // DescribeScalingActivitiesPages indicates an expected call of DescribeScalingActivitiesPages
 func (mr *MockAutoscalingClientMockRecorder) DescribeScalingActivitiesPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScalingActivitiesPages", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScalingActivitiesPages), arg0, arg1)
 }
 
 // DescribeScalingActivitiesPagesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeScalingActivitiesPagesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeScalingActivitiesInput, arg2 func(*autoscaling.DescribeScalingActivitiesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockAutoscalingClient) DescribeScalingActivitiesPagesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeScalingActivitiesInput, arg2 func(*autoscaling.DescribeScalingActivitiesOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2}
 	for _, a := range arg3 {
 		varargs = append(varargs, a)
@@ -1494,12 +1793,14 @@ func (m *MockAutoscalingClient) DescribeScalingActivitiesPagesWithContext(arg0 a
 
 // DescribeScalingActivitiesPagesWithContext indicates an expected call of DescribeScalingActivitiesPagesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeScalingActivitiesPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScalingActivitiesPagesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScalingActivitiesPagesWithContext), varargs...)
 }
 
 // DescribeScalingActivitiesRequest mocks base method
 func (m *MockAutoscalingClient) DescribeScalingActivitiesRequest(arg0 *autoscaling.DescribeScalingActivitiesInput) (*request.Request, *autoscaling.DescribeScalingActivitiesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeScalingActivitiesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeScalingActivitiesOutput)
@@ -1508,11 +1809,13 @@ func (m *MockAutoscalingClient) DescribeScalingActivitiesRequest(arg0 *autoscali
 
 // DescribeScalingActivitiesRequest indicates an expected call of DescribeScalingActivitiesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeScalingActivitiesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScalingActivitiesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScalingActivitiesRequest), arg0)
 }
 
 // DescribeScalingActivitiesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeScalingActivitiesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeScalingActivitiesInput, arg2 ...request.Option) (*autoscaling.DescribeScalingActivitiesOutput, error) {
+func (m *MockAutoscalingClient) DescribeScalingActivitiesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeScalingActivitiesInput, arg2 ...request.Option) (*autoscaling.DescribeScalingActivitiesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1525,12 +1828,14 @@ func (m *MockAutoscalingClient) DescribeScalingActivitiesWithContext(arg0 aws.Co
 
 // DescribeScalingActivitiesWithContext indicates an expected call of DescribeScalingActivitiesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeScalingActivitiesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScalingActivitiesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScalingActivitiesWithContext), varargs...)
 }
 
 // DescribeScalingProcessTypes mocks base method
 func (m *MockAutoscalingClient) DescribeScalingProcessTypes(arg0 *autoscaling.DescribeScalingProcessTypesInput) (*autoscaling.DescribeScalingProcessTypesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeScalingProcessTypes", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeScalingProcessTypesOutput)
 	ret1, _ := ret[1].(error)
@@ -1539,11 +1844,13 @@ func (m *MockAutoscalingClient) DescribeScalingProcessTypes(arg0 *autoscaling.De
 
 // DescribeScalingProcessTypes indicates an expected call of DescribeScalingProcessTypes
 func (mr *MockAutoscalingClientMockRecorder) DescribeScalingProcessTypes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScalingProcessTypes", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScalingProcessTypes), arg0)
 }
 
 // DescribeScalingProcessTypesRequest mocks base method
 func (m *MockAutoscalingClient) DescribeScalingProcessTypesRequest(arg0 *autoscaling.DescribeScalingProcessTypesInput) (*request.Request, *autoscaling.DescribeScalingProcessTypesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeScalingProcessTypesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeScalingProcessTypesOutput)
@@ -1552,11 +1859,13 @@ func (m *MockAutoscalingClient) DescribeScalingProcessTypesRequest(arg0 *autosca
 
 // DescribeScalingProcessTypesRequest indicates an expected call of DescribeScalingProcessTypesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeScalingProcessTypesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScalingProcessTypesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScalingProcessTypesRequest), arg0)
 }
 
 // DescribeScalingProcessTypesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeScalingProcessTypesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeScalingProcessTypesInput, arg2 ...request.Option) (*autoscaling.DescribeScalingProcessTypesOutput, error) {
+func (m *MockAutoscalingClient) DescribeScalingProcessTypesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeScalingProcessTypesInput, arg2 ...request.Option) (*autoscaling.DescribeScalingProcessTypesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1569,12 +1878,14 @@ func (m *MockAutoscalingClient) DescribeScalingProcessTypesWithContext(arg0 aws.
 
 // DescribeScalingProcessTypesWithContext indicates an expected call of DescribeScalingProcessTypesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeScalingProcessTypesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScalingProcessTypesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScalingProcessTypesWithContext), varargs...)
 }
 
 // DescribeScheduledActions mocks base method
 func (m *MockAutoscalingClient) DescribeScheduledActions(arg0 *autoscaling.DescribeScheduledActionsInput) (*autoscaling.DescribeScheduledActionsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeScheduledActions", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeScheduledActionsOutput)
 	ret1, _ := ret[1].(error)
@@ -1583,11 +1894,13 @@ func (m *MockAutoscalingClient) DescribeScheduledActions(arg0 *autoscaling.Descr
 
 // DescribeScheduledActions indicates an expected call of DescribeScheduledActions
 func (mr *MockAutoscalingClientMockRecorder) DescribeScheduledActions(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScheduledActions", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScheduledActions), arg0)
 }
 
 // DescribeScheduledActionsPages mocks base method
 func (m *MockAutoscalingClient) DescribeScheduledActionsPages(arg0 *autoscaling.DescribeScheduledActionsInput, arg1 func(*autoscaling.DescribeScheduledActionsOutput, bool) bool) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeScheduledActionsPages", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -1595,11 +1908,13 @@ func (m *MockAutoscalingClient) DescribeScheduledActionsPages(arg0 *autoscaling.
 
 // DescribeScheduledActionsPages indicates an expected call of DescribeScheduledActionsPages
 func (mr *MockAutoscalingClientMockRecorder) DescribeScheduledActionsPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScheduledActionsPages", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScheduledActionsPages), arg0, arg1)
 }
 
 // DescribeScheduledActionsPagesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeScheduledActionsPagesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeScheduledActionsInput, arg2 func(*autoscaling.DescribeScheduledActionsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockAutoscalingClient) DescribeScheduledActionsPagesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeScheduledActionsInput, arg2 func(*autoscaling.DescribeScheduledActionsOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2}
 	for _, a := range arg3 {
 		varargs = append(varargs, a)
@@ -1611,12 +1926,14 @@ func (m *MockAutoscalingClient) DescribeScheduledActionsPagesWithContext(arg0 aw
 
 // DescribeScheduledActionsPagesWithContext indicates an expected call of DescribeScheduledActionsPagesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeScheduledActionsPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScheduledActionsPagesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScheduledActionsPagesWithContext), varargs...)
 }
 
 // DescribeScheduledActionsRequest mocks base method
 func (m *MockAutoscalingClient) DescribeScheduledActionsRequest(arg0 *autoscaling.DescribeScheduledActionsInput) (*request.Request, *autoscaling.DescribeScheduledActionsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeScheduledActionsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeScheduledActionsOutput)
@@ -1625,11 +1942,13 @@ func (m *MockAutoscalingClient) DescribeScheduledActionsRequest(arg0 *autoscalin
 
 // DescribeScheduledActionsRequest indicates an expected call of DescribeScheduledActionsRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeScheduledActionsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScheduledActionsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScheduledActionsRequest), arg0)
 }
 
 // DescribeScheduledActionsWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeScheduledActionsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeScheduledActionsInput, arg2 ...request.Option) (*autoscaling.DescribeScheduledActionsOutput, error) {
+func (m *MockAutoscalingClient) DescribeScheduledActionsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeScheduledActionsInput, arg2 ...request.Option) (*autoscaling.DescribeScheduledActionsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1642,12 +1961,14 @@ func (m *MockAutoscalingClient) DescribeScheduledActionsWithContext(arg0 aws.Con
 
 // DescribeScheduledActionsWithContext indicates an expected call of DescribeScheduledActionsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeScheduledActionsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeScheduledActionsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeScheduledActionsWithContext), varargs...)
 }
 
 // DescribeTags mocks base method
 func (m *MockAutoscalingClient) DescribeTags(arg0 *autoscaling.DescribeTagsInput) (*autoscaling.DescribeTagsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeTags", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeTagsOutput)
 	ret1, _ := ret[1].(error)
@@ -1656,11 +1977,13 @@ func (m *MockAutoscalingClient) DescribeTags(arg0 *autoscaling.DescribeTagsInput
 
 // DescribeTags indicates an expected call of DescribeTags
 func (mr *MockAutoscalingClientMockRecorder) DescribeTags(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTags", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeTags), arg0)
 }
 
 // DescribeTagsPages mocks base method
 func (m *MockAutoscalingClient) DescribeTagsPages(arg0 *autoscaling.DescribeTagsInput, arg1 func(*autoscaling.DescribeTagsOutput, bool) bool) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeTagsPages", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -1668,11 +1991,13 @@ func (m *MockAutoscalingClient) DescribeTagsPages(arg0 *autoscaling.DescribeTags
 
 // DescribeTagsPages indicates an expected call of DescribeTagsPages
 func (mr *MockAutoscalingClientMockRecorder) DescribeTagsPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTagsPages", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeTagsPages), arg0, arg1)
 }
 
 // DescribeTagsPagesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeTagsPagesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeTagsInput, arg2 func(*autoscaling.DescribeTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockAutoscalingClient) DescribeTagsPagesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeTagsInput, arg2 func(*autoscaling.DescribeTagsOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2}
 	for _, a := range arg3 {
 		varargs = append(varargs, a)
@@ -1684,12 +2009,14 @@ func (m *MockAutoscalingClient) DescribeTagsPagesWithContext(arg0 aws.Context, a
 
 // DescribeTagsPagesWithContext indicates an expected call of DescribeTagsPagesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeTagsPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTagsPagesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeTagsPagesWithContext), varargs...)
 }
 
 // DescribeTagsRequest mocks base method
 func (m *MockAutoscalingClient) DescribeTagsRequest(arg0 *autoscaling.DescribeTagsInput) (*request.Request, *autoscaling.DescribeTagsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeTagsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeTagsOutput)
@@ -1698,11 +2025,13 @@ func (m *MockAutoscalingClient) DescribeTagsRequest(arg0 *autoscaling.DescribeTa
 
 // DescribeTagsRequest indicates an expected call of DescribeTagsRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeTagsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTagsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeTagsRequest), arg0)
 }
 
 // DescribeTagsWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeTagsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeTagsInput, arg2 ...request.Option) (*autoscaling.DescribeTagsOutput, error) {
+func (m *MockAutoscalingClient) DescribeTagsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeTagsInput, arg2 ...request.Option) (*autoscaling.DescribeTagsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1715,12 +2044,14 @@ func (m *MockAutoscalingClient) DescribeTagsWithContext(arg0 aws.Context, arg1 *
 
 // DescribeTagsWithContext indicates an expected call of DescribeTagsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeTagsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTagsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeTagsWithContext), varargs...)
 }
 
 // DescribeTerminationPolicyTypes mocks base method
 func (m *MockAutoscalingClient) DescribeTerminationPolicyTypes(arg0 *autoscaling.DescribeTerminationPolicyTypesInput) (*autoscaling.DescribeTerminationPolicyTypesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeTerminationPolicyTypes", arg0)
 	ret0, _ := ret[0].(*autoscaling.DescribeTerminationPolicyTypesOutput)
 	ret1, _ := ret[1].(error)
@@ -1729,11 +2060,13 @@ func (m *MockAutoscalingClient) DescribeTerminationPolicyTypes(arg0 *autoscaling
 
 // DescribeTerminationPolicyTypes indicates an expected call of DescribeTerminationPolicyTypes
 func (mr *MockAutoscalingClientMockRecorder) DescribeTerminationPolicyTypes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTerminationPolicyTypes", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeTerminationPolicyTypes), arg0)
 }
 
 // DescribeTerminationPolicyTypesRequest mocks base method
 func (m *MockAutoscalingClient) DescribeTerminationPolicyTypesRequest(arg0 *autoscaling.DescribeTerminationPolicyTypesInput) (*request.Request, *autoscaling.DescribeTerminationPolicyTypesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeTerminationPolicyTypesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DescribeTerminationPolicyTypesOutput)
@@ -1742,11 +2075,13 @@ func (m *MockAutoscalingClient) DescribeTerminationPolicyTypesRequest(arg0 *auto
 
 // DescribeTerminationPolicyTypesRequest indicates an expected call of DescribeTerminationPolicyTypesRequest
 func (mr *MockAutoscalingClientMockRecorder) DescribeTerminationPolicyTypesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTerminationPolicyTypesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeTerminationPolicyTypesRequest), arg0)
 }
 
 // DescribeTerminationPolicyTypesWithContext mocks base method
-func (m *MockAutoscalingClient) DescribeTerminationPolicyTypesWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeTerminationPolicyTypesInput, arg2 ...request.Option) (*autoscaling.DescribeTerminationPolicyTypesOutput, error) {
+func (m *MockAutoscalingClient) DescribeTerminationPolicyTypesWithContext(arg0 context.Context, arg1 *autoscaling.DescribeTerminationPolicyTypesInput, arg2 ...request.Option) (*autoscaling.DescribeTerminationPolicyTypesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1759,12 +2094,14 @@ func (m *MockAutoscalingClient) DescribeTerminationPolicyTypesWithContext(arg0 a
 
 // DescribeTerminationPolicyTypesWithContext indicates an expected call of DescribeTerminationPolicyTypesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DescribeTerminationPolicyTypesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTerminationPolicyTypesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DescribeTerminationPolicyTypesWithContext), varargs...)
 }
 
 // DetachInstances mocks base method
 func (m *MockAutoscalingClient) DetachInstances(arg0 *autoscaling.DetachInstancesInput) (*autoscaling.DetachInstancesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DetachInstances", arg0)
 	ret0, _ := ret[0].(*autoscaling.DetachInstancesOutput)
 	ret1, _ := ret[1].(error)
@@ -1773,11 +2110,13 @@ func (m *MockAutoscalingClient) DetachInstances(arg0 *autoscaling.DetachInstance
 
 // DetachInstances indicates an expected call of DetachInstances
 func (mr *MockAutoscalingClientMockRecorder) DetachInstances(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachInstances", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachInstances), arg0)
 }
 
 // DetachInstancesRequest mocks base method
 func (m *MockAutoscalingClient) DetachInstancesRequest(arg0 *autoscaling.DetachInstancesInput) (*request.Request, *autoscaling.DetachInstancesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DetachInstancesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DetachInstancesOutput)
@@ -1786,11 +2125,13 @@ func (m *MockAutoscalingClient) DetachInstancesRequest(arg0 *autoscaling.DetachI
 
 // DetachInstancesRequest indicates an expected call of DetachInstancesRequest
 func (mr *MockAutoscalingClientMockRecorder) DetachInstancesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachInstancesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachInstancesRequest), arg0)
 }
 
 // DetachInstancesWithContext mocks base method
-func (m *MockAutoscalingClient) DetachInstancesWithContext(arg0 aws.Context, arg1 *autoscaling.DetachInstancesInput, arg2 ...request.Option) (*autoscaling.DetachInstancesOutput, error) {
+func (m *MockAutoscalingClient) DetachInstancesWithContext(arg0 context.Context, arg1 *autoscaling.DetachInstancesInput, arg2 ...request.Option) (*autoscaling.DetachInstancesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1803,12 +2144,14 @@ func (m *MockAutoscalingClient) DetachInstancesWithContext(arg0 aws.Context, arg
 
 // DetachInstancesWithContext indicates an expected call of DetachInstancesWithContext
 func (mr *MockAutoscalingClientMockRecorder) DetachInstancesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachInstancesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachInstancesWithContext), varargs...)
 }
 
 // DetachLoadBalancerTargetGroups mocks base method
 func (m *MockAutoscalingClient) DetachLoadBalancerTargetGroups(arg0 *autoscaling.DetachLoadBalancerTargetGroupsInput) (*autoscaling.DetachLoadBalancerTargetGroupsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DetachLoadBalancerTargetGroups", arg0)
 	ret0, _ := ret[0].(*autoscaling.DetachLoadBalancerTargetGroupsOutput)
 	ret1, _ := ret[1].(error)
@@ -1817,11 +2160,13 @@ func (m *MockAutoscalingClient) DetachLoadBalancerTargetGroups(arg0 *autoscaling
 
 // DetachLoadBalancerTargetGroups indicates an expected call of DetachLoadBalancerTargetGroups
 func (mr *MockAutoscalingClientMockRecorder) DetachLoadBalancerTargetGroups(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachLoadBalancerTargetGroups", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachLoadBalancerTargetGroups), arg0)
 }
 
 // DetachLoadBalancerTargetGroupsRequest mocks base method
 func (m *MockAutoscalingClient) DetachLoadBalancerTargetGroupsRequest(arg0 *autoscaling.DetachLoadBalancerTargetGroupsInput) (*request.Request, *autoscaling.DetachLoadBalancerTargetGroupsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DetachLoadBalancerTargetGroupsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DetachLoadBalancerTargetGroupsOutput)
@@ -1830,11 +2175,13 @@ func (m *MockAutoscalingClient) DetachLoadBalancerTargetGroupsRequest(arg0 *auto
 
 // DetachLoadBalancerTargetGroupsRequest indicates an expected call of DetachLoadBalancerTargetGroupsRequest
 func (mr *MockAutoscalingClientMockRecorder) DetachLoadBalancerTargetGroupsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachLoadBalancerTargetGroupsRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachLoadBalancerTargetGroupsRequest), arg0)
 }
 
 // DetachLoadBalancerTargetGroupsWithContext mocks base method
-func (m *MockAutoscalingClient) DetachLoadBalancerTargetGroupsWithContext(arg0 aws.Context, arg1 *autoscaling.DetachLoadBalancerTargetGroupsInput, arg2 ...request.Option) (*autoscaling.DetachLoadBalancerTargetGroupsOutput, error) {
+func (m *MockAutoscalingClient) DetachLoadBalancerTargetGroupsWithContext(arg0 context.Context, arg1 *autoscaling.DetachLoadBalancerTargetGroupsInput, arg2 ...request.Option) (*autoscaling.DetachLoadBalancerTargetGroupsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1847,12 +2194,14 @@ func (m *MockAutoscalingClient) DetachLoadBalancerTargetGroupsWithContext(arg0 a
 
 // DetachLoadBalancerTargetGroupsWithContext indicates an expected call of DetachLoadBalancerTargetGroupsWithContext
 func (mr *MockAutoscalingClientMockRecorder) DetachLoadBalancerTargetGroupsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachLoadBalancerTargetGroupsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachLoadBalancerTargetGroupsWithContext), varargs...)
 }
 
 // DetachLoadBalancers mocks base method
 func (m *MockAutoscalingClient) DetachLoadBalancers(arg0 *autoscaling.DetachLoadBalancersInput) (*autoscaling.DetachLoadBalancersOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DetachLoadBalancers", arg0)
 	ret0, _ := ret[0].(*autoscaling.DetachLoadBalancersOutput)
 	ret1, _ := ret[1].(error)
@@ -1861,11 +2210,13 @@ func (m *MockAutoscalingClient) DetachLoadBalancers(arg0 *autoscaling.DetachLoad
 
 // DetachLoadBalancers indicates an expected call of DetachLoadBalancers
 func (mr *MockAutoscalingClientMockRecorder) DetachLoadBalancers(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachLoadBalancers", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachLoadBalancers), arg0)
 }
 
 // DetachLoadBalancersRequest mocks base method
 func (m *MockAutoscalingClient) DetachLoadBalancersRequest(arg0 *autoscaling.DetachLoadBalancersInput) (*request.Request, *autoscaling.DetachLoadBalancersOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DetachLoadBalancersRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DetachLoadBalancersOutput)
@@ -1874,11 +2225,13 @@ func (m *MockAutoscalingClient) DetachLoadBalancersRequest(arg0 *autoscaling.Det
 
 // DetachLoadBalancersRequest indicates an expected call of DetachLoadBalancersRequest
 func (mr *MockAutoscalingClientMockRecorder) DetachLoadBalancersRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachLoadBalancersRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachLoadBalancersRequest), arg0)
 }
 
 // DetachLoadBalancersWithContext mocks base method
-func (m *MockAutoscalingClient) DetachLoadBalancersWithContext(arg0 aws.Context, arg1 *autoscaling.DetachLoadBalancersInput, arg2 ...request.Option) (*autoscaling.DetachLoadBalancersOutput, error) {
+func (m *MockAutoscalingClient) DetachLoadBalancersWithContext(arg0 context.Context, arg1 *autoscaling.DetachLoadBalancersInput, arg2 ...request.Option) (*autoscaling.DetachLoadBalancersOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1891,12 +2244,14 @@ func (m *MockAutoscalingClient) DetachLoadBalancersWithContext(arg0 aws.Context,
 
 // DetachLoadBalancersWithContext indicates an expected call of DetachLoadBalancersWithContext
 func (mr *MockAutoscalingClientMockRecorder) DetachLoadBalancersWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetachLoadBalancersWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DetachLoadBalancersWithContext), varargs...)
 }
 
 // DisableMetricsCollection mocks base method
 func (m *MockAutoscalingClient) DisableMetricsCollection(arg0 *autoscaling.DisableMetricsCollectionInput) (*autoscaling.DisableMetricsCollectionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DisableMetricsCollection", arg0)
 	ret0, _ := ret[0].(*autoscaling.DisableMetricsCollectionOutput)
 	ret1, _ := ret[1].(error)
@@ -1905,11 +2260,13 @@ func (m *MockAutoscalingClient) DisableMetricsCollection(arg0 *autoscaling.Disab
 
 // DisableMetricsCollection indicates an expected call of DisableMetricsCollection
 func (mr *MockAutoscalingClientMockRecorder) DisableMetricsCollection(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisableMetricsCollection", reflect.TypeOf((*MockAutoscalingClient)(nil).DisableMetricsCollection), arg0)
 }
 
 // DisableMetricsCollectionRequest mocks base method
 func (m *MockAutoscalingClient) DisableMetricsCollectionRequest(arg0 *autoscaling.DisableMetricsCollectionInput) (*request.Request, *autoscaling.DisableMetricsCollectionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DisableMetricsCollectionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.DisableMetricsCollectionOutput)
@@ -1918,11 +2275,13 @@ func (m *MockAutoscalingClient) DisableMetricsCollectionRequest(arg0 *autoscalin
 
 // DisableMetricsCollectionRequest indicates an expected call of DisableMetricsCollectionRequest
 func (mr *MockAutoscalingClientMockRecorder) DisableMetricsCollectionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisableMetricsCollectionRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).DisableMetricsCollectionRequest), arg0)
 }
 
 // DisableMetricsCollectionWithContext mocks base method
-func (m *MockAutoscalingClient) DisableMetricsCollectionWithContext(arg0 aws.Context, arg1 *autoscaling.DisableMetricsCollectionInput, arg2 ...request.Option) (*autoscaling.DisableMetricsCollectionOutput, error) {
+func (m *MockAutoscalingClient) DisableMetricsCollectionWithContext(arg0 context.Context, arg1 *autoscaling.DisableMetricsCollectionInput, arg2 ...request.Option) (*autoscaling.DisableMetricsCollectionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1935,12 +2294,14 @@ func (m *MockAutoscalingClient) DisableMetricsCollectionWithContext(arg0 aws.Con
 
 // DisableMetricsCollectionWithContext indicates an expected call of DisableMetricsCollectionWithContext
 func (mr *MockAutoscalingClientMockRecorder) DisableMetricsCollectionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisableMetricsCollectionWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).DisableMetricsCollectionWithContext), varargs...)
 }
 
 // EnableMetricsCollection mocks base method
 func (m *MockAutoscalingClient) EnableMetricsCollection(arg0 *autoscaling.EnableMetricsCollectionInput) (*autoscaling.EnableMetricsCollectionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnableMetricsCollection", arg0)
 	ret0, _ := ret[0].(*autoscaling.EnableMetricsCollectionOutput)
 	ret1, _ := ret[1].(error)
@@ -1949,11 +2310,13 @@ func (m *MockAutoscalingClient) EnableMetricsCollection(arg0 *autoscaling.Enable
 
 // EnableMetricsCollection indicates an expected call of EnableMetricsCollection
 func (mr *MockAutoscalingClientMockRecorder) EnableMetricsCollection(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableMetricsCollection", reflect.TypeOf((*MockAutoscalingClient)(nil).EnableMetricsCollection), arg0)
 }
 
 // EnableMetricsCollectionRequest mocks base method
 func (m *MockAutoscalingClient) EnableMetricsCollectionRequest(arg0 *autoscaling.EnableMetricsCollectionInput) (*request.Request, *autoscaling.EnableMetricsCollectionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnableMetricsCollectionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.EnableMetricsCollectionOutput)
@@ -1962,11 +2325,13 @@ func (m *MockAutoscalingClient) EnableMetricsCollectionRequest(arg0 *autoscaling
 
 // EnableMetricsCollectionRequest indicates an expected call of EnableMetricsCollectionRequest
 func (mr *MockAutoscalingClientMockRecorder) EnableMetricsCollectionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableMetricsCollectionRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).EnableMetricsCollectionRequest), arg0)
 }
 
 // EnableMetricsCollectionWithContext mocks base method
-func (m *MockAutoscalingClient) EnableMetricsCollectionWithContext(arg0 aws.Context, arg1 *autoscaling.EnableMetricsCollectionInput, arg2 ...request.Option) (*autoscaling.EnableMetricsCollectionOutput, error) {
+func (m *MockAutoscalingClient) EnableMetricsCollectionWithContext(arg0 context.Context, arg1 *autoscaling.EnableMetricsCollectionInput, arg2 ...request.Option) (*autoscaling.EnableMetricsCollectionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -1979,12 +2344,14 @@ func (m *MockAutoscalingClient) EnableMetricsCollectionWithContext(arg0 aws.Cont
 
 // EnableMetricsCollectionWithContext indicates an expected call of EnableMetricsCollectionWithContext
 func (mr *MockAutoscalingClientMockRecorder) EnableMetricsCollectionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableMetricsCollectionWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).EnableMetricsCollectionWithContext), varargs...)
 }
 
 // EnterStandby mocks base method
 func (m *MockAutoscalingClient) EnterStandby(arg0 *autoscaling.EnterStandbyInput) (*autoscaling.EnterStandbyOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnterStandby", arg0)
 	ret0, _ := ret[0].(*autoscaling.EnterStandbyOutput)
 	ret1, _ := ret[1].(error)
@@ -1993,11 +2360,13 @@ func (m *MockAutoscalingClient) EnterStandby(arg0 *autoscaling.EnterStandbyInput
 
 // EnterStandby indicates an expected call of EnterStandby
 func (mr *MockAutoscalingClientMockRecorder) EnterStandby(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnterStandby", reflect.TypeOf((*MockAutoscalingClient)(nil).EnterStandby), arg0)
 }
 
 // EnterStandbyRequest mocks base method
 func (m *MockAutoscalingClient) EnterStandbyRequest(arg0 *autoscaling.EnterStandbyInput) (*request.Request, *autoscaling.EnterStandbyOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnterStandbyRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.EnterStandbyOutput)
@@ -2006,11 +2375,13 @@ func (m *MockAutoscalingClient) EnterStandbyRequest(arg0 *autoscaling.EnterStand
 
 // EnterStandbyRequest indicates an expected call of EnterStandbyRequest
 func (mr *MockAutoscalingClientMockRecorder) EnterStandbyRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnterStandbyRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).EnterStandbyRequest), arg0)
 }
 
 // EnterStandbyWithContext mocks base method
-func (m *MockAutoscalingClient) EnterStandbyWithContext(arg0 aws.Context, arg1 *autoscaling.EnterStandbyInput, arg2 ...request.Option) (*autoscaling.EnterStandbyOutput, error) {
+func (m *MockAutoscalingClient) EnterStandbyWithContext(arg0 context.Context, arg1 *autoscaling.EnterStandbyInput, arg2 ...request.Option) (*autoscaling.EnterStandbyOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2023,12 +2394,14 @@ func (m *MockAutoscalingClient) EnterStandbyWithContext(arg0 aws.Context, arg1 *
 
 // EnterStandbyWithContext indicates an expected call of EnterStandbyWithContext
 func (mr *MockAutoscalingClientMockRecorder) EnterStandbyWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnterStandbyWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).EnterStandbyWithContext), varargs...)
 }
 
 // ExecutePolicy mocks base method
 func (m *MockAutoscalingClient) ExecutePolicy(arg0 *autoscaling.ExecutePolicyInput) (*autoscaling.ExecutePolicyOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExecutePolicy", arg0)
 	ret0, _ := ret[0].(*autoscaling.ExecutePolicyOutput)
 	ret1, _ := ret[1].(error)
@@ -2037,11 +2410,13 @@ func (m *MockAutoscalingClient) ExecutePolicy(arg0 *autoscaling.ExecutePolicyInp
 
 // ExecutePolicy indicates an expected call of ExecutePolicy
 func (mr *MockAutoscalingClientMockRecorder) ExecutePolicy(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecutePolicy", reflect.TypeOf((*MockAutoscalingClient)(nil).ExecutePolicy), arg0)
 }
 
 // ExecutePolicyRequest mocks base method
 func (m *MockAutoscalingClient) ExecutePolicyRequest(arg0 *autoscaling.ExecutePolicyInput) (*request.Request, *autoscaling.ExecutePolicyOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExecutePolicyRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.ExecutePolicyOutput)
@@ -2050,11 +2425,13 @@ func (m *MockAutoscalingClient) ExecutePolicyRequest(arg0 *autoscaling.ExecutePo
 
 // ExecutePolicyRequest indicates an expected call of ExecutePolicyRequest
 func (mr *MockAutoscalingClientMockRecorder) ExecutePolicyRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecutePolicyRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).ExecutePolicyRequest), arg0)
 }
 
 // ExecutePolicyWithContext mocks base method
-func (m *MockAutoscalingClient) ExecutePolicyWithContext(arg0 aws.Context, arg1 *autoscaling.ExecutePolicyInput, arg2 ...request.Option) (*autoscaling.ExecutePolicyOutput, error) {
+func (m *MockAutoscalingClient) ExecutePolicyWithContext(arg0 context.Context, arg1 *autoscaling.ExecutePolicyInput, arg2 ...request.Option) (*autoscaling.ExecutePolicyOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2067,12 +2444,14 @@ func (m *MockAutoscalingClient) ExecutePolicyWithContext(arg0 aws.Context, arg1 
 
 // ExecutePolicyWithContext indicates an expected call of ExecutePolicyWithContext
 func (mr *MockAutoscalingClientMockRecorder) ExecutePolicyWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecutePolicyWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).ExecutePolicyWithContext), varargs...)
 }
 
 // ExitStandby mocks base method
 func (m *MockAutoscalingClient) ExitStandby(arg0 *autoscaling.ExitStandbyInput) (*autoscaling.ExitStandbyOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExitStandby", arg0)
 	ret0, _ := ret[0].(*autoscaling.ExitStandbyOutput)
 	ret1, _ := ret[1].(error)
@@ -2081,11 +2460,13 @@ func (m *MockAutoscalingClient) ExitStandby(arg0 *autoscaling.ExitStandbyInput) 
 
 // ExitStandby indicates an expected call of ExitStandby
 func (mr *MockAutoscalingClientMockRecorder) ExitStandby(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitStandby", reflect.TypeOf((*MockAutoscalingClient)(nil).ExitStandby), arg0)
 }
 
 // ExitStandbyRequest mocks base method
 func (m *MockAutoscalingClient) ExitStandbyRequest(arg0 *autoscaling.ExitStandbyInput) (*request.Request, *autoscaling.ExitStandbyOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExitStandbyRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.ExitStandbyOutput)
@@ -2094,11 +2475,13 @@ func (m *MockAutoscalingClient) ExitStandbyRequest(arg0 *autoscaling.ExitStandby
 
 // ExitStandbyRequest indicates an expected call of ExitStandbyRequest
 func (mr *MockAutoscalingClientMockRecorder) ExitStandbyRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitStandbyRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).ExitStandbyRequest), arg0)
 }
 
 // ExitStandbyWithContext mocks base method
-func (m *MockAutoscalingClient) ExitStandbyWithContext(arg0 aws.Context, arg1 *autoscaling.ExitStandbyInput, arg2 ...request.Option) (*autoscaling.ExitStandbyOutput, error) {
+func (m *MockAutoscalingClient) ExitStandbyWithContext(arg0 context.Context, arg1 *autoscaling.ExitStandbyInput, arg2 ...request.Option) (*autoscaling.ExitStandbyOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2111,12 +2494,14 @@ func (m *MockAutoscalingClient) ExitStandbyWithContext(arg0 aws.Context, arg1 *a
 
 // ExitStandbyWithContext indicates an expected call of ExitStandbyWithContext
 func (mr *MockAutoscalingClientMockRecorder) ExitStandbyWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitStandbyWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).ExitStandbyWithContext), varargs...)
 }
 
 // PutLifecycleHook mocks base method
 func (m *MockAutoscalingClient) PutLifecycleHook(arg0 *autoscaling.PutLifecycleHookInput) (*autoscaling.PutLifecycleHookOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutLifecycleHook", arg0)
 	ret0, _ := ret[0].(*autoscaling.PutLifecycleHookOutput)
 	ret1, _ := ret[1].(error)
@@ -2125,11 +2510,13 @@ func (m *MockAutoscalingClient) PutLifecycleHook(arg0 *autoscaling.PutLifecycleH
 
 // PutLifecycleHook indicates an expected call of PutLifecycleHook
 func (mr *MockAutoscalingClientMockRecorder) PutLifecycleHook(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutLifecycleHook", reflect.TypeOf((*MockAutoscalingClient)(nil).PutLifecycleHook), arg0)
 }
 
 // PutLifecycleHookRequest mocks base method
 func (m *MockAutoscalingClient) PutLifecycleHookRequest(arg0 *autoscaling.PutLifecycleHookInput) (*request.Request, *autoscaling.PutLifecycleHookOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutLifecycleHookRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.PutLifecycleHookOutput)
@@ -2138,11 +2525,13 @@ func (m *MockAutoscalingClient) PutLifecycleHookRequest(arg0 *autoscaling.PutLif
 
 // PutLifecycleHookRequest indicates an expected call of PutLifecycleHookRequest
 func (mr *MockAutoscalingClientMockRecorder) PutLifecycleHookRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutLifecycleHookRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).PutLifecycleHookRequest), arg0)
 }
 
 // PutLifecycleHookWithContext mocks base method
-func (m *MockAutoscalingClient) PutLifecycleHookWithContext(arg0 aws.Context, arg1 *autoscaling.PutLifecycleHookInput, arg2 ...request.Option) (*autoscaling.PutLifecycleHookOutput, error) {
+func (m *MockAutoscalingClient) PutLifecycleHookWithContext(arg0 context.Context, arg1 *autoscaling.PutLifecycleHookInput, arg2 ...request.Option) (*autoscaling.PutLifecycleHookOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2155,12 +2544,14 @@ func (m *MockAutoscalingClient) PutLifecycleHookWithContext(arg0 aws.Context, ar
 
 // PutLifecycleHookWithContext indicates an expected call of PutLifecycleHookWithContext
 func (mr *MockAutoscalingClientMockRecorder) PutLifecycleHookWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutLifecycleHookWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).PutLifecycleHookWithContext), varargs...)
 }
 
 // PutNotificationConfiguration mocks base method
 func (m *MockAutoscalingClient) PutNotificationConfiguration(arg0 *autoscaling.PutNotificationConfigurationInput) (*autoscaling.PutNotificationConfigurationOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutNotificationConfiguration", arg0)
 	ret0, _ := ret[0].(*autoscaling.PutNotificationConfigurationOutput)
 	ret1, _ := ret[1].(error)
@@ -2169,11 +2560,13 @@ func (m *MockAutoscalingClient) PutNotificationConfiguration(arg0 *autoscaling.P
 
 // PutNotificationConfiguration indicates an expected call of PutNotificationConfiguration
 func (mr *MockAutoscalingClientMockRecorder) PutNotificationConfiguration(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutNotificationConfiguration", reflect.TypeOf((*MockAutoscalingClient)(nil).PutNotificationConfiguration), arg0)
 }
 
 // PutNotificationConfigurationRequest mocks base method
 func (m *MockAutoscalingClient) PutNotificationConfigurationRequest(arg0 *autoscaling.PutNotificationConfigurationInput) (*request.Request, *autoscaling.PutNotificationConfigurationOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutNotificationConfigurationRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.PutNotificationConfigurationOutput)
@@ -2182,11 +2575,13 @@ func (m *MockAutoscalingClient) PutNotificationConfigurationRequest(arg0 *autosc
 
 // PutNotificationConfigurationRequest indicates an expected call of PutNotificationConfigurationRequest
 func (mr *MockAutoscalingClientMockRecorder) PutNotificationConfigurationRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutNotificationConfigurationRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).PutNotificationConfigurationRequest), arg0)
 }
 
 // PutNotificationConfigurationWithContext mocks base method
-func (m *MockAutoscalingClient) PutNotificationConfigurationWithContext(arg0 aws.Context, arg1 *autoscaling.PutNotificationConfigurationInput, arg2 ...request.Option) (*autoscaling.PutNotificationConfigurationOutput, error) {
+func (m *MockAutoscalingClient) PutNotificationConfigurationWithContext(arg0 context.Context, arg1 *autoscaling.PutNotificationConfigurationInput, arg2 ...request.Option) (*autoscaling.PutNotificationConfigurationOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2199,12 +2594,14 @@ func (m *MockAutoscalingClient) PutNotificationConfigurationWithContext(arg0 aws
 
 // PutNotificationConfigurationWithContext indicates an expected call of PutNotificationConfigurationWithContext
 func (mr *MockAutoscalingClientMockRecorder) PutNotificationConfigurationWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutNotificationConfigurationWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).PutNotificationConfigurationWithContext), varargs...)
 }
 
 // PutScalingPolicy mocks base method
 func (m *MockAutoscalingClient) PutScalingPolicy(arg0 *autoscaling.PutScalingPolicyInput) (*autoscaling.PutScalingPolicyOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutScalingPolicy", arg0)
 	ret0, _ := ret[0].(*autoscaling.PutScalingPolicyOutput)
 	ret1, _ := ret[1].(error)
@@ -2213,11 +2610,13 @@ func (m *MockAutoscalingClient) PutScalingPolicy(arg0 *autoscaling.PutScalingPol
 
 // PutScalingPolicy indicates an expected call of PutScalingPolicy
 func (mr *MockAutoscalingClientMockRecorder) PutScalingPolicy(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutScalingPolicy", reflect.TypeOf((*MockAutoscalingClient)(nil).PutScalingPolicy), arg0)
 }
 
 // PutScalingPolicyRequest mocks base method
 func (m *MockAutoscalingClient) PutScalingPolicyRequest(arg0 *autoscaling.PutScalingPolicyInput) (*request.Request, *autoscaling.PutScalingPolicyOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutScalingPolicyRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.PutScalingPolicyOutput)
@@ -2226,11 +2625,13 @@ func (m *MockAutoscalingClient) PutScalingPolicyRequest(arg0 *autoscaling.PutSca
 
 // PutScalingPolicyRequest indicates an expected call of PutScalingPolicyRequest
 func (mr *MockAutoscalingClientMockRecorder) PutScalingPolicyRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutScalingPolicyRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).PutScalingPolicyRequest), arg0)
 }
 
 // PutScalingPolicyWithContext mocks base method
-func (m *MockAutoscalingClient) PutScalingPolicyWithContext(arg0 aws.Context, arg1 *autoscaling.PutScalingPolicyInput, arg2 ...request.Option) (*autoscaling.PutScalingPolicyOutput, error) {
+func (m *MockAutoscalingClient) PutScalingPolicyWithContext(arg0 context.Context, arg1 *autoscaling.PutScalingPolicyInput, arg2 ...request.Option) (*autoscaling.PutScalingPolicyOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2243,12 +2644,14 @@ func (m *MockAutoscalingClient) PutScalingPolicyWithContext(arg0 aws.Context, ar
 
 // PutScalingPolicyWithContext indicates an expected call of PutScalingPolicyWithContext
 func (mr *MockAutoscalingClientMockRecorder) PutScalingPolicyWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutScalingPolicyWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).PutScalingPolicyWithContext), varargs...)
 }
 
 // PutScheduledUpdateGroupAction mocks base method
 func (m *MockAutoscalingClient) PutScheduledUpdateGroupAction(arg0 *autoscaling.PutScheduledUpdateGroupActionInput) (*autoscaling.PutScheduledUpdateGroupActionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutScheduledUpdateGroupAction", arg0)
 	ret0, _ := ret[0].(*autoscaling.PutScheduledUpdateGroupActionOutput)
 	ret1, _ := ret[1].(error)
@@ -2257,11 +2660,13 @@ func (m *MockAutoscalingClient) PutScheduledUpdateGroupAction(arg0 *autoscaling.
 
 // PutScheduledUpdateGroupAction indicates an expected call of PutScheduledUpdateGroupAction
 func (mr *MockAutoscalingClientMockRecorder) PutScheduledUpdateGroupAction(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutScheduledUpdateGroupAction", reflect.TypeOf((*MockAutoscalingClient)(nil).PutScheduledUpdateGroupAction), arg0)
 }
 
 // PutScheduledUpdateGroupActionRequest mocks base method
 func (m *MockAutoscalingClient) PutScheduledUpdateGroupActionRequest(arg0 *autoscaling.PutScheduledUpdateGroupActionInput) (*request.Request, *autoscaling.PutScheduledUpdateGroupActionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutScheduledUpdateGroupActionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.PutScheduledUpdateGroupActionOutput)
@@ -2270,11 +2675,13 @@ func (m *MockAutoscalingClient) PutScheduledUpdateGroupActionRequest(arg0 *autos
 
 // PutScheduledUpdateGroupActionRequest indicates an expected call of PutScheduledUpdateGroupActionRequest
 func (mr *MockAutoscalingClientMockRecorder) PutScheduledUpdateGroupActionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutScheduledUpdateGroupActionRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).PutScheduledUpdateGroupActionRequest), arg0)
 }
 
 // PutScheduledUpdateGroupActionWithContext mocks base method
-func (m *MockAutoscalingClient) PutScheduledUpdateGroupActionWithContext(arg0 aws.Context, arg1 *autoscaling.PutScheduledUpdateGroupActionInput, arg2 ...request.Option) (*autoscaling.PutScheduledUpdateGroupActionOutput, error) {
+func (m *MockAutoscalingClient) PutScheduledUpdateGroupActionWithContext(arg0 context.Context, arg1 *autoscaling.PutScheduledUpdateGroupActionInput, arg2 ...request.Option) (*autoscaling.PutScheduledUpdateGroupActionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2287,12 +2694,14 @@ func (m *MockAutoscalingClient) PutScheduledUpdateGroupActionWithContext(arg0 aw
 
 // PutScheduledUpdateGroupActionWithContext indicates an expected call of PutScheduledUpdateGroupActionWithContext
 func (mr *MockAutoscalingClientMockRecorder) PutScheduledUpdateGroupActionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutScheduledUpdateGroupActionWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).PutScheduledUpdateGroupActionWithContext), varargs...)
 }
 
 // RecordLifecycleActionHeartbeat mocks base method
 func (m *MockAutoscalingClient) RecordLifecycleActionHeartbeat(arg0 *autoscaling.RecordLifecycleActionHeartbeatInput) (*autoscaling.RecordLifecycleActionHeartbeatOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RecordLifecycleActionHeartbeat", arg0)
 	ret0, _ := ret[0].(*autoscaling.RecordLifecycleActionHeartbeatOutput)
 	ret1, _ := ret[1].(error)
@@ -2301,11 +2710,13 @@ func (m *MockAutoscalingClient) RecordLifecycleActionHeartbeat(arg0 *autoscaling
 
 // RecordLifecycleActionHeartbeat indicates an expected call of RecordLifecycleActionHeartbeat
 func (mr *MockAutoscalingClientMockRecorder) RecordLifecycleActionHeartbeat(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordLifecycleActionHeartbeat", reflect.TypeOf((*MockAutoscalingClient)(nil).RecordLifecycleActionHeartbeat), arg0)
 }
 
 // RecordLifecycleActionHeartbeatRequest mocks base method
 func (m *MockAutoscalingClient) RecordLifecycleActionHeartbeatRequest(arg0 *autoscaling.RecordLifecycleActionHeartbeatInput) (*request.Request, *autoscaling.RecordLifecycleActionHeartbeatOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RecordLifecycleActionHeartbeatRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.RecordLifecycleActionHeartbeatOutput)
@@ -2314,11 +2725,13 @@ func (m *MockAutoscalingClient) RecordLifecycleActionHeartbeatRequest(arg0 *auto
 
 // RecordLifecycleActionHeartbeatRequest indicates an expected call of RecordLifecycleActionHeartbeatRequest
 func (mr *MockAutoscalingClientMockRecorder) RecordLifecycleActionHeartbeatRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordLifecycleActionHeartbeatRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).RecordLifecycleActionHeartbeatRequest), arg0)
 }
 
 // RecordLifecycleActionHeartbeatWithContext mocks base method
-func (m *MockAutoscalingClient) RecordLifecycleActionHeartbeatWithContext(arg0 aws.Context, arg1 *autoscaling.RecordLifecycleActionHeartbeatInput, arg2 ...request.Option) (*autoscaling.RecordLifecycleActionHeartbeatOutput, error) {
+func (m *MockAutoscalingClient) RecordLifecycleActionHeartbeatWithContext(arg0 context.Context, arg1 *autoscaling.RecordLifecycleActionHeartbeatInput, arg2 ...request.Option) (*autoscaling.RecordLifecycleActionHeartbeatOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2331,12 +2744,14 @@ func (m *MockAutoscalingClient) RecordLifecycleActionHeartbeatWithContext(arg0 a
 
 // RecordLifecycleActionHeartbeatWithContext indicates an expected call of RecordLifecycleActionHeartbeatWithContext
 func (mr *MockAutoscalingClientMockRecorder) RecordLifecycleActionHeartbeatWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordLifecycleActionHeartbeatWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).RecordLifecycleActionHeartbeatWithContext), varargs...)
 }
 
 // ResumeProcesses mocks base method
 func (m *MockAutoscalingClient) ResumeProcesses(arg0 *autoscaling.ScalingProcessQuery) (*autoscaling.ResumeProcessesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ResumeProcesses", arg0)
 	ret0, _ := ret[0].(*autoscaling.ResumeProcessesOutput)
 	ret1, _ := ret[1].(error)
@@ -2345,11 +2760,13 @@ func (m *MockAutoscalingClient) ResumeProcesses(arg0 *autoscaling.ScalingProcess
 
 // ResumeProcesses indicates an expected call of ResumeProcesses
 func (mr *MockAutoscalingClientMockRecorder) ResumeProcesses(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumeProcesses", reflect.TypeOf((*MockAutoscalingClient)(nil).ResumeProcesses), arg0)
 }
 
 // ResumeProcessesRequest mocks base method
 func (m *MockAutoscalingClient) ResumeProcessesRequest(arg0 *autoscaling.ScalingProcessQuery) (*request.Request, *autoscaling.ResumeProcessesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ResumeProcessesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.ResumeProcessesOutput)
@@ -2358,11 +2775,13 @@ func (m *MockAutoscalingClient) ResumeProcessesRequest(arg0 *autoscaling.Scaling
 
 // ResumeProcessesRequest indicates an expected call of ResumeProcessesRequest
 func (mr *MockAutoscalingClientMockRecorder) ResumeProcessesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumeProcessesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).ResumeProcessesRequest), arg0)
 }
 
 // ResumeProcessesWithContext mocks base method
-func (m *MockAutoscalingClient) ResumeProcessesWithContext(arg0 aws.Context, arg1 *autoscaling.ScalingProcessQuery, arg2 ...request.Option) (*autoscaling.ResumeProcessesOutput, error) {
+func (m *MockAutoscalingClient) ResumeProcessesWithContext(arg0 context.Context, arg1 *autoscaling.ScalingProcessQuery, arg2 ...request.Option) (*autoscaling.ResumeProcessesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2375,12 +2794,14 @@ func (m *MockAutoscalingClient) ResumeProcessesWithContext(arg0 aws.Context, arg
 
 // ResumeProcessesWithContext indicates an expected call of ResumeProcessesWithContext
 func (mr *MockAutoscalingClientMockRecorder) ResumeProcessesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumeProcessesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).ResumeProcessesWithContext), varargs...)
 }
 
 // SetDesiredCapacity mocks base method
 func (m *MockAutoscalingClient) SetDesiredCapacity(arg0 *autoscaling.SetDesiredCapacityInput) (*autoscaling.SetDesiredCapacityOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetDesiredCapacity", arg0)
 	ret0, _ := ret[0].(*autoscaling.SetDesiredCapacityOutput)
 	ret1, _ := ret[1].(error)
@@ -2389,11 +2810,13 @@ func (m *MockAutoscalingClient) SetDesiredCapacity(arg0 *autoscaling.SetDesiredC
 
 // SetDesiredCapacity indicates an expected call of SetDesiredCapacity
 func (mr *MockAutoscalingClientMockRecorder) SetDesiredCapacity(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDesiredCapacity", reflect.TypeOf((*MockAutoscalingClient)(nil).SetDesiredCapacity), arg0)
 }
 
 // SetDesiredCapacityRequest mocks base method
 func (m *MockAutoscalingClient) SetDesiredCapacityRequest(arg0 *autoscaling.SetDesiredCapacityInput) (*request.Request, *autoscaling.SetDesiredCapacityOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetDesiredCapacityRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.SetDesiredCapacityOutput)
@@ -2402,11 +2825,13 @@ func (m *MockAutoscalingClient) SetDesiredCapacityRequest(arg0 *autoscaling.SetD
 
 // SetDesiredCapacityRequest indicates an expected call of SetDesiredCapacityRequest
 func (mr *MockAutoscalingClientMockRecorder) SetDesiredCapacityRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDesiredCapacityRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).SetDesiredCapacityRequest), arg0)
 }
 
 // SetDesiredCapacityWithContext mocks base method
-func (m *MockAutoscalingClient) SetDesiredCapacityWithContext(arg0 aws.Context, arg1 *autoscaling.SetDesiredCapacityInput, arg2 ...request.Option) (*autoscaling.SetDesiredCapacityOutput, error) {
+func (m *MockAutoscalingClient) SetDesiredCapacityWithContext(arg0 context.Context, arg1 *autoscaling.SetDesiredCapacityInput, arg2 ...request.Option) (*autoscaling.SetDesiredCapacityOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2419,12 +2844,14 @@ func (m *MockAutoscalingClient) SetDesiredCapacityWithContext(arg0 aws.Context, 
 
 // SetDesiredCapacityWithContext indicates an expected call of SetDesiredCapacityWithContext
 func (mr *MockAutoscalingClientMockRecorder) SetDesiredCapacityWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDesiredCapacityWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).SetDesiredCapacityWithContext), varargs...)
 }
 
 // SetInstanceHealth mocks base method
 func (m *MockAutoscalingClient) SetInstanceHealth(arg0 *autoscaling.SetInstanceHealthInput) (*autoscaling.SetInstanceHealthOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetInstanceHealth", arg0)
 	ret0, _ := ret[0].(*autoscaling.SetInstanceHealthOutput)
 	ret1, _ := ret[1].(error)
@@ -2433,11 +2860,13 @@ func (m *MockAutoscalingClient) SetInstanceHealth(arg0 *autoscaling.SetInstanceH
 
 // SetInstanceHealth indicates an expected call of SetInstanceHealth
 func (mr *MockAutoscalingClientMockRecorder) SetInstanceHealth(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInstanceHealth", reflect.TypeOf((*MockAutoscalingClient)(nil).SetInstanceHealth), arg0)
 }
 
 // SetInstanceHealthRequest mocks base method
 func (m *MockAutoscalingClient) SetInstanceHealthRequest(arg0 *autoscaling.SetInstanceHealthInput) (*request.Request, *autoscaling.SetInstanceHealthOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetInstanceHealthRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.SetInstanceHealthOutput)
@@ -2446,11 +2875,13 @@ func (m *MockAutoscalingClient) SetInstanceHealthRequest(arg0 *autoscaling.SetIn
 
 // SetInstanceHealthRequest indicates an expected call of SetInstanceHealthRequest
 func (mr *MockAutoscalingClientMockRecorder) SetInstanceHealthRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInstanceHealthRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).SetInstanceHealthRequest), arg0)
 }
 
 // SetInstanceHealthWithContext mocks base method
-func (m *MockAutoscalingClient) SetInstanceHealthWithContext(arg0 aws.Context, arg1 *autoscaling.SetInstanceHealthInput, arg2 ...request.Option) (*autoscaling.SetInstanceHealthOutput, error) {
+func (m *MockAutoscalingClient) SetInstanceHealthWithContext(arg0 context.Context, arg1 *autoscaling.SetInstanceHealthInput, arg2 ...request.Option) (*autoscaling.SetInstanceHealthOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2463,12 +2894,14 @@ func (m *MockAutoscalingClient) SetInstanceHealthWithContext(arg0 aws.Context, a
 
 // SetInstanceHealthWithContext indicates an expected call of SetInstanceHealthWithContext
 func (mr *MockAutoscalingClientMockRecorder) SetInstanceHealthWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInstanceHealthWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).SetInstanceHealthWithContext), varargs...)
 }
 
 // SetInstanceProtection mocks base method
 func (m *MockAutoscalingClient) SetInstanceProtection(arg0 *autoscaling.SetInstanceProtectionInput) (*autoscaling.SetInstanceProtectionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetInstanceProtection", arg0)
 	ret0, _ := ret[0].(*autoscaling.SetInstanceProtectionOutput)
 	ret1, _ := ret[1].(error)
@@ -2477,11 +2910,13 @@ func (m *MockAutoscalingClient) SetInstanceProtection(arg0 *autoscaling.SetInsta
 
 // SetInstanceProtection indicates an expected call of SetInstanceProtection
 func (mr *MockAutoscalingClientMockRecorder) SetInstanceProtection(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInstanceProtection", reflect.TypeOf((*MockAutoscalingClient)(nil).SetInstanceProtection), arg0)
 }
 
 // SetInstanceProtectionRequest mocks base method
 func (m *MockAutoscalingClient) SetInstanceProtectionRequest(arg0 *autoscaling.SetInstanceProtectionInput) (*request.Request, *autoscaling.SetInstanceProtectionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetInstanceProtectionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.SetInstanceProtectionOutput)
@@ -2490,11 +2925,13 @@ func (m *MockAutoscalingClient) SetInstanceProtectionRequest(arg0 *autoscaling.S
 
 // SetInstanceProtectionRequest indicates an expected call of SetInstanceProtectionRequest
 func (mr *MockAutoscalingClientMockRecorder) SetInstanceProtectionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInstanceProtectionRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).SetInstanceProtectionRequest), arg0)
 }
 
 // SetInstanceProtectionWithContext mocks base method
-func (m *MockAutoscalingClient) SetInstanceProtectionWithContext(arg0 aws.Context, arg1 *autoscaling.SetInstanceProtectionInput, arg2 ...request.Option) (*autoscaling.SetInstanceProtectionOutput, error) {
+func (m *MockAutoscalingClient) SetInstanceProtectionWithContext(arg0 context.Context, arg1 *autoscaling.SetInstanceProtectionInput, arg2 ...request.Option) (*autoscaling.SetInstanceProtectionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2507,12 +2944,64 @@ func (m *MockAutoscalingClient) SetInstanceProtectionWithContext(arg0 aws.Contex
 
 // SetInstanceProtectionWithContext indicates an expected call of SetInstanceProtectionWithContext
 func (mr *MockAutoscalingClientMockRecorder) SetInstanceProtectionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInstanceProtectionWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).SetInstanceProtectionWithContext), varargs...)
 }
 
+// StartInstanceRefresh mocks base method
+func (m *MockAutoscalingClient) StartInstanceRefresh(arg0 *autoscaling.StartInstanceRefreshInput) (*autoscaling.StartInstanceRefreshOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartInstanceRefresh", arg0)
+	ret0, _ := ret[0].(*autoscaling.StartInstanceRefreshOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartInstanceRefresh indicates an expected call of StartInstanceRefresh
+func (mr *MockAutoscalingClientMockRecorder) StartInstanceRefresh(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartInstanceRefresh", reflect.TypeOf((*MockAutoscalingClient)(nil).StartInstanceRefresh), arg0)
+}
+
+// StartInstanceRefreshRequest mocks base method
+func (m *MockAutoscalingClient) StartInstanceRefreshRequest(arg0 *autoscaling.StartInstanceRefreshInput) (*request.Request, *autoscaling.StartInstanceRefreshOutput) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartInstanceRefreshRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*autoscaling.StartInstanceRefreshOutput)
+	return ret0, ret1
+}
+
+// StartInstanceRefreshRequest indicates an expected call of StartInstanceRefreshRequest
+func (mr *MockAutoscalingClientMockRecorder) StartInstanceRefreshRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartInstanceRefreshRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).StartInstanceRefreshRequest), arg0)
+}
+
+// StartInstanceRefreshWithContext mocks base method
+func (m *MockAutoscalingClient) StartInstanceRefreshWithContext(arg0 context.Context, arg1 *autoscaling.StartInstanceRefreshInput, arg2 ...request.Option) (*autoscaling.StartInstanceRefreshOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "StartInstanceRefreshWithContext", varargs...)
+	ret0, _ := ret[0].(*autoscaling.StartInstanceRefreshOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartInstanceRefreshWithContext indicates an expected call of StartInstanceRefreshWithContext
+func (mr *MockAutoscalingClientMockRecorder) StartInstanceRefreshWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartInstanceRefreshWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).StartInstanceRefreshWithContext), varargs...)
+}
+
 // SuspendProcesses mocks base method
 func (m *MockAutoscalingClient) SuspendProcesses(arg0 *autoscaling.ScalingProcessQuery) (*autoscaling.SuspendProcessesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SuspendProcesses", arg0)
 	ret0, _ := ret[0].(*autoscaling.SuspendProcessesOutput)
 	ret1, _ := ret[1].(error)
@@ -2521,11 +3010,13 @@ func (m *MockAutoscalingClient) SuspendProcesses(arg0 *autoscaling.ScalingProces
 
 // SuspendProcesses indicates an expected call of SuspendProcesses
 func (mr *MockAutoscalingClientMockRecorder) SuspendProcesses(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SuspendProcesses", reflect.TypeOf((*MockAutoscalingClient)(nil).SuspendProcesses), arg0)
 }
 
 // SuspendProcessesRequest mocks base method
 func (m *MockAutoscalingClient) SuspendProcessesRequest(arg0 *autoscaling.ScalingProcessQuery) (*request.Request, *autoscaling.SuspendProcessesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SuspendProcessesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.SuspendProcessesOutput)
@@ -2534,11 +3025,13 @@ func (m *MockAutoscalingClient) SuspendProcessesRequest(arg0 *autoscaling.Scalin
 
 // SuspendProcessesRequest indicates an expected call of SuspendProcessesRequest
 func (mr *MockAutoscalingClientMockRecorder) SuspendProcessesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SuspendProcessesRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).SuspendProcessesRequest), arg0)
 }
 
 // SuspendProcessesWithContext mocks base method
-func (m *MockAutoscalingClient) SuspendProcessesWithContext(arg0 aws.Context, arg1 *autoscaling.ScalingProcessQuery, arg2 ...request.Option) (*autoscaling.SuspendProcessesOutput, error) {
+func (m *MockAutoscalingClient) SuspendProcessesWithContext(arg0 context.Context, arg1 *autoscaling.ScalingProcessQuery, arg2 ...request.Option) (*autoscaling.SuspendProcessesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2551,12 +3044,14 @@ func (m *MockAutoscalingClient) SuspendProcessesWithContext(arg0 aws.Context, ar
 
 // SuspendProcessesWithContext indicates an expected call of SuspendProcessesWithContext
 func (mr *MockAutoscalingClientMockRecorder) SuspendProcessesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SuspendProcessesWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).SuspendProcessesWithContext), varargs...)
 }
 
 // TerminateInstanceInAutoScalingGroup mocks base method
 func (m *MockAutoscalingClient) TerminateInstanceInAutoScalingGroup(arg0 *autoscaling.TerminateInstanceInAutoScalingGroupInput) (*autoscaling.TerminateInstanceInAutoScalingGroupOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TerminateInstanceInAutoScalingGroup", arg0)
 	ret0, _ := ret[0].(*autoscaling.TerminateInstanceInAutoScalingGroupOutput)
 	ret1, _ := ret[1].(error)
@@ -2565,11 +3060,13 @@ func (m *MockAutoscalingClient) TerminateInstanceInAutoScalingGroup(arg0 *autosc
 
 // TerminateInstanceInAutoScalingGroup indicates an expected call of TerminateInstanceInAutoScalingGroup
 func (mr *MockAutoscalingClientMockRecorder) TerminateInstanceInAutoScalingGroup(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TerminateInstanceInAutoScalingGroup", reflect.TypeOf((*MockAutoscalingClient)(nil).TerminateInstanceInAutoScalingGroup), arg0)
 }
 
 // TerminateInstanceInAutoScalingGroupRequest mocks base method
 func (m *MockAutoscalingClient) TerminateInstanceInAutoScalingGroupRequest(arg0 *autoscaling.TerminateInstanceInAutoScalingGroupInput) (*request.Request, *autoscaling.TerminateInstanceInAutoScalingGroupOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TerminateInstanceInAutoScalingGroupRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.TerminateInstanceInAutoScalingGroupOutput)
@@ -2578,11 +3075,13 @@ func (m *MockAutoscalingClient) TerminateInstanceInAutoScalingGroupRequest(arg0 
 
 // TerminateInstanceInAutoScalingGroupRequest indicates an expected call of TerminateInstanceInAutoScalingGroupRequest
 func (mr *MockAutoscalingClientMockRecorder) TerminateInstanceInAutoScalingGroupRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TerminateInstanceInAutoScalingGroupRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).TerminateInstanceInAutoScalingGroupRequest), arg0)
 }
 
 // TerminateInstanceInAutoScalingGroupWithContext mocks base method
-func (m *MockAutoscalingClient) TerminateInstanceInAutoScalingGroupWithContext(arg0 aws.Context, arg1 *autoscaling.TerminateInstanceInAutoScalingGroupInput, arg2 ...request.Option) (*autoscaling.TerminateInstanceInAutoScalingGroupOutput, error) {
+func (m *MockAutoscalingClient) TerminateInstanceInAutoScalingGroupWithContext(arg0 context.Context, arg1 *autoscaling.TerminateInstanceInAutoScalingGroupInput, arg2 ...request.Option) (*autoscaling.TerminateInstanceInAutoScalingGroupOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2595,12 +3094,14 @@ func (m *MockAutoscalingClient) TerminateInstanceInAutoScalingGroupWithContext(a
 
 // TerminateInstanceInAutoScalingGroupWithContext indicates an expected call of TerminateInstanceInAutoScalingGroupWithContext
 func (mr *MockAutoscalingClientMockRecorder) TerminateInstanceInAutoScalingGroupWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TerminateInstanceInAutoScalingGroupWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).TerminateInstanceInAutoScalingGroupWithContext), varargs...)
 }
 
 // UpdateAutoScalingGroup mocks base method
 func (m *MockAutoscalingClient) UpdateAutoScalingGroup(arg0 *autoscaling.UpdateAutoScalingGroupInput) (*autoscaling.UpdateAutoScalingGroupOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAutoScalingGroup", arg0)
 	ret0, _ := ret[0].(*autoscaling.UpdateAutoScalingGroupOutput)
 	ret1, _ := ret[1].(error)
@@ -2609,11 +3110,13 @@ func (m *MockAutoscalingClient) UpdateAutoScalingGroup(arg0 *autoscaling.UpdateA
 
 // UpdateAutoScalingGroup indicates an expected call of UpdateAutoScalingGroup
 func (mr *MockAutoscalingClientMockRecorder) UpdateAutoScalingGroup(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAutoScalingGroup", reflect.TypeOf((*MockAutoscalingClient)(nil).UpdateAutoScalingGroup), arg0)
 }
 
 // UpdateAutoScalingGroupRequest mocks base method
 func (m *MockAutoscalingClient) UpdateAutoScalingGroupRequest(arg0 *autoscaling.UpdateAutoScalingGroupInput) (*request.Request, *autoscaling.UpdateAutoScalingGroupOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAutoScalingGroupRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*autoscaling.UpdateAutoScalingGroupOutput)
@@ -2622,11 +3125,13 @@ func (m *MockAutoscalingClient) UpdateAutoScalingGroupRequest(arg0 *autoscaling.
 
 // UpdateAutoScalingGroupRequest indicates an expected call of UpdateAutoScalingGroupRequest
 func (mr *MockAutoscalingClientMockRecorder) UpdateAutoScalingGroupRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAutoScalingGroupRequest", reflect.TypeOf((*MockAutoscalingClient)(nil).UpdateAutoScalingGroupRequest), arg0)
 }
 
 // UpdateAutoScalingGroupWithContext mocks base method
-func (m *MockAutoscalingClient) UpdateAutoScalingGroupWithContext(arg0 aws.Context, arg1 *autoscaling.UpdateAutoScalingGroupInput, arg2 ...request.Option) (*autoscaling.UpdateAutoScalingGroupOutput, error) {
+func (m *MockAutoscalingClient) UpdateAutoScalingGroupWithContext(arg0 context.Context, arg1 *autoscaling.UpdateAutoScalingGroupInput, arg2 ...request.Option) (*autoscaling.UpdateAutoScalingGroupOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2639,12 +3144,14 @@ func (m *MockAutoscalingClient) UpdateAutoScalingGroupWithContext(arg0 aws.Conte
 
 // UpdateAutoScalingGroupWithContext indicates an expected call of UpdateAutoScalingGroupWithContext
 func (mr *MockAutoscalingClientMockRecorder) UpdateAutoScalingGroupWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAutoScalingGroupWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).UpdateAutoScalingGroupWithContext), varargs...)
 }
 
 // WaitUntilGroupExists mocks base method
 func (m *MockAutoscalingClient) WaitUntilGroupExists(arg0 *autoscaling.DescribeAutoScalingGroupsInput) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WaitUntilGroupExists", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -2652,11 +3159,13 @@ func (m *MockAutoscalingClient) WaitUntilGroupExists(arg0 *autoscaling.DescribeA
 
 // WaitUntilGroupExists indicates an expected call of WaitUntilGroupExists
 func (mr *MockAutoscalingClientMockRecorder) WaitUntilGroupExists(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitUntilGroupExists", reflect.TypeOf((*MockAutoscalingClient)(nil).WaitUntilGroupExists), arg0)
 }
 
 // WaitUntilGroupExistsWithContext mocks base method
-func (m *MockAutoscalingClient) WaitUntilGroupExistsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 ...request.WaiterOption) error {
+func (m *MockAutoscalingClient) WaitUntilGroupExistsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 ...request.WaiterOption) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2668,12 +3177,14 @@ func (m *MockAutoscalingClient) WaitUntilGroupExistsWithContext(arg0 aws.Context
 
 // WaitUntilGroupExistsWithContext indicates an expected call of WaitUntilGroupExistsWithContext
 func (mr *MockAutoscalingClientMockRecorder) WaitUntilGroupExistsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitUntilGroupExistsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).WaitUntilGroupExistsWithContext), varargs...)
 }
 
 // WaitUntilGroupInService mocks base method
 func (m *MockAutoscalingClient) WaitUntilGroupInService(arg0 *autoscaling.DescribeAutoScalingGroupsInput) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WaitUntilGroupInService", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -2681,11 +3192,13 @@ func (m *MockAutoscalingClient) WaitUntilGroupInService(arg0 *autoscaling.Descri
 
 // WaitUntilGroupInService indicates an expected call of WaitUntilGroupInService
 func (mr *MockAutoscalingClientMockRecorder) WaitUntilGroupInService(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitUntilGroupInService", reflect.TypeOf((*MockAutoscalingClient)(nil).WaitUntilGroupInService), arg0)
 }
 
 // WaitUntilGroupInServiceWithContext mocks base method
-func (m *MockAutoscalingClient) WaitUntilGroupInServiceWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 ...request.WaiterOption) error {
+func (m *MockAutoscalingClient) WaitUntilGroupInServiceWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 ...request.WaiterOption) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2697,12 +3210,14 @@ func (m *MockAutoscalingClient) WaitUntilGroupInServiceWithContext(arg0 aws.Cont
 
 // WaitUntilGroupInServiceWithContext indicates an expected call of WaitUntilGroupInServiceWithContext
 func (mr *MockAutoscalingClientMockRecorder) WaitUntilGroupInServiceWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitUntilGroupInServiceWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).WaitUntilGroupInServiceWithContext), varargs...)
 }
 
 // WaitUntilGroupNotExists mocks base method
 func (m *MockAutoscalingClient) WaitUntilGroupNotExists(arg0 *autoscaling.DescribeAutoScalingGroupsInput) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WaitUntilGroupNotExists", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -2710,11 +3225,13 @@ func (m *MockAutoscalingClient) WaitUntilGroupNotExists(arg0 *autoscaling.Descri
 
 // WaitUntilGroupNotExists indicates an expected call of WaitUntilGroupNotExists
 func (mr *MockAutoscalingClientMockRecorder) WaitUntilGroupNotExists(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitUntilGroupNotExists", reflect.TypeOf((*MockAutoscalingClient)(nil).WaitUntilGroupNotExists), arg0)
 }
 
 // WaitUntilGroupNotExistsWithContext mocks base method
-func (m *MockAutoscalingClient) WaitUntilGroupNotExistsWithContext(arg0 aws.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 ...request.WaiterOption) error {
+func (m *MockAutoscalingClient) WaitUntilGroupNotExistsWithContext(arg0 context.Context, arg1 *autoscaling.DescribeAutoScalingGroupsInput, arg2 ...request.WaiterOption) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -2726,6 +3243,7 @@ func (m *MockAutoscalingClient) WaitUntilGroupNotExistsWithContext(arg0 aws.Cont
 
 // WaitUntilGroupNotExistsWithContext indicates an expected call of WaitUntilGroupNotExistsWithContext
 func (mr *MockAutoscalingClientMockRecorder) WaitUntilGroupNotExistsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitUntilGroupNotExistsWithContext", reflect.TypeOf((*MockAutoscalingClient)(nil).WaitUntilGroupNotExistsWithContext), varargs...)
 }

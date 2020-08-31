@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	aws "github.com/aws/aws-sdk-go/aws"
+	context "context"
 	request "github.com/aws/aws-sdk-go/aws/request"
 	sqs "github.com/aws/aws-sdk-go/service/sqs"
 	gomock "github.com/golang/mock/gomock"
@@ -37,6 +37,7 @@ func (m *MockSQSClient) EXPECT() *MockSQSClientMockRecorder {
 
 // AddPermission mocks base method
 func (m *MockSQSClient) AddPermission(arg0 *sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddPermission", arg0)
 	ret0, _ := ret[0].(*sqs.AddPermissionOutput)
 	ret1, _ := ret[1].(error)
@@ -45,11 +46,13 @@ func (m *MockSQSClient) AddPermission(arg0 *sqs.AddPermissionInput) (*sqs.AddPer
 
 // AddPermission indicates an expected call of AddPermission
 func (mr *MockSQSClientMockRecorder) AddPermission(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPermission", reflect.TypeOf((*MockSQSClient)(nil).AddPermission), arg0)
 }
 
 // AddPermissionRequest mocks base method
 func (m *MockSQSClient) AddPermissionRequest(arg0 *sqs.AddPermissionInput) (*request.Request, *sqs.AddPermissionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddPermissionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.AddPermissionOutput)
@@ -58,11 +61,13 @@ func (m *MockSQSClient) AddPermissionRequest(arg0 *sqs.AddPermissionInput) (*req
 
 // AddPermissionRequest indicates an expected call of AddPermissionRequest
 func (mr *MockSQSClientMockRecorder) AddPermissionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPermissionRequest", reflect.TypeOf((*MockSQSClient)(nil).AddPermissionRequest), arg0)
 }
 
 // AddPermissionWithContext mocks base method
-func (m *MockSQSClient) AddPermissionWithContext(arg0 aws.Context, arg1 *sqs.AddPermissionInput, arg2 ...request.Option) (*sqs.AddPermissionOutput, error) {
+func (m *MockSQSClient) AddPermissionWithContext(arg0 context.Context, arg1 *sqs.AddPermissionInput, arg2 ...request.Option) (*sqs.AddPermissionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -75,12 +80,14 @@ func (m *MockSQSClient) AddPermissionWithContext(arg0 aws.Context, arg1 *sqs.Add
 
 // AddPermissionWithContext indicates an expected call of AddPermissionWithContext
 func (mr *MockSQSClientMockRecorder) AddPermissionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPermissionWithContext", reflect.TypeOf((*MockSQSClient)(nil).AddPermissionWithContext), varargs...)
 }
 
 // ChangeMessageVisibility mocks base method
 func (m *MockSQSClient) ChangeMessageVisibility(arg0 *sqs.ChangeMessageVisibilityInput) (*sqs.ChangeMessageVisibilityOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangeMessageVisibility", arg0)
 	ret0, _ := ret[0].(*sqs.ChangeMessageVisibilityOutput)
 	ret1, _ := ret[1].(error)
@@ -89,11 +96,13 @@ func (m *MockSQSClient) ChangeMessageVisibility(arg0 *sqs.ChangeMessageVisibilit
 
 // ChangeMessageVisibility indicates an expected call of ChangeMessageVisibility
 func (mr *MockSQSClientMockRecorder) ChangeMessageVisibility(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeMessageVisibility", reflect.TypeOf((*MockSQSClient)(nil).ChangeMessageVisibility), arg0)
 }
 
 // ChangeMessageVisibilityBatch mocks base method
 func (m *MockSQSClient) ChangeMessageVisibilityBatch(arg0 *sqs.ChangeMessageVisibilityBatchInput) (*sqs.ChangeMessageVisibilityBatchOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangeMessageVisibilityBatch", arg0)
 	ret0, _ := ret[0].(*sqs.ChangeMessageVisibilityBatchOutput)
 	ret1, _ := ret[1].(error)
@@ -102,11 +111,13 @@ func (m *MockSQSClient) ChangeMessageVisibilityBatch(arg0 *sqs.ChangeMessageVisi
 
 // ChangeMessageVisibilityBatch indicates an expected call of ChangeMessageVisibilityBatch
 func (mr *MockSQSClientMockRecorder) ChangeMessageVisibilityBatch(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeMessageVisibilityBatch", reflect.TypeOf((*MockSQSClient)(nil).ChangeMessageVisibilityBatch), arg0)
 }
 
 // ChangeMessageVisibilityBatchRequest mocks base method
 func (m *MockSQSClient) ChangeMessageVisibilityBatchRequest(arg0 *sqs.ChangeMessageVisibilityBatchInput) (*request.Request, *sqs.ChangeMessageVisibilityBatchOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangeMessageVisibilityBatchRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.ChangeMessageVisibilityBatchOutput)
@@ -115,11 +126,13 @@ func (m *MockSQSClient) ChangeMessageVisibilityBatchRequest(arg0 *sqs.ChangeMess
 
 // ChangeMessageVisibilityBatchRequest indicates an expected call of ChangeMessageVisibilityBatchRequest
 func (mr *MockSQSClientMockRecorder) ChangeMessageVisibilityBatchRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeMessageVisibilityBatchRequest", reflect.TypeOf((*MockSQSClient)(nil).ChangeMessageVisibilityBatchRequest), arg0)
 }
 
 // ChangeMessageVisibilityBatchWithContext mocks base method
-func (m *MockSQSClient) ChangeMessageVisibilityBatchWithContext(arg0 aws.Context, arg1 *sqs.ChangeMessageVisibilityBatchInput, arg2 ...request.Option) (*sqs.ChangeMessageVisibilityBatchOutput, error) {
+func (m *MockSQSClient) ChangeMessageVisibilityBatchWithContext(arg0 context.Context, arg1 *sqs.ChangeMessageVisibilityBatchInput, arg2 ...request.Option) (*sqs.ChangeMessageVisibilityBatchOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -132,12 +145,14 @@ func (m *MockSQSClient) ChangeMessageVisibilityBatchWithContext(arg0 aws.Context
 
 // ChangeMessageVisibilityBatchWithContext indicates an expected call of ChangeMessageVisibilityBatchWithContext
 func (mr *MockSQSClientMockRecorder) ChangeMessageVisibilityBatchWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeMessageVisibilityBatchWithContext", reflect.TypeOf((*MockSQSClient)(nil).ChangeMessageVisibilityBatchWithContext), varargs...)
 }
 
 // ChangeMessageVisibilityRequest mocks base method
 func (m *MockSQSClient) ChangeMessageVisibilityRequest(arg0 *sqs.ChangeMessageVisibilityInput) (*request.Request, *sqs.ChangeMessageVisibilityOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangeMessageVisibilityRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.ChangeMessageVisibilityOutput)
@@ -146,11 +161,13 @@ func (m *MockSQSClient) ChangeMessageVisibilityRequest(arg0 *sqs.ChangeMessageVi
 
 // ChangeMessageVisibilityRequest indicates an expected call of ChangeMessageVisibilityRequest
 func (mr *MockSQSClientMockRecorder) ChangeMessageVisibilityRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeMessageVisibilityRequest", reflect.TypeOf((*MockSQSClient)(nil).ChangeMessageVisibilityRequest), arg0)
 }
 
 // ChangeMessageVisibilityWithContext mocks base method
-func (m *MockSQSClient) ChangeMessageVisibilityWithContext(arg0 aws.Context, arg1 *sqs.ChangeMessageVisibilityInput, arg2 ...request.Option) (*sqs.ChangeMessageVisibilityOutput, error) {
+func (m *MockSQSClient) ChangeMessageVisibilityWithContext(arg0 context.Context, arg1 *sqs.ChangeMessageVisibilityInput, arg2 ...request.Option) (*sqs.ChangeMessageVisibilityOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -163,12 +180,14 @@ func (m *MockSQSClient) ChangeMessageVisibilityWithContext(arg0 aws.Context, arg
 
 // ChangeMessageVisibilityWithContext indicates an expected call of ChangeMessageVisibilityWithContext
 func (mr *MockSQSClientMockRecorder) ChangeMessageVisibilityWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeMessageVisibilityWithContext", reflect.TypeOf((*MockSQSClient)(nil).ChangeMessageVisibilityWithContext), varargs...)
 }
 
 // CreateQueue mocks base method
 func (m *MockSQSClient) CreateQueue(arg0 *sqs.CreateQueueInput) (*sqs.CreateQueueOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateQueue", arg0)
 	ret0, _ := ret[0].(*sqs.CreateQueueOutput)
 	ret1, _ := ret[1].(error)
@@ -177,11 +196,13 @@ func (m *MockSQSClient) CreateQueue(arg0 *sqs.CreateQueueInput) (*sqs.CreateQueu
 
 // CreateQueue indicates an expected call of CreateQueue
 func (mr *MockSQSClientMockRecorder) CreateQueue(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQueue", reflect.TypeOf((*MockSQSClient)(nil).CreateQueue), arg0)
 }
 
 // CreateQueueRequest mocks base method
 func (m *MockSQSClient) CreateQueueRequest(arg0 *sqs.CreateQueueInput) (*request.Request, *sqs.CreateQueueOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateQueueRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.CreateQueueOutput)
@@ -190,11 +211,13 @@ func (m *MockSQSClient) CreateQueueRequest(arg0 *sqs.CreateQueueInput) (*request
 
 // CreateQueueRequest indicates an expected call of CreateQueueRequest
 func (mr *MockSQSClientMockRecorder) CreateQueueRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQueueRequest", reflect.TypeOf((*MockSQSClient)(nil).CreateQueueRequest), arg0)
 }
 
 // CreateQueueWithContext mocks base method
-func (m *MockSQSClient) CreateQueueWithContext(arg0 aws.Context, arg1 *sqs.CreateQueueInput, arg2 ...request.Option) (*sqs.CreateQueueOutput, error) {
+func (m *MockSQSClient) CreateQueueWithContext(arg0 context.Context, arg1 *sqs.CreateQueueInput, arg2 ...request.Option) (*sqs.CreateQueueOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -207,12 +230,14 @@ func (m *MockSQSClient) CreateQueueWithContext(arg0 aws.Context, arg1 *sqs.Creat
 
 // CreateQueueWithContext indicates an expected call of CreateQueueWithContext
 func (mr *MockSQSClientMockRecorder) CreateQueueWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQueueWithContext", reflect.TypeOf((*MockSQSClient)(nil).CreateQueueWithContext), varargs...)
 }
 
 // DeleteMessage mocks base method
 func (m *MockSQSClient) DeleteMessage(arg0 *sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteMessage", arg0)
 	ret0, _ := ret[0].(*sqs.DeleteMessageOutput)
 	ret1, _ := ret[1].(error)
@@ -221,11 +246,13 @@ func (m *MockSQSClient) DeleteMessage(arg0 *sqs.DeleteMessageInput) (*sqs.Delete
 
 // DeleteMessage indicates an expected call of DeleteMessage
 func (mr *MockSQSClientMockRecorder) DeleteMessage(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessage", reflect.TypeOf((*MockSQSClient)(nil).DeleteMessage), arg0)
 }
 
 // DeleteMessageBatch mocks base method
 func (m *MockSQSClient) DeleteMessageBatch(arg0 *sqs.DeleteMessageBatchInput) (*sqs.DeleteMessageBatchOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteMessageBatch", arg0)
 	ret0, _ := ret[0].(*sqs.DeleteMessageBatchOutput)
 	ret1, _ := ret[1].(error)
@@ -234,11 +261,13 @@ func (m *MockSQSClient) DeleteMessageBatch(arg0 *sqs.DeleteMessageBatchInput) (*
 
 // DeleteMessageBatch indicates an expected call of DeleteMessageBatch
 func (mr *MockSQSClientMockRecorder) DeleteMessageBatch(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessageBatch", reflect.TypeOf((*MockSQSClient)(nil).DeleteMessageBatch), arg0)
 }
 
 // DeleteMessageBatchRequest mocks base method
 func (m *MockSQSClient) DeleteMessageBatchRequest(arg0 *sqs.DeleteMessageBatchInput) (*request.Request, *sqs.DeleteMessageBatchOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteMessageBatchRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.DeleteMessageBatchOutput)
@@ -247,11 +276,13 @@ func (m *MockSQSClient) DeleteMessageBatchRequest(arg0 *sqs.DeleteMessageBatchIn
 
 // DeleteMessageBatchRequest indicates an expected call of DeleteMessageBatchRequest
 func (mr *MockSQSClientMockRecorder) DeleteMessageBatchRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessageBatchRequest", reflect.TypeOf((*MockSQSClient)(nil).DeleteMessageBatchRequest), arg0)
 }
 
 // DeleteMessageBatchWithContext mocks base method
-func (m *MockSQSClient) DeleteMessageBatchWithContext(arg0 aws.Context, arg1 *sqs.DeleteMessageBatchInput, arg2 ...request.Option) (*sqs.DeleteMessageBatchOutput, error) {
+func (m *MockSQSClient) DeleteMessageBatchWithContext(arg0 context.Context, arg1 *sqs.DeleteMessageBatchInput, arg2 ...request.Option) (*sqs.DeleteMessageBatchOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -264,12 +295,14 @@ func (m *MockSQSClient) DeleteMessageBatchWithContext(arg0 aws.Context, arg1 *sq
 
 // DeleteMessageBatchWithContext indicates an expected call of DeleteMessageBatchWithContext
 func (mr *MockSQSClientMockRecorder) DeleteMessageBatchWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessageBatchWithContext", reflect.TypeOf((*MockSQSClient)(nil).DeleteMessageBatchWithContext), varargs...)
 }
 
 // DeleteMessageRequest mocks base method
 func (m *MockSQSClient) DeleteMessageRequest(arg0 *sqs.DeleteMessageInput) (*request.Request, *sqs.DeleteMessageOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteMessageRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.DeleteMessageOutput)
@@ -278,11 +311,13 @@ func (m *MockSQSClient) DeleteMessageRequest(arg0 *sqs.DeleteMessageInput) (*req
 
 // DeleteMessageRequest indicates an expected call of DeleteMessageRequest
 func (mr *MockSQSClientMockRecorder) DeleteMessageRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessageRequest", reflect.TypeOf((*MockSQSClient)(nil).DeleteMessageRequest), arg0)
 }
 
 // DeleteMessageWithContext mocks base method
-func (m *MockSQSClient) DeleteMessageWithContext(arg0 aws.Context, arg1 *sqs.DeleteMessageInput, arg2 ...request.Option) (*sqs.DeleteMessageOutput, error) {
+func (m *MockSQSClient) DeleteMessageWithContext(arg0 context.Context, arg1 *sqs.DeleteMessageInput, arg2 ...request.Option) (*sqs.DeleteMessageOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -295,12 +330,14 @@ func (m *MockSQSClient) DeleteMessageWithContext(arg0 aws.Context, arg1 *sqs.Del
 
 // DeleteMessageWithContext indicates an expected call of DeleteMessageWithContext
 func (mr *MockSQSClientMockRecorder) DeleteMessageWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessageWithContext", reflect.TypeOf((*MockSQSClient)(nil).DeleteMessageWithContext), varargs...)
 }
 
 // DeleteQueue mocks base method
 func (m *MockSQSClient) DeleteQueue(arg0 *sqs.DeleteQueueInput) (*sqs.DeleteQueueOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteQueue", arg0)
 	ret0, _ := ret[0].(*sqs.DeleteQueueOutput)
 	ret1, _ := ret[1].(error)
@@ -309,11 +346,13 @@ func (m *MockSQSClient) DeleteQueue(arg0 *sqs.DeleteQueueInput) (*sqs.DeleteQueu
 
 // DeleteQueue indicates an expected call of DeleteQueue
 func (mr *MockSQSClientMockRecorder) DeleteQueue(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueue", reflect.TypeOf((*MockSQSClient)(nil).DeleteQueue), arg0)
 }
 
 // DeleteQueueRequest mocks base method
 func (m *MockSQSClient) DeleteQueueRequest(arg0 *sqs.DeleteQueueInput) (*request.Request, *sqs.DeleteQueueOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteQueueRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.DeleteQueueOutput)
@@ -322,11 +361,13 @@ func (m *MockSQSClient) DeleteQueueRequest(arg0 *sqs.DeleteQueueInput) (*request
 
 // DeleteQueueRequest indicates an expected call of DeleteQueueRequest
 func (mr *MockSQSClientMockRecorder) DeleteQueueRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueueRequest", reflect.TypeOf((*MockSQSClient)(nil).DeleteQueueRequest), arg0)
 }
 
 // DeleteQueueWithContext mocks base method
-func (m *MockSQSClient) DeleteQueueWithContext(arg0 aws.Context, arg1 *sqs.DeleteQueueInput, arg2 ...request.Option) (*sqs.DeleteQueueOutput, error) {
+func (m *MockSQSClient) DeleteQueueWithContext(arg0 context.Context, arg1 *sqs.DeleteQueueInput, arg2 ...request.Option) (*sqs.DeleteQueueOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -339,12 +380,14 @@ func (m *MockSQSClient) DeleteQueueWithContext(arg0 aws.Context, arg1 *sqs.Delet
 
 // DeleteQueueWithContext indicates an expected call of DeleteQueueWithContext
 func (mr *MockSQSClientMockRecorder) DeleteQueueWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQueueWithContext", reflect.TypeOf((*MockSQSClient)(nil).DeleteQueueWithContext), varargs...)
 }
 
 // GetQueueAttributes mocks base method
 func (m *MockSQSClient) GetQueueAttributes(arg0 *sqs.GetQueueAttributesInput) (*sqs.GetQueueAttributesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueueAttributes", arg0)
 	ret0, _ := ret[0].(*sqs.GetQueueAttributesOutput)
 	ret1, _ := ret[1].(error)
@@ -353,11 +396,13 @@ func (m *MockSQSClient) GetQueueAttributes(arg0 *sqs.GetQueueAttributesInput) (*
 
 // GetQueueAttributes indicates an expected call of GetQueueAttributes
 func (mr *MockSQSClientMockRecorder) GetQueueAttributes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueAttributes", reflect.TypeOf((*MockSQSClient)(nil).GetQueueAttributes), arg0)
 }
 
 // GetQueueAttributesRequest mocks base method
 func (m *MockSQSClient) GetQueueAttributesRequest(arg0 *sqs.GetQueueAttributesInput) (*request.Request, *sqs.GetQueueAttributesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueueAttributesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.GetQueueAttributesOutput)
@@ -366,11 +411,13 @@ func (m *MockSQSClient) GetQueueAttributesRequest(arg0 *sqs.GetQueueAttributesIn
 
 // GetQueueAttributesRequest indicates an expected call of GetQueueAttributesRequest
 func (mr *MockSQSClientMockRecorder) GetQueueAttributesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueAttributesRequest", reflect.TypeOf((*MockSQSClient)(nil).GetQueueAttributesRequest), arg0)
 }
 
 // GetQueueAttributesWithContext mocks base method
-func (m *MockSQSClient) GetQueueAttributesWithContext(arg0 aws.Context, arg1 *sqs.GetQueueAttributesInput, arg2 ...request.Option) (*sqs.GetQueueAttributesOutput, error) {
+func (m *MockSQSClient) GetQueueAttributesWithContext(arg0 context.Context, arg1 *sqs.GetQueueAttributesInput, arg2 ...request.Option) (*sqs.GetQueueAttributesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -383,12 +430,14 @@ func (m *MockSQSClient) GetQueueAttributesWithContext(arg0 aws.Context, arg1 *sq
 
 // GetQueueAttributesWithContext indicates an expected call of GetQueueAttributesWithContext
 func (mr *MockSQSClientMockRecorder) GetQueueAttributesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueAttributesWithContext", reflect.TypeOf((*MockSQSClient)(nil).GetQueueAttributesWithContext), varargs...)
 }
 
 // GetQueueUrl mocks base method
 func (m *MockSQSClient) GetQueueUrl(arg0 *sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueueUrl", arg0)
 	ret0, _ := ret[0].(*sqs.GetQueueUrlOutput)
 	ret1, _ := ret[1].(error)
@@ -397,11 +446,13 @@ func (m *MockSQSClient) GetQueueUrl(arg0 *sqs.GetQueueUrlInput) (*sqs.GetQueueUr
 
 // GetQueueUrl indicates an expected call of GetQueueUrl
 func (mr *MockSQSClientMockRecorder) GetQueueUrl(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueUrl", reflect.TypeOf((*MockSQSClient)(nil).GetQueueUrl), arg0)
 }
 
 // GetQueueUrlRequest mocks base method
 func (m *MockSQSClient) GetQueueUrlRequest(arg0 *sqs.GetQueueUrlInput) (*request.Request, *sqs.GetQueueUrlOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetQueueUrlRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.GetQueueUrlOutput)
@@ -410,11 +461,13 @@ func (m *MockSQSClient) GetQueueUrlRequest(arg0 *sqs.GetQueueUrlInput) (*request
 
 // GetQueueUrlRequest indicates an expected call of GetQueueUrlRequest
 func (mr *MockSQSClientMockRecorder) GetQueueUrlRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueUrlRequest", reflect.TypeOf((*MockSQSClient)(nil).GetQueueUrlRequest), arg0)
 }
 
 // GetQueueUrlWithContext mocks base method
-func (m *MockSQSClient) GetQueueUrlWithContext(arg0 aws.Context, arg1 *sqs.GetQueueUrlInput, arg2 ...request.Option) (*sqs.GetQueueUrlOutput, error) {
+func (m *MockSQSClient) GetQueueUrlWithContext(arg0 context.Context, arg1 *sqs.GetQueueUrlInput, arg2 ...request.Option) (*sqs.GetQueueUrlOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -427,12 +480,14 @@ func (m *MockSQSClient) GetQueueUrlWithContext(arg0 aws.Context, arg1 *sqs.GetQu
 
 // GetQueueUrlWithContext indicates an expected call of GetQueueUrlWithContext
 func (mr *MockSQSClientMockRecorder) GetQueueUrlWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueueUrlWithContext", reflect.TypeOf((*MockSQSClient)(nil).GetQueueUrlWithContext), varargs...)
 }
 
 // ListDeadLetterSourceQueues mocks base method
 func (m *MockSQSClient) ListDeadLetterSourceQueues(arg0 *sqs.ListDeadLetterSourceQueuesInput) (*sqs.ListDeadLetterSourceQueuesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDeadLetterSourceQueues", arg0)
 	ret0, _ := ret[0].(*sqs.ListDeadLetterSourceQueuesOutput)
 	ret1, _ := ret[1].(error)
@@ -441,11 +496,46 @@ func (m *MockSQSClient) ListDeadLetterSourceQueues(arg0 *sqs.ListDeadLetterSourc
 
 // ListDeadLetterSourceQueues indicates an expected call of ListDeadLetterSourceQueues
 func (mr *MockSQSClientMockRecorder) ListDeadLetterSourceQueues(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeadLetterSourceQueues", reflect.TypeOf((*MockSQSClient)(nil).ListDeadLetterSourceQueues), arg0)
+}
+
+// ListDeadLetterSourceQueuesPages mocks base method
+func (m *MockSQSClient) ListDeadLetterSourceQueuesPages(arg0 *sqs.ListDeadLetterSourceQueuesInput, arg1 func(*sqs.ListDeadLetterSourceQueuesOutput, bool) bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDeadLetterSourceQueuesPages", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ListDeadLetterSourceQueuesPages indicates an expected call of ListDeadLetterSourceQueuesPages
+func (mr *MockSQSClientMockRecorder) ListDeadLetterSourceQueuesPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeadLetterSourceQueuesPages", reflect.TypeOf((*MockSQSClient)(nil).ListDeadLetterSourceQueuesPages), arg0, arg1)
+}
+
+// ListDeadLetterSourceQueuesPagesWithContext mocks base method
+func (m *MockSQSClient) ListDeadLetterSourceQueuesPagesWithContext(arg0 context.Context, arg1 *sqs.ListDeadLetterSourceQueuesInput, arg2 func(*sqs.ListDeadLetterSourceQueuesOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2}
+	for _, a := range arg3 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListDeadLetterSourceQueuesPagesWithContext", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ListDeadLetterSourceQueuesPagesWithContext indicates an expected call of ListDeadLetterSourceQueuesPagesWithContext
+func (mr *MockSQSClientMockRecorder) ListDeadLetterSourceQueuesPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeadLetterSourceQueuesPagesWithContext", reflect.TypeOf((*MockSQSClient)(nil).ListDeadLetterSourceQueuesPagesWithContext), varargs...)
 }
 
 // ListDeadLetterSourceQueuesRequest mocks base method
 func (m *MockSQSClient) ListDeadLetterSourceQueuesRequest(arg0 *sqs.ListDeadLetterSourceQueuesInput) (*request.Request, *sqs.ListDeadLetterSourceQueuesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDeadLetterSourceQueuesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.ListDeadLetterSourceQueuesOutput)
@@ -454,11 +544,13 @@ func (m *MockSQSClient) ListDeadLetterSourceQueuesRequest(arg0 *sqs.ListDeadLett
 
 // ListDeadLetterSourceQueuesRequest indicates an expected call of ListDeadLetterSourceQueuesRequest
 func (mr *MockSQSClientMockRecorder) ListDeadLetterSourceQueuesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeadLetterSourceQueuesRequest", reflect.TypeOf((*MockSQSClient)(nil).ListDeadLetterSourceQueuesRequest), arg0)
 }
 
 // ListDeadLetterSourceQueuesWithContext mocks base method
-func (m *MockSQSClient) ListDeadLetterSourceQueuesWithContext(arg0 aws.Context, arg1 *sqs.ListDeadLetterSourceQueuesInput, arg2 ...request.Option) (*sqs.ListDeadLetterSourceQueuesOutput, error) {
+func (m *MockSQSClient) ListDeadLetterSourceQueuesWithContext(arg0 context.Context, arg1 *sqs.ListDeadLetterSourceQueuesInput, arg2 ...request.Option) (*sqs.ListDeadLetterSourceQueuesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -471,12 +563,14 @@ func (m *MockSQSClient) ListDeadLetterSourceQueuesWithContext(arg0 aws.Context, 
 
 // ListDeadLetterSourceQueuesWithContext indicates an expected call of ListDeadLetterSourceQueuesWithContext
 func (mr *MockSQSClientMockRecorder) ListDeadLetterSourceQueuesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeadLetterSourceQueuesWithContext", reflect.TypeOf((*MockSQSClient)(nil).ListDeadLetterSourceQueuesWithContext), varargs...)
 }
 
 // ListQueueTags mocks base method
 func (m *MockSQSClient) ListQueueTags(arg0 *sqs.ListQueueTagsInput) (*sqs.ListQueueTagsOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListQueueTags", arg0)
 	ret0, _ := ret[0].(*sqs.ListQueueTagsOutput)
 	ret1, _ := ret[1].(error)
@@ -485,11 +579,13 @@ func (m *MockSQSClient) ListQueueTags(arg0 *sqs.ListQueueTagsInput) (*sqs.ListQu
 
 // ListQueueTags indicates an expected call of ListQueueTags
 func (mr *MockSQSClientMockRecorder) ListQueueTags(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueueTags", reflect.TypeOf((*MockSQSClient)(nil).ListQueueTags), arg0)
 }
 
 // ListQueueTagsRequest mocks base method
 func (m *MockSQSClient) ListQueueTagsRequest(arg0 *sqs.ListQueueTagsInput) (*request.Request, *sqs.ListQueueTagsOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListQueueTagsRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.ListQueueTagsOutput)
@@ -498,11 +594,13 @@ func (m *MockSQSClient) ListQueueTagsRequest(arg0 *sqs.ListQueueTagsInput) (*req
 
 // ListQueueTagsRequest indicates an expected call of ListQueueTagsRequest
 func (mr *MockSQSClientMockRecorder) ListQueueTagsRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueueTagsRequest", reflect.TypeOf((*MockSQSClient)(nil).ListQueueTagsRequest), arg0)
 }
 
 // ListQueueTagsWithContext mocks base method
-func (m *MockSQSClient) ListQueueTagsWithContext(arg0 aws.Context, arg1 *sqs.ListQueueTagsInput, arg2 ...request.Option) (*sqs.ListQueueTagsOutput, error) {
+func (m *MockSQSClient) ListQueueTagsWithContext(arg0 context.Context, arg1 *sqs.ListQueueTagsInput, arg2 ...request.Option) (*sqs.ListQueueTagsOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -515,12 +613,14 @@ func (m *MockSQSClient) ListQueueTagsWithContext(arg0 aws.Context, arg1 *sqs.Lis
 
 // ListQueueTagsWithContext indicates an expected call of ListQueueTagsWithContext
 func (mr *MockSQSClientMockRecorder) ListQueueTagsWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueueTagsWithContext", reflect.TypeOf((*MockSQSClient)(nil).ListQueueTagsWithContext), varargs...)
 }
 
 // ListQueues mocks base method
 func (m *MockSQSClient) ListQueues(arg0 *sqs.ListQueuesInput) (*sqs.ListQueuesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListQueues", arg0)
 	ret0, _ := ret[0].(*sqs.ListQueuesOutput)
 	ret1, _ := ret[1].(error)
@@ -529,11 +629,46 @@ func (m *MockSQSClient) ListQueues(arg0 *sqs.ListQueuesInput) (*sqs.ListQueuesOu
 
 // ListQueues indicates an expected call of ListQueues
 func (mr *MockSQSClientMockRecorder) ListQueues(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueues", reflect.TypeOf((*MockSQSClient)(nil).ListQueues), arg0)
+}
+
+// ListQueuesPages mocks base method
+func (m *MockSQSClient) ListQueuesPages(arg0 *sqs.ListQueuesInput, arg1 func(*sqs.ListQueuesOutput, bool) bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListQueuesPages", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ListQueuesPages indicates an expected call of ListQueuesPages
+func (mr *MockSQSClientMockRecorder) ListQueuesPages(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueuesPages", reflect.TypeOf((*MockSQSClient)(nil).ListQueuesPages), arg0, arg1)
+}
+
+// ListQueuesPagesWithContext mocks base method
+func (m *MockSQSClient) ListQueuesPagesWithContext(arg0 context.Context, arg1 *sqs.ListQueuesInput, arg2 func(*sqs.ListQueuesOutput, bool) bool, arg3 ...request.Option) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2}
+	for _, a := range arg3 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListQueuesPagesWithContext", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ListQueuesPagesWithContext indicates an expected call of ListQueuesPagesWithContext
+func (mr *MockSQSClientMockRecorder) ListQueuesPagesWithContext(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueuesPagesWithContext", reflect.TypeOf((*MockSQSClient)(nil).ListQueuesPagesWithContext), varargs...)
 }
 
 // ListQueuesRequest mocks base method
 func (m *MockSQSClient) ListQueuesRequest(arg0 *sqs.ListQueuesInput) (*request.Request, *sqs.ListQueuesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListQueuesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.ListQueuesOutput)
@@ -542,11 +677,13 @@ func (m *MockSQSClient) ListQueuesRequest(arg0 *sqs.ListQueuesInput) (*request.R
 
 // ListQueuesRequest indicates an expected call of ListQueuesRequest
 func (mr *MockSQSClientMockRecorder) ListQueuesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueuesRequest", reflect.TypeOf((*MockSQSClient)(nil).ListQueuesRequest), arg0)
 }
 
 // ListQueuesWithContext mocks base method
-func (m *MockSQSClient) ListQueuesWithContext(arg0 aws.Context, arg1 *sqs.ListQueuesInput, arg2 ...request.Option) (*sqs.ListQueuesOutput, error) {
+func (m *MockSQSClient) ListQueuesWithContext(arg0 context.Context, arg1 *sqs.ListQueuesInput, arg2 ...request.Option) (*sqs.ListQueuesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -559,12 +696,14 @@ func (m *MockSQSClient) ListQueuesWithContext(arg0 aws.Context, arg1 *sqs.ListQu
 
 // ListQueuesWithContext indicates an expected call of ListQueuesWithContext
 func (mr *MockSQSClientMockRecorder) ListQueuesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListQueuesWithContext", reflect.TypeOf((*MockSQSClient)(nil).ListQueuesWithContext), varargs...)
 }
 
 // PurgeQueue mocks base method
 func (m *MockSQSClient) PurgeQueue(arg0 *sqs.PurgeQueueInput) (*sqs.PurgeQueueOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PurgeQueue", arg0)
 	ret0, _ := ret[0].(*sqs.PurgeQueueOutput)
 	ret1, _ := ret[1].(error)
@@ -573,11 +712,13 @@ func (m *MockSQSClient) PurgeQueue(arg0 *sqs.PurgeQueueInput) (*sqs.PurgeQueueOu
 
 // PurgeQueue indicates an expected call of PurgeQueue
 func (mr *MockSQSClientMockRecorder) PurgeQueue(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PurgeQueue", reflect.TypeOf((*MockSQSClient)(nil).PurgeQueue), arg0)
 }
 
 // PurgeQueueRequest mocks base method
 func (m *MockSQSClient) PurgeQueueRequest(arg0 *sqs.PurgeQueueInput) (*request.Request, *sqs.PurgeQueueOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PurgeQueueRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.PurgeQueueOutput)
@@ -586,11 +727,13 @@ func (m *MockSQSClient) PurgeQueueRequest(arg0 *sqs.PurgeQueueInput) (*request.R
 
 // PurgeQueueRequest indicates an expected call of PurgeQueueRequest
 func (mr *MockSQSClientMockRecorder) PurgeQueueRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PurgeQueueRequest", reflect.TypeOf((*MockSQSClient)(nil).PurgeQueueRequest), arg0)
 }
 
 // PurgeQueueWithContext mocks base method
-func (m *MockSQSClient) PurgeQueueWithContext(arg0 aws.Context, arg1 *sqs.PurgeQueueInput, arg2 ...request.Option) (*sqs.PurgeQueueOutput, error) {
+func (m *MockSQSClient) PurgeQueueWithContext(arg0 context.Context, arg1 *sqs.PurgeQueueInput, arg2 ...request.Option) (*sqs.PurgeQueueOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -603,12 +746,14 @@ func (m *MockSQSClient) PurgeQueueWithContext(arg0 aws.Context, arg1 *sqs.PurgeQ
 
 // PurgeQueueWithContext indicates an expected call of PurgeQueueWithContext
 func (mr *MockSQSClientMockRecorder) PurgeQueueWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PurgeQueueWithContext", reflect.TypeOf((*MockSQSClient)(nil).PurgeQueueWithContext), varargs...)
 }
 
 // ReceiveMessage mocks base method
 func (m *MockSQSClient) ReceiveMessage(arg0 *sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReceiveMessage", arg0)
 	ret0, _ := ret[0].(*sqs.ReceiveMessageOutput)
 	ret1, _ := ret[1].(error)
@@ -617,11 +762,13 @@ func (m *MockSQSClient) ReceiveMessage(arg0 *sqs.ReceiveMessageInput) (*sqs.Rece
 
 // ReceiveMessage indicates an expected call of ReceiveMessage
 func (mr *MockSQSClientMockRecorder) ReceiveMessage(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveMessage", reflect.TypeOf((*MockSQSClient)(nil).ReceiveMessage), arg0)
 }
 
 // ReceiveMessageRequest mocks base method
 func (m *MockSQSClient) ReceiveMessageRequest(arg0 *sqs.ReceiveMessageInput) (*request.Request, *sqs.ReceiveMessageOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReceiveMessageRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.ReceiveMessageOutput)
@@ -630,11 +777,13 @@ func (m *MockSQSClient) ReceiveMessageRequest(arg0 *sqs.ReceiveMessageInput) (*r
 
 // ReceiveMessageRequest indicates an expected call of ReceiveMessageRequest
 func (mr *MockSQSClientMockRecorder) ReceiveMessageRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveMessageRequest", reflect.TypeOf((*MockSQSClient)(nil).ReceiveMessageRequest), arg0)
 }
 
 // ReceiveMessageWithContext mocks base method
-func (m *MockSQSClient) ReceiveMessageWithContext(arg0 aws.Context, arg1 *sqs.ReceiveMessageInput, arg2 ...request.Option) (*sqs.ReceiveMessageOutput, error) {
+func (m *MockSQSClient) ReceiveMessageWithContext(arg0 context.Context, arg1 *sqs.ReceiveMessageInput, arg2 ...request.Option) (*sqs.ReceiveMessageOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -647,12 +796,14 @@ func (m *MockSQSClient) ReceiveMessageWithContext(arg0 aws.Context, arg1 *sqs.Re
 
 // ReceiveMessageWithContext indicates an expected call of ReceiveMessageWithContext
 func (mr *MockSQSClientMockRecorder) ReceiveMessageWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveMessageWithContext", reflect.TypeOf((*MockSQSClient)(nil).ReceiveMessageWithContext), varargs...)
 }
 
 // RemovePermission mocks base method
 func (m *MockSQSClient) RemovePermission(arg0 *sqs.RemovePermissionInput) (*sqs.RemovePermissionOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemovePermission", arg0)
 	ret0, _ := ret[0].(*sqs.RemovePermissionOutput)
 	ret1, _ := ret[1].(error)
@@ -661,11 +812,13 @@ func (m *MockSQSClient) RemovePermission(arg0 *sqs.RemovePermissionInput) (*sqs.
 
 // RemovePermission indicates an expected call of RemovePermission
 func (mr *MockSQSClientMockRecorder) RemovePermission(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePermission", reflect.TypeOf((*MockSQSClient)(nil).RemovePermission), arg0)
 }
 
 // RemovePermissionRequest mocks base method
 func (m *MockSQSClient) RemovePermissionRequest(arg0 *sqs.RemovePermissionInput) (*request.Request, *sqs.RemovePermissionOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemovePermissionRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.RemovePermissionOutput)
@@ -674,11 +827,13 @@ func (m *MockSQSClient) RemovePermissionRequest(arg0 *sqs.RemovePermissionInput)
 
 // RemovePermissionRequest indicates an expected call of RemovePermissionRequest
 func (mr *MockSQSClientMockRecorder) RemovePermissionRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePermissionRequest", reflect.TypeOf((*MockSQSClient)(nil).RemovePermissionRequest), arg0)
 }
 
 // RemovePermissionWithContext mocks base method
-func (m *MockSQSClient) RemovePermissionWithContext(arg0 aws.Context, arg1 *sqs.RemovePermissionInput, arg2 ...request.Option) (*sqs.RemovePermissionOutput, error) {
+func (m *MockSQSClient) RemovePermissionWithContext(arg0 context.Context, arg1 *sqs.RemovePermissionInput, arg2 ...request.Option) (*sqs.RemovePermissionOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -691,12 +846,14 @@ func (m *MockSQSClient) RemovePermissionWithContext(arg0 aws.Context, arg1 *sqs.
 
 // RemovePermissionWithContext indicates an expected call of RemovePermissionWithContext
 func (mr *MockSQSClientMockRecorder) RemovePermissionWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePermissionWithContext", reflect.TypeOf((*MockSQSClient)(nil).RemovePermissionWithContext), varargs...)
 }
 
 // SendMessage mocks base method
 func (m *MockSQSClient) SendMessage(arg0 *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendMessage", arg0)
 	ret0, _ := ret[0].(*sqs.SendMessageOutput)
 	ret1, _ := ret[1].(error)
@@ -705,11 +862,13 @@ func (m *MockSQSClient) SendMessage(arg0 *sqs.SendMessageInput) (*sqs.SendMessag
 
 // SendMessage indicates an expected call of SendMessage
 func (mr *MockSQSClientMockRecorder) SendMessage(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessage", reflect.TypeOf((*MockSQSClient)(nil).SendMessage), arg0)
 }
 
 // SendMessageBatch mocks base method
 func (m *MockSQSClient) SendMessageBatch(arg0 *sqs.SendMessageBatchInput) (*sqs.SendMessageBatchOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendMessageBatch", arg0)
 	ret0, _ := ret[0].(*sqs.SendMessageBatchOutput)
 	ret1, _ := ret[1].(error)
@@ -718,11 +877,13 @@ func (m *MockSQSClient) SendMessageBatch(arg0 *sqs.SendMessageBatchInput) (*sqs.
 
 // SendMessageBatch indicates an expected call of SendMessageBatch
 func (mr *MockSQSClientMockRecorder) SendMessageBatch(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessageBatch", reflect.TypeOf((*MockSQSClient)(nil).SendMessageBatch), arg0)
 }
 
 // SendMessageBatchRequest mocks base method
 func (m *MockSQSClient) SendMessageBatchRequest(arg0 *sqs.SendMessageBatchInput) (*request.Request, *sqs.SendMessageBatchOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendMessageBatchRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.SendMessageBatchOutput)
@@ -731,11 +892,13 @@ func (m *MockSQSClient) SendMessageBatchRequest(arg0 *sqs.SendMessageBatchInput)
 
 // SendMessageBatchRequest indicates an expected call of SendMessageBatchRequest
 func (mr *MockSQSClientMockRecorder) SendMessageBatchRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessageBatchRequest", reflect.TypeOf((*MockSQSClient)(nil).SendMessageBatchRequest), arg0)
 }
 
 // SendMessageBatchWithContext mocks base method
-func (m *MockSQSClient) SendMessageBatchWithContext(arg0 aws.Context, arg1 *sqs.SendMessageBatchInput, arg2 ...request.Option) (*sqs.SendMessageBatchOutput, error) {
+func (m *MockSQSClient) SendMessageBatchWithContext(arg0 context.Context, arg1 *sqs.SendMessageBatchInput, arg2 ...request.Option) (*sqs.SendMessageBatchOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -748,12 +911,14 @@ func (m *MockSQSClient) SendMessageBatchWithContext(arg0 aws.Context, arg1 *sqs.
 
 // SendMessageBatchWithContext indicates an expected call of SendMessageBatchWithContext
 func (mr *MockSQSClientMockRecorder) SendMessageBatchWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessageBatchWithContext", reflect.TypeOf((*MockSQSClient)(nil).SendMessageBatchWithContext), varargs...)
 }
 
 // SendMessageRequest mocks base method
 func (m *MockSQSClient) SendMessageRequest(arg0 *sqs.SendMessageInput) (*request.Request, *sqs.SendMessageOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendMessageRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.SendMessageOutput)
@@ -762,11 +927,13 @@ func (m *MockSQSClient) SendMessageRequest(arg0 *sqs.SendMessageInput) (*request
 
 // SendMessageRequest indicates an expected call of SendMessageRequest
 func (mr *MockSQSClientMockRecorder) SendMessageRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessageRequest", reflect.TypeOf((*MockSQSClient)(nil).SendMessageRequest), arg0)
 }
 
 // SendMessageWithContext mocks base method
-func (m *MockSQSClient) SendMessageWithContext(arg0 aws.Context, arg1 *sqs.SendMessageInput, arg2 ...request.Option) (*sqs.SendMessageOutput, error) {
+func (m *MockSQSClient) SendMessageWithContext(arg0 context.Context, arg1 *sqs.SendMessageInput, arg2 ...request.Option) (*sqs.SendMessageOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -779,12 +946,14 @@ func (m *MockSQSClient) SendMessageWithContext(arg0 aws.Context, arg1 *sqs.SendM
 
 // SendMessageWithContext indicates an expected call of SendMessageWithContext
 func (mr *MockSQSClientMockRecorder) SendMessageWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMessageWithContext", reflect.TypeOf((*MockSQSClient)(nil).SendMessageWithContext), varargs...)
 }
 
 // SetQueueAttributes mocks base method
 func (m *MockSQSClient) SetQueueAttributes(arg0 *sqs.SetQueueAttributesInput) (*sqs.SetQueueAttributesOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetQueueAttributes", arg0)
 	ret0, _ := ret[0].(*sqs.SetQueueAttributesOutput)
 	ret1, _ := ret[1].(error)
@@ -793,11 +962,13 @@ func (m *MockSQSClient) SetQueueAttributes(arg0 *sqs.SetQueueAttributesInput) (*
 
 // SetQueueAttributes indicates an expected call of SetQueueAttributes
 func (mr *MockSQSClientMockRecorder) SetQueueAttributes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetQueueAttributes", reflect.TypeOf((*MockSQSClient)(nil).SetQueueAttributes), arg0)
 }
 
 // SetQueueAttributesRequest mocks base method
 func (m *MockSQSClient) SetQueueAttributesRequest(arg0 *sqs.SetQueueAttributesInput) (*request.Request, *sqs.SetQueueAttributesOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetQueueAttributesRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.SetQueueAttributesOutput)
@@ -806,11 +977,13 @@ func (m *MockSQSClient) SetQueueAttributesRequest(arg0 *sqs.SetQueueAttributesIn
 
 // SetQueueAttributesRequest indicates an expected call of SetQueueAttributesRequest
 func (mr *MockSQSClientMockRecorder) SetQueueAttributesRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetQueueAttributesRequest", reflect.TypeOf((*MockSQSClient)(nil).SetQueueAttributesRequest), arg0)
 }
 
 // SetQueueAttributesWithContext mocks base method
-func (m *MockSQSClient) SetQueueAttributesWithContext(arg0 aws.Context, arg1 *sqs.SetQueueAttributesInput, arg2 ...request.Option) (*sqs.SetQueueAttributesOutput, error) {
+func (m *MockSQSClient) SetQueueAttributesWithContext(arg0 context.Context, arg1 *sqs.SetQueueAttributesInput, arg2 ...request.Option) (*sqs.SetQueueAttributesOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -823,12 +996,14 @@ func (m *MockSQSClient) SetQueueAttributesWithContext(arg0 aws.Context, arg1 *sq
 
 // SetQueueAttributesWithContext indicates an expected call of SetQueueAttributesWithContext
 func (mr *MockSQSClientMockRecorder) SetQueueAttributesWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetQueueAttributesWithContext", reflect.TypeOf((*MockSQSClient)(nil).SetQueueAttributesWithContext), varargs...)
 }
 
 // TagQueue mocks base method
 func (m *MockSQSClient) TagQueue(arg0 *sqs.TagQueueInput) (*sqs.TagQueueOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TagQueue", arg0)
 	ret0, _ := ret[0].(*sqs.TagQueueOutput)
 	ret1, _ := ret[1].(error)
@@ -837,11 +1012,13 @@ func (m *MockSQSClient) TagQueue(arg0 *sqs.TagQueueInput) (*sqs.TagQueueOutput, 
 
 // TagQueue indicates an expected call of TagQueue
 func (mr *MockSQSClientMockRecorder) TagQueue(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagQueue", reflect.TypeOf((*MockSQSClient)(nil).TagQueue), arg0)
 }
 
 // TagQueueRequest mocks base method
 func (m *MockSQSClient) TagQueueRequest(arg0 *sqs.TagQueueInput) (*request.Request, *sqs.TagQueueOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TagQueueRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.TagQueueOutput)
@@ -850,11 +1027,13 @@ func (m *MockSQSClient) TagQueueRequest(arg0 *sqs.TagQueueInput) (*request.Reque
 
 // TagQueueRequest indicates an expected call of TagQueueRequest
 func (mr *MockSQSClientMockRecorder) TagQueueRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagQueueRequest", reflect.TypeOf((*MockSQSClient)(nil).TagQueueRequest), arg0)
 }
 
 // TagQueueWithContext mocks base method
-func (m *MockSQSClient) TagQueueWithContext(arg0 aws.Context, arg1 *sqs.TagQueueInput, arg2 ...request.Option) (*sqs.TagQueueOutput, error) {
+func (m *MockSQSClient) TagQueueWithContext(arg0 context.Context, arg1 *sqs.TagQueueInput, arg2 ...request.Option) (*sqs.TagQueueOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -867,12 +1046,14 @@ func (m *MockSQSClient) TagQueueWithContext(arg0 aws.Context, arg1 *sqs.TagQueue
 
 // TagQueueWithContext indicates an expected call of TagQueueWithContext
 func (mr *MockSQSClientMockRecorder) TagQueueWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagQueueWithContext", reflect.TypeOf((*MockSQSClient)(nil).TagQueueWithContext), varargs...)
 }
 
 // UntagQueue mocks base method
 func (m *MockSQSClient) UntagQueue(arg0 *sqs.UntagQueueInput) (*sqs.UntagQueueOutput, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UntagQueue", arg0)
 	ret0, _ := ret[0].(*sqs.UntagQueueOutput)
 	ret1, _ := ret[1].(error)
@@ -881,11 +1062,13 @@ func (m *MockSQSClient) UntagQueue(arg0 *sqs.UntagQueueInput) (*sqs.UntagQueueOu
 
 // UntagQueue indicates an expected call of UntagQueue
 func (mr *MockSQSClientMockRecorder) UntagQueue(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UntagQueue", reflect.TypeOf((*MockSQSClient)(nil).UntagQueue), arg0)
 }
 
 // UntagQueueRequest mocks base method
 func (m *MockSQSClient) UntagQueueRequest(arg0 *sqs.UntagQueueInput) (*request.Request, *sqs.UntagQueueOutput) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UntagQueueRequest", arg0)
 	ret0, _ := ret[0].(*request.Request)
 	ret1, _ := ret[1].(*sqs.UntagQueueOutput)
@@ -894,11 +1077,13 @@ func (m *MockSQSClient) UntagQueueRequest(arg0 *sqs.UntagQueueInput) (*request.R
 
 // UntagQueueRequest indicates an expected call of UntagQueueRequest
 func (mr *MockSQSClientMockRecorder) UntagQueueRequest(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UntagQueueRequest", reflect.TypeOf((*MockSQSClient)(nil).UntagQueueRequest), arg0)
 }
 
 // UntagQueueWithContext mocks base method
-func (m *MockSQSClient) UntagQueueWithContext(arg0 aws.Context, arg1 *sqs.UntagQueueInput, arg2 ...request.Option) (*sqs.UntagQueueOutput, error) {
+func (m *MockSQSClient) UntagQueueWithContext(arg0 context.Context, arg1 *sqs.UntagQueueInput, arg2 ...request.Option) (*sqs.UntagQueueOutput, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
@@ -911,6 +1096,7 @@ func (m *MockSQSClient) UntagQueueWithContext(arg0 aws.Context, arg1 *sqs.UntagQ
 
 // UntagQueueWithContext indicates an expected call of UntagQueueWithContext
 func (mr *MockSQSClientMockRecorder) UntagQueueWithContext(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UntagQueueWithContext", reflect.TypeOf((*MockSQSClient)(nil).UntagQueueWithContext), varargs...)
 }
