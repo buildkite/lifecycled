@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/buildkite/lifecycled"
@@ -75,7 +76,22 @@ func main() {
 			logger.SetLevel(logrus.DebugLevel)
 		}
 
-		sess, err := session.NewSession()
+		region := os.Getenv("AWS_REGION")
+		if region == "" {
+			logger.Info("Looking up region from metadata service")
+			sess, err := session.NewSession()
+			if err != nil {
+				logger.WithError(err).Fatal("Failed to create new aws session")
+			}
+			region, err = ec2metadata.New(sess).Region()
+			if err != nil {
+				logger.WithError(err).Fatal("Failed to look up region")
+			}
+		}
+
+		sess, err := session.NewSession(&aws.Config{
+			Region: aws.String(region),
+		})
 		if err != nil {
 			logger.WithError(err).Fatal("Failed to create new aws session")
 		}
