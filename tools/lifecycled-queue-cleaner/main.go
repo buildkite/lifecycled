@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"flag"
 	"log"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -21,8 +23,21 @@ func main() {
 	parallel := flag.Int("parallel", 20, "The number of parallel deletes to run")
 	flag.Parse()
 
+	region := os.Getenv("AWS_REGION")
+	if region == "" {
+		log.Println("Looking up region from metadata service")
+		sess, err := session.NewSession()
+		if err != nil {
+			log.Fatalf("Failed to create new aws session: %s", err)
+		}
+		region, err = ec2metadata.New(sess).Region()
+		if err != nil {
+			log.Fatalf("Failed to look up region: %s", err)
+		}
+	}
+
 	for {
-		count, err := deleteInactiveSubscriptions(session.Must(session.NewSession()))
+		count, err := deleteInactiveSubscriptions(session.Must(session.NewSession(&aws.Config{ Region: aws.String(region), })))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -36,7 +51,7 @@ func main() {
 	}
 
 	for {
-		count, err := deleteInactiveQueues(session.Must(session.NewSession()), *parallel)
+		count, err := deleteInactiveQueues(session.Must(session.NewSession(&aws.Config{ Region: aws.String(region), })), *parallel)
 		if err != nil {
 			log.Fatal(err)
 		}
