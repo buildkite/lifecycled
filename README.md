@@ -2,7 +2,7 @@
 
 Gracefully handles EC2 scaling events. Lifecycled is designed to run on an AWS EC2 instance and listen for various state change mechanisms:
 
- * [AWS AutoScaling](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/lifecycle-hooks.html)
+ * [AWS AutoScaling](https://docs.aws.amazon.com/autoscaling/ec2/userguide/lifecycle-hooks.html)
  * [Spot Instance Termination Notices](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html)
 
 When a termination notice is received, lifecycled runs a user-provided script (called a handler) and then proceeds with the shutdown. This script can be used to gracefully terminate any daemons you have running.
