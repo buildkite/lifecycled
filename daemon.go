@@ -52,17 +52,18 @@ func NewDaemon(
 			sqsClient,
 			snsClient,
 		)
-		daemon.AddListener(NewAutoscalingListener(config.InstanceID, queue, asgClient))
+		daemon.AddListener(NewAutoscalingListener(config.InstanceID, queue, asgClient, config.AutoscalingHeartbeatInterval))
 	}
 	return daemon
 }
 
 // Config for the Lifecycled Daemon.
 type Config struct {
-	InstanceID           string
-	SNSTopic             string
-	SpotListener         bool
-	SpotListenerInterval time.Duration
+	InstanceID                   string
+	SNSTopic                     string
+	SpotListener                 bool
+	SpotListenerInterval         time.Duration
+	AutoscalingHeartbeatInterval time.Duration
 }
 
 // Daemon is what orchestrates the listening and execution of the handler on a termination notice.

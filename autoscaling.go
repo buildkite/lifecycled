@@ -12,6 +12,7 @@ import (
 )
 
 // AutoscalingClient for testing purposes
+//
 //go:generate mockgen -destination=mocks/mock_autoscaling_client.go -package=mocks github.com/buildkite/lifecycled AutoscalingClient
 type AutoscalingClient autoscalingiface.AutoScalingAPI
 
@@ -34,21 +35,23 @@ type Message struct {
 }
 
 // NewAutoscalingListener ...
-func NewAutoscalingListener(instanceID string, queue *Queue, autoscaling AutoscalingClient) *AutoscalingListener {
+func NewAutoscalingListener(instanceID string, queue *Queue, autoscaling AutoscalingClient, heartbeatInterval time.Duration) *AutoscalingListener {
 	return &AutoscalingListener{
-		listenerType: "autoscaling",
-		instanceID:   instanceID,
-		queue:        queue,
-		autoscaling:  autoscaling,
+		listenerType:      "autoscaling",
+		instanceID:        instanceID,
+		queue:             queue,
+		autoscaling:       autoscaling,
+		heartbeatInterval: heartbeatInterval,
 	}
 }
 
 // AutoscalingListener ...
 type AutoscalingListener struct {
-	listenerType string
-	instanceID   string
-	queue        *Queue
-	autoscaling  AutoscalingClient
+	listenerType      string
+	instanceID        string
+	queue             *Queue
+	autoscaling       AutoscalingClient
+	heartbeatInterval time.Duration
 }
 
 // Type returns a string describing the listener type.
@@ -126,9 +129,10 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 				}
 
 				notices <- &autoscalingTerminationNotice{
-					noticeType:  l.Type(),
-					message:     &msg,
-					autoscaling: l.autoscaling,
+					noticeType:        l.Type(),
+					message:           &msg,
+					autoscaling:       l.autoscaling,
+					heartbeatInterval: l.heartbeatInterval,
 				}
 				return nil
 			}
@@ -137,9 +141,10 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 }
 
 type autoscalingTerminationNotice struct {
-	noticeType  string
-	message     *Message
-	autoscaling AutoscalingClient
+	noticeType        string
+	message           *Message
+	autoscaling       AutoscalingClient
+	heartbeatInterval time.Duration
 }
 
 func (n *autoscalingTerminationNotice) Type() string {
@@ -162,7 +167,7 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 		}
 	}()
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(n.heartbeatInterval)
 	defer ticker.Stop()
 
 	go func() {
