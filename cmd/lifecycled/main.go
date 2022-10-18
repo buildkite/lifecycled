@@ -29,14 +29,16 @@ func main() {
 	app.DefaultEnvars()
 
 	var (
-		instanceID          string
-		snsTopic            string
-		disableSpotListener bool
-		handler             *os.File
-		jsonLogging         bool
-		debugLogging        bool
-		cloudwatchGroup     string
-		cloudwatchStream    string
+		instanceID                   string
+		snsTopic                     string
+		disableSpotListener          bool
+		handler                      *os.File
+		jsonLogging                  bool
+		debugLogging                 bool
+		cloudwatchGroup              string
+		cloudwatchStream             string
+		spotListenerInterval         time.Duration
+		autoscalingHeartbeatInterval time.Duration
 	)
 
 	app.Flag("instance-id", "The instance id to listen for events for").
@@ -63,6 +65,14 @@ func main() {
 
 	app.Flag("debug", "Show debugging info").
 		BoolVar(&debugLogging)
+
+	app.Flag("spot-listener-interval", "Interval to check for spot instance termination notices").
+		Default("5s").
+		DurationVar(&spotListenerInterval)
+
+	app.Flag("autoscaling-heartbeat-interval", "Interval to send AWS Lifecycle Heartbeat Actions").
+		Default("10s").
+		DurationVar(&autoscalingHeartbeatInterval)
 
 	app.Action(func(c *kingpin.ParseContext) error {
 		logger := logrus.New()
@@ -148,10 +158,11 @@ func main() {
 
 		handler := lifecycled.NewFileHandler(handler)
 		daemon := lifecycled.New(&lifecycled.Config{
-			InstanceID:           instanceID,
-			SNSTopic:             snsTopic,
-			SpotListener:         !disableSpotListener,
-			SpotListenerInterval: 5 * time.Second,
+			InstanceID:                   instanceID,
+			SNSTopic:                     snsTopic,
+			SpotListener:                 !disableSpotListener,
+			SpotListenerInterval:         spotListenerInterval,
+			AutoscalingHeartbeatInterval: autoscalingHeartbeatInterval,
 		}, sess, logger)
 
 		notice, err := daemon.Start(ctx)
