@@ -17,9 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var (
-	Version string
-)
+var Version = "development"
 
 func main() {
 	app := kingpin.New("lifecycled",
@@ -170,7 +168,9 @@ func main() {
 			return err
 		}
 		if notice != nil {
-			log := logger.WithFields(logrus.Fields{"instanceId": instanceID, "notice": notice.Type()})
+			log := logger.WithFields(
+				logrus.Fields{"instanceId": instanceID, "notice": notice.Type()},
+			)
 			log.Info("Executing handler")
 
 			start, err := time.Now(), notice.Handle(ctx, handler, log)
