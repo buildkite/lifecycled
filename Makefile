@@ -15,7 +15,7 @@ generate:
 
 .PHONY: clean
 clean:
-	rm -f lifecycled
+	git clean -ffidx -e Session.vim
 
 .PHONY: release
 release:
