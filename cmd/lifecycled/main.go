@@ -136,7 +136,7 @@ func main() {
 			}
 		}
 
-		sigs := make(chan os.Signal)
+		sigs := make(chan os.Signal, 1)
 		defer close(sigs)
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
