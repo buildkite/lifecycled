@@ -1,6 +1,13 @@
 Release Process
 ===
 
+# Perquisites
+- goreleaser. For now, use the fork
+```shell
+go install github/triarius/goreleaser@latest
+```
+
+# Process
 1. Choose a new tag, e.g. v3.3.1
 ```shell
 git tag -f v3.3.1
