@@ -1,6 +1,8 @@
 steps:
   - label: "🔎"
-    command: make test
+    commands:
+      - go install github.com/golang/mock/mockgen@v1.6.0
+      - make test
     plugins:
       - golang#v2.0.0:
           version: 1.19.2
