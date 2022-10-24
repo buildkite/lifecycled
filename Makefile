@@ -22,13 +22,5 @@ clean:
 	rm -f lifecycled
 
 .PHONY: release
-release: arm64
-# 	go get github.com/mitchellh/gox
-	gox -ldflags="$(FLAGS)" -output="build/{{.Dir}}-{{.OS}}-{{.Arch}}" -osarch="freebsd/amd64 linux/386 linux/amd64 windows/amd64" ./cmd/lifecycled
-
-# gox currenlty does not build arm64/aarch64 (https://github.com/mitchellh/gox/issues/92)
-# Ensure we build both arm64 and aarch64 since `uname` can refer to the same arch using either name
-.PHONE: arm64
-arm64:
-	GOOS=linux GOARCH=arm64 go build -o "build/lifecycled-linux-arm64" -ldflags="$(FLAGS)" -v ./cmd/lifecycled
-	cp build/lifecycled-linux-arm64 build/lifecycled-linux-aarch64
+release:
+	goreleaser release --skip-publish --rm-dist
