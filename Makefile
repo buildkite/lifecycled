@@ -4,7 +4,7 @@ lifecycled: *.go
 	goreleaser build --rm-dist --single-target
 
 .PHONY: test
-test:
+test: generate
 	gofmt -s -l -w $(SRC)
 	go vet -v ./...
 	go test -race -v ./...
