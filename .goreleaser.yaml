@@ -9,7 +9,7 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X main.Version=v{{ .Version }}
+      - -X main.Version=v{{ .Summary}}
     env:
       - CGO_ENABLED=0
     goos:
