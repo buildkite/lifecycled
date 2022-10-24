@@ -2,9 +2,13 @@ Release Process
 ===
 
 # Perquisites
-- goreleaser. For now, use the fork
+- goreleaser. For now, use the fork:
 ```shell
 go install github/triarius/goreleaser@latest
+```
+- ghch. For now, use this fork:
+```shell
+go install github.com/buildkite/ghch/cmd/ghch@latest
 ```
 
 # Process
