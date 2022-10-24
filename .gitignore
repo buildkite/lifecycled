@@ -5,3 +5,5 @@ build/
 # Terraform
 **/.terraform
 *.tfstate*
+
+mocks/
