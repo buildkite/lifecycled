@@ -150,18 +150,20 @@ type Handler interface {
 }
 
 // NewFileHandler ...
-func NewFileHandler(file *os.File) *FileHandler {
-	return &FileHandler{file: file}
+func NewFileHandler(file *os.File, args []string) *FileHandler {
+	return &FileHandler{file: file, args: args}
 }
 
 // FileHandler ...
 type FileHandler struct {
 	file *os.File
+	args []string
 }
 
 // Execute the file handler.
 func (h *FileHandler) Execute(ctx context.Context, args ...string) error {
-	cmd := exec.CommandContext(ctx, h.file.Name(), args...)
+	cmdArguments := append(h.args, args...)
+	cmd := exec.CommandContext(ctx, h.file.Name(), cmdArguments...)
 	cmd.Env = os.Environ()
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
