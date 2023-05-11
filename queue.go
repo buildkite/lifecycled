@@ -23,7 +23,7 @@ const (
 var queuePolicy = loadQueuePolicy()
 
 func loadQueuePolicy() string {
-	filePath := "/etc/lifecycled/queue_policy.conf"
+	filePath := "/etc/lifecycled/queue_policy.json"
 	policy, err := os.ReadFile(filePath)
 	if err != nil {
 		// Handle the error, e.g., by providing a default policy
