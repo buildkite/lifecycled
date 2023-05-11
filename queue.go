@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,7 +18,16 @@ import (
 
 const (
 	longPollingWaitTimeSeconds = 20
-	queuePolicy                = `
+)
+
+var queuePolicy = loadQueuePolicy()
+
+func loadQueuePolicy() string {
+	filePath := "/etc/lifecycled/queue_policy.conf"
+	policy, err := os.ReadFile(filePath)
+	if err != nil {
+		// Handle the error, e.g., by providing a default policy
+		return `
 {
   "Version":"2012-10-17",
   "Statement":[
@@ -35,7 +45,9 @@ const (
   ]
 }
 `
-)
+	}
+	return string(policy)
+}
 
 // SQSClient for testing purposes
 //go:generate mockgen -destination=mocks/mock_sqs_client.go -package=mocks github.com/buildkite/lifecycled SQSClient
