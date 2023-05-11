@@ -81,16 +81,24 @@ func NewQueue(queueName, topicArn string, sqsClient SQSClient, snsClient SNSClie
 
 // Create the SQS queue.
 func (q *Queue) Create() error {
+	attributes := map[string]*string{
+		"Policy":                        aws.String(fmt.Sprintf(queuePolicy, q.topicArn)),
+		"ReceiveMessageWaitTimeSeconds": aws.String(strconv.Itoa(longPollingWaitTimeSeconds)),
+	}
+
+	kmsMasterKeyID := os.Getenv("KMS_MASTER_KEY_ID")
+	if kmsMasterKeyID != "" {
+		attributes["KMSMasterKeyId"] = aws.String(kmsMasterKeyID)
+	}
+
 	out, err := q.sqsClient.CreateQueue(&sqs.CreateQueueInput{
-		QueueName: aws.String(q.name),
-		Attributes: map[string]*string{
-			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, q.topicArn)),
-			"ReceiveMessageWaitTimeSeconds": aws.String(strconv.Itoa(longPollingWaitTimeSeconds)),
-		},
+		QueueName:  aws.String(q.name),
+		Attributes: attributes,
 	})
 	if err != nil {
 		return err
 	}
+
 	q.url = aws.StringValue(out.QueueUrl)
 	return nil
 }
