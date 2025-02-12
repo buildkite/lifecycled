@@ -12,5 +12,5 @@ require (
 	github.com/kdar/logrus-cloudwatchlogs v0.0.0-20200414190340-facbc54742f0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
-	golang.org/x/sys v0.0.0-20200828194041-157a740278f4 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 )
