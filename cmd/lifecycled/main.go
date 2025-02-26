@@ -33,6 +33,7 @@ func main() {
 		snsTopic                     string
 		disableSpotListener          bool
 		handler                      *os.File
+		handlerArgs                  []string
 		jsonLogging                  bool
 		debugLogging                 bool
 		cloudwatchGroup              string
@@ -53,6 +54,9 @@ func main() {
 	app.Flag("handler", "The script to invoke to handle events").
 		Required().
 		FileVar(&handler)
+
+	app.Flag("handler-args", "Additional arguments to pass to the script invoked by the handler").
+		StringsVar(&handlerArgs)
 
 	app.Flag("json", "Enable JSON logging").
 		BoolVar(&jsonLogging)
@@ -156,7 +160,7 @@ func main() {
 			}
 		}()
 
-		handler := lifecycled.NewFileHandler(handler)
+		handler := lifecycled.NewFileHandler(handler, handlerArgs)
 		daemon := lifecycled.New(&lifecycled.Config{
 			InstanceID:                   instanceID,
 			SNSTopic:                     snsTopic,
