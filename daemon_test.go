@@ -124,7 +124,6 @@ func TestDaemon(t *testing.T) {
 				sq.EXPECT().GetQueueAttributes(gomock.Any()).Times(1).Return(&sqs.GetQueueAttributesOutput{
 					Attributes: map[string]*string{"QueueArn": aws.String("arn")},
 				}, nil)
-				sq.EXPECT().DeleteQueue(gomock.Any()).Times(1).Return(nil, nil)
 
 				if tc.subscribeError == nil {
 					sq.EXPECT().ReceiveMessageWithContext(gomock.Any(), gomock.Any()).MinTimes(1).Return(&sqs.ReceiveMessageOutput{
