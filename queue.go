@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -38,10 +39,12 @@ const (
 )
 
 // SQSClient for testing purposes
+//
 //go:generate mockgen -destination=mocks/mock_sqs_client.go -package=mocks github.com/buildkite/lifecycled SQSClient
 type SQSClient sqsiface.SQSAPI
 
 // SNSClient for testing purposes
+//
 //go:generate mockgen -destination=mocks/mock_sns_client.go -package=mocks github.com/buildkite/lifecycled SNSClient
 type SNSClient snsiface.SNSAPI
 
@@ -52,18 +55,20 @@ type Queue struct {
 	arn             string
 	topicArn        string
 	subscriptionArn string
+	tags            string
 
 	sqsClient SQSClient
 	snsClient SNSClient
 }
 
 // NewQueue returns a new... Queue.
-func NewQueue(queueName, topicArn string, sqsClient SQSClient, snsClient SNSClient) *Queue {
+func NewQueue(queueName, topicArn string, sqsClient SQSClient, snsClient SNSClient, tags string) *Queue {
 	return &Queue{
 		name:      queueName,
 		topicArn:  topicArn,
 		sqsClient: sqsClient,
 		snsClient: snsClient,
+		tags:      tags,
 	}
 }
 
@@ -75,6 +80,7 @@ func (q *Queue) Create() error {
 			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, q.topicArn)),
 			"ReceiveMessageWaitTimeSeconds": aws.String(strconv.Itoa(longPollingWaitTimeSeconds)),
 		},
+		Tags: parseTags(q.tags),
 	})
 	if err != nil {
 		return err
@@ -173,4 +179,29 @@ func (q *Queue) Delete() error {
 		}
 	}
 	return nil
+}
+
+// Expects format like "key1=alpha,key2=beta"
+func parseTags(tagString string) map[string]*string {
+	if tagString == "" {
+		return nil
+	}
+	tags := make(map[string]*string)
+
+	tagPairs := strings.Split(tagString, ",")
+
+	for _, pair := range tagPairs {
+		pair = strings.TrimSpace(pair)
+		kv := strings.SplitN(pair, "=", 2)
+		if len(kv) == 2 {
+			key := strings.TrimSpace(kv[0])
+			value := strings.TrimSpace(kv[1])
+
+			if key != "" {
+				tags[key] = aws.String(value)
+			}
+		}
+	}
+
+	return tags
 }

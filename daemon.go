@@ -51,6 +51,7 @@ func NewDaemon(
 			config.SNSTopic,
 			sqsClient,
 			snsClient,
+			config.Tags,
 		)
 		daemon.AddListener(NewAutoscalingListener(config.InstanceID, queue, asgClient, config.AutoscalingHeartbeatInterval))
 	}
@@ -60,6 +61,7 @@ func NewDaemon(
 // Config for the Lifecycled Daemon.
 type Config struct {
 	InstanceID                   string
+	Tags                         string
 	SNSTopic                     string
 	SpotListener                 bool
 	SpotListenerInterval         time.Duration
