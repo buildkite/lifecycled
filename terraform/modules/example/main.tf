@@ -33,6 +33,7 @@ data "template_file" "main" {
     artifact_bucket = "${aws_s3_bucket.artifact.id}"
     artifact_key    = "${aws_s3_bucket_object.artifact.id}"
     artifact_etag   = "${aws_s3_bucket_object.artifact.etag}"
+    tags            = "${var.tags}"
   }
 }
 
