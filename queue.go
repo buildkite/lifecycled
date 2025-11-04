@@ -74,13 +74,17 @@ func NewQueue(queueName, topicArn string, sqsClient SQSClient, snsClient SNSClie
 
 // Create the SQS queue.
 func (q *Queue) Create() error {
+	tags, err := parseTags(q.tags)
+	if err != nil {
+		return err
+	}
 	out, err := q.sqsClient.CreateQueue(&sqs.CreateQueueInput{
 		QueueName: aws.String(q.name),
 		Attributes: map[string]*string{
 			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, q.topicArn)),
 			"ReceiveMessageWaitTimeSeconds": aws.String(strconv.Itoa(longPollingWaitTimeSeconds)),
 		},
-		Tags: parseTags(q.tags),
+		Tags: tags,
 	})
 	if err != nil {
 		return err
@@ -182,26 +186,59 @@ func (q *Queue) Delete() error {
 }
 
 // Expects format like "key1=alpha,key2=beta"
-func parseTags(tagString string) map[string]*string {
-	if tagString == "" {
-		return nil
+func parseTags(input string) (map[string]*string, error) {
+	if input == "" {
+		return nil, nil
 	}
+
+	const (
+		maxTags        = 50
+		maxKeyLength   = 128
+		maxValueLength = 256
+	)
+
 	tags := make(map[string]*string)
+	pairs := strings.Split(input, ",")
 
-	tagPairs := strings.Split(tagString, ",")
-
-	for _, pair := range tagPairs {
-		pair = strings.TrimSpace(pair)
-		kv := strings.SplitN(pair, "=", 2)
-		if len(kv) == 2 {
-			key := strings.TrimSpace(kv[0])
-			value := strings.TrimSpace(kv[1])
-
-			if key != "" {
-				tags[key] = aws.String(value)
-			}
+	for _, pair := range pairs {
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) != 2 {
+			continue
 		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		if key == "" {
+			continue
+		}
+
+		// Check key length
+		if len(key) > maxKeyLength {
+			return nil, fmt.Errorf("tag key exceeds maximum length of %d characters: %q", maxKeyLength, key)
+		}
+
+		// Check value length
+		if len(value) > maxValueLength {
+			return nil, fmt.Errorf("tag value exceeds maximum length of %d characters for key %q", maxValueLength, key)
+		}
+
+		// Check for aws: prefix (case-insensitive)
+		if len(key) >= 4 && strings.ToLower(key[:4]) == "aws:" {
+			return nil, fmt.Errorf("tag keys cannot start with 'aws:' prefix: %q", key)
+		}
+
+		tags[key] = aws.String(value)
 	}
 
-	return tags
+	// Check total number of tags
+	if len(tags) > maxTags {
+		return nil, fmt.Errorf("number of tags (%d) exceeds maximum allowed (%d)", len(tags), maxTags)
+	}
+
+	if len(tags) == 0 {
+		return map[string]*string{}, nil
+	}
+
+	return tags, nil
 }

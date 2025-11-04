@@ -5,6 +5,10 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+locals {
+    formatted_tags = join(",", [for k, v in var.tags : "${k}=${v}"])
+}
+
 # Create an S3 bucket for uploading the artifact (pre-prefixed with the account ID to avoid conflicting bucket names)
 resource "aws_s3_bucket" "artifact" {
   bucket = "${data.aws_caller_identity.current.account_id}-${var.name_prefix}-artifact"
@@ -33,7 +37,7 @@ data "template_file" "main" {
     artifact_bucket = "${aws_s3_bucket.artifact.id}"
     artifact_key    = "${aws_s3_bucket_object.artifact.id}"
     artifact_etag   = "${aws_s3_bucket_object.artifact.etag}"
-    tags            = "${var.tags}"
+    tags            = "${local.formatted_tags}"
   }
 }
 
