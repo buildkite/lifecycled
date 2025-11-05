@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
 	"flag"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -37,7 +37,7 @@ func main() {
 	}
 
 	for {
-		count, err := deleteInactiveSubscriptions(session.Must(session.NewSession(&aws.Config{ Region: aws.String(region), })))
+		count, err := deleteInactiveSubscriptions(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -51,7 +51,7 @@ func main() {
 	}
 
 	for {
-		count, err := deleteInactiveQueues(session.Must(session.NewSession(&aws.Config{ Region: aws.String(region), })), *parallel)
+		count, err := deleteInactiveQueues(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})), *parallel)
 		if err != nil {
 			log.Fatal(err)
 		}
