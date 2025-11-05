@@ -29,6 +29,25 @@ Ensure your Go bin directory is in your PATH:
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
+### First-Time Setup
+
+After cloning the repository:
+
+1. **Install dependencies:**
+   ```bash
+   go mod download
+   ```
+
+2. **Sync and verify dependencies:**
+   ```bash
+   go mod tidy
+   ```
+
+3. **Verify setup by running tests:**
+   ```bash
+   make test
+   ```
+
 ## Building
 
 ### Local Development Build
@@ -143,16 +162,20 @@ This will regenerate mock files in the `mocks/` directory using `mockgen` from `
 .
 ├── cmd/
 │   └── lifecycled/        # Main application entry point
+├── mocks/                 # Generated mock implementations for testing
+├── tools/                 # Additional tools (e.g., lifecycled-queue-cleaner)
+├── terraform/             # Terraform configurations
+├── init/                  # Initialization scripts
 ├── build/                 # Build output directory (created by make release)
-├── .buildkite/           # Buildkite CI configuration (historical)
-└── release/              # Legacy Docker-based build configuration
+├── .buildkite/           # Buildkite CI configuration
+└── .github/              # GitHub workflows and configuration
 ```
 
 ## Development Notes
 
 - The project uses Go modules (`GO111MODULE=on`)
+- After cloning or when dependencies change, run `go mod tidy` to sync dependencies
 - Version information is derived from git tags
-- The `.buildkite/` directory contains historical CI configuration
-- There is an experimental `triarius/goreleaser` branch with GoReleaser configuration (not merged)
 - Mock generation uses `go.uber.org/mock` (the actively maintained fork of gomock), not the deprecated `github.com/golang/mock`
 - Generated mock files should not be manually edited; regenerate them using `make generate`
+- The project requires Go 1.23.0 or later due to modern Go syntax (use of `any` instead of `interface{}`)
