@@ -4,14 +4,25 @@
 
 ### Required Tools
 
-- **Go**: Go 1.11 or later (module support enabled)
-- **gox**: Cross-platform Go compilation tool
+- **Go**: Go 1.23.0 or later (required for module support and modern syntax)
+- **gox**: Cross-platform Go compilation tool (required for `make release`)
+- **mockgen**: Mock code generation tool (required for `make generate`)
 
 #### Installing gox
 
 ```bash
 go install github.com/mitchellh/gox@latest
 ```
+
+#### Installing mockgen
+
+```bash
+go install go.uber.org/mock/mockgen@latest
+```
+
+**Note**: This project uses `go.uber.org/mock` (the actively maintained fork) rather than the deprecated `github.com/golang/mock`.
+
+#### PATH Configuration
 
 Ensure your Go bin directory is in your PATH:
 ```bash
@@ -62,8 +73,9 @@ make release
 This builds binaries for the following platforms:
 - freebsd/amd64
 - linux/386
+- linux/aarch64
 - linux/amd64
-- linux/arm64 & linux/aarch64
+- linux/arm64
 - windows/amd64
 
 **Output Location:** All binaries are placed in the `build/` directory with the naming pattern:
@@ -88,7 +100,7 @@ This version is embedded into the binary using Go build flags:
 
 1. **Create and push a git tag:**
    ```bash
-   git tag v3.x.x
+   git tag v1.2.3
    git push --tags
    ```
 
@@ -97,29 +109,33 @@ This version is embedded into the binary using Go build flags:
    make release
    ```
 
-3. **Generate changelog** (requires `ghch`):
-   ```bash
-   ghch --format=markdown --from=<old_version> --next-version=v3.x.x
-   ```
-
-4. **Create GitHub release:**
+3. **Create GitHub release:**
    - Navigate to the GitHub repository
    - Create a new release
    - Select the tag created in step 1
-   - Use the generated changelog as the release description
+   - Set the Release title to the tag (`v1.2.3`)
+   - Set the Previous tag to the tag of the most previous release
+   - Click Generate Release Notes
 
-5. **Upload binaries:**
+4. **Upload binaries:**
    - Manually upload all binaries from the `build/` directory to the GitHub release
 
-6. **Publish the release**
+5. **Publish the release**
 
 ## Code Generation
 
-If you make changes that require code generation:
+The project uses code generation to create mock implementations for testing. If you make changes to interfaces or need to regenerate mocks:
 
 ```bash
 make generate
 ```
+
+This will regenerate mock files in the `mocks/` directory using `mockgen` from `go.uber.org/mock`.
+
+**Generated files:**
+- `mocks/mock_autoscaling_client.go`
+- `mocks/mock_sns_client.go`
+- `mocks/mock_sqs_client.go`
 
 ## Project Structure
 
@@ -138,3 +154,5 @@ make generate
 - Version information is derived from git tags
 - The `.buildkite/` directory contains historical CI configuration
 - There is an experimental `triarius/goreleaser` branch with GoReleaser configuration (not merged)
+- Mock generation uses `go.uber.org/mock` (the actively maintained fork of gomock), not the deprecated `github.com/golang/mock`
+- Generated mock files should not be manually edited; regenerate them using `make generate`
