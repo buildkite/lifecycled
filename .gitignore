@@ -1,6 +1,7 @@
 /handler.sh
 build/
 /lifecycled
+.DS_Store
 
 # Terraform
 **/.terraform
