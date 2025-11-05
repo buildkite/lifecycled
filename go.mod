@@ -5,7 +5,6 @@ go 1.23.0
 require (
 	github.com/alecthomas/kingpin v0.0.0-20180312062423-a39589180ebd
 	github.com/aws/aws-sdk-go v1.34.13
-	github.com/golang/mock v1.4.4
 	github.com/kdar/logrus-cloudwatchlogs v0.0.0-20200414190340-facbc54742f0
 	github.com/sirupsen/logrus v1.6.0
 	go.uber.org/mock v0.6.0
