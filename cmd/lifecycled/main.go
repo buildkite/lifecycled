@@ -37,12 +37,16 @@ func main() {
 		debugLogging                 bool
 		cloudwatchGroup              string
 		cloudwatchStream             string
+		tags                         string
 		spotListenerInterval         time.Duration
 		autoscalingHeartbeatInterval time.Duration
 	)
 
 	app.Flag("instance-id", "The instance id to listen for events for").
 		StringVar(&instanceID)
+
+	app.Flag("tags", "Comma separated list of tags to add to SQS queues").
+		StringVar(&tags)
 
 	app.Flag("sns-topic", "The SNS topic that receives events").
 		StringVar(&snsTopic)
@@ -138,7 +142,7 @@ func main() {
 			}
 		}
 
-		sigs := make(chan os.Signal)
+		sigs := make(chan os.Signal, 1)
 		defer close(sigs)
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -159,6 +163,7 @@ func main() {
 		handler := lifecycled.NewFileHandler(handler)
 		daemon := lifecycled.New(&lifecycled.Config{
 			InstanceID:                   instanceID,
+			Tags:                         tags,
 			SNSTopic:                     snsTopic,
 			SpotListener:                 !disableSpotListener,
 			SpotListenerInterval:         spotListenerInterval,

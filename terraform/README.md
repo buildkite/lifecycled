@@ -1,7 +1,7 @@
 ## Terraform example
 
 Quick way of bootstrapping an autoscaling group with a termination lifecycle hook enabled
-and `lifecycled` running on the instance, using terraform. It creates the the following:
+and `lifecycled` running on the instance, using terraform. It creates the following:
 
 - Autoscaling group running Amazon linux 2.
 - Topic and lifecycle hook which sends termination notices to the topic.

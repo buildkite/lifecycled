@@ -83,6 +83,7 @@ func TestDaemon(t *testing.T) {
 	tests := []struct {
 		description        string
 		snsTopic           string
+		tags               string
 		spotListener       bool
 		subscribeError     error
 		expectedNoticeType string
@@ -104,6 +105,24 @@ func TestDaemon(t *testing.T) {
 			subscribeError:    errors.New("invalid topic"),
 			expectDaemonError: true,
 		},
+		{
+			description:        "works with empty tags",
+			snsTopic:           "topic",
+			tags:               "",
+			expectedNoticeType: "autoscaling",
+		},
+		{
+			description:        "works with two tags",
+			snsTopic:           "topic",
+			tags:               "Environment=production,Team=platform",
+			expectedNoticeType: "autoscaling",
+		},
+		{
+			description:        "spot listener ignores tags",
+			spotListener:       true,
+			tags:               "Environment=production",
+			expectedNoticeType: "spot",
+		},
 	}
 
 	for _, tc := range tests {
@@ -116,11 +135,38 @@ func TestDaemon(t *testing.T) {
 			sn := mocks.NewMockSNSClient(ctrl)
 			as := mocks.NewMockAutoscalingClient(ctrl)
 
+			expectedTags := parseTagString(tc.tags)
+
 			// Expected SQS calls
 			if tc.snsTopic != "" {
-				sq.EXPECT().CreateQueue(gomock.Any()).Times(1).Return(&sqs.CreateQueueOutput{
-					QueueUrl: aws.String("url"),
-				}, nil)
+				sq.EXPECT().CreateQueue(gomock.Any()).Times(1).DoAndReturn(
+					func(input *sqs.CreateQueueInput) (*sqs.CreateQueueOutput, error) {
+						if tc.tags != "" {
+							if input.Tags == nil || len(input.Tags) == 0 {
+								t.Error("expected tags to be set in CreateQueue request but got none")
+							} else {
+								for key, expectedValue := range expectedTags {
+									actualValue, ok := input.Tags[key]
+									if !ok {
+										t.Errorf("expected tag key '%s' not found in CreateQueue request", key)
+									} else if actualValue == nil {
+										t.Errorf("tag key '%s' has nil value", key)
+									} else if *actualValue != expectedValue {
+										t.Errorf("tag '%s': expected value '%s' but got '%s'", key, expectedValue, *actualValue)
+									}
+								}
+
+								// Verify no extra tags were added
+								if len(input.Tags) != len(expectedTags) {
+									t.Errorf("expected %d tags but got %d tags", len(expectedTags), len(input.Tags))
+								}
+							}
+						}
+						return &sqs.CreateQueueOutput{
+							QueueUrl: aws.String("url"),
+						}, nil
+					},
+				)
 				sq.EXPECT().GetQueueAttributes(gomock.Any()).Times(1).Return(&sqs.GetQueueAttributesOutput{
 					Attributes: map[string]*string{"QueueArn": aws.String("arn")},
 				}, nil)
@@ -162,6 +208,7 @@ func TestDaemon(t *testing.T) {
 			config := &lifecycled.Config{
 				InstanceID:           instanceID,
 				SNSTopic:             tc.snsTopic,
+				Tags:                 tc.tags,
 				SpotListener:         tc.spotListener,
 				SpotListenerInterval: 1 * time.Millisecond,
 			}
@@ -204,4 +251,29 @@ func TestDaemon(t *testing.T) {
 		})
 	}
 
+}
+
+func parseTagString(tagString string) map[string]string {
+	tags := make(map[string]string)
+
+	if tagString == "" {
+		return tags
+	}
+
+	pairs := strings.Split(tagString, ",")
+	for _, pair := range pairs {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			tags[key] = value
+		}
+	}
+
+	return tags
 }
