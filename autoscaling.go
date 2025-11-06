@@ -65,12 +65,6 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	if err := l.queue.Create(); err != nil {
 		return err
 	}
-	defer func() {
-		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
-		if err := l.queue.Delete(); err != nil {
-			log.WithError(err).Error("Failed to delete queue")
-		}
-	}()
 
 	log.WithField("topic", l.queue.topicArn).Debug("Subscribing queue to sns topic")
 	if err := l.queue.Subscribe(); err != nil {
