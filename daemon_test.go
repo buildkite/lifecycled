@@ -18,8 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/buildkite/lifecycled"
 	"github.com/buildkite/lifecycled/mocks"
-	"github.com/golang/mock/gomock"
 	logrus "github.com/sirupsen/logrus/hooks/test"
+	"go.uber.org/mock/gomock"
 )
 
 func newMetadataStub(instanceID, terminationTime string) *httptest.Server {

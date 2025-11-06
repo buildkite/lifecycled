@@ -3,7 +3,7 @@ steps:
     command: go test ./...
     plugins:
       - golang#v2.0.0:
-          version: 1.17
+          version: 1.25.0
           import: github.com/buildkite/lifecycled
           environment:
             - GO111MODULE=on
