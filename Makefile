@@ -28,7 +28,7 @@ release: arm64
 
 # gox currenlty does not build arm64/aarch64 (https://github.com/mitchellh/gox/issues/92)
 # Ensure we build both arm64 and aarch64 since `uname` can refer to the same arch using either name
-.PHONE: arm64
+.PHONY: arm64
 arm64:
 	GOOS=linux GOARCH=arm64 go build -o "build/lifecycled-linux-arm64" -ldflags="$(FLAGS)" -v ./cmd/lifecycled
 	cp build/lifecycled-linux-arm64 build/lifecycled-linux-aarch64
