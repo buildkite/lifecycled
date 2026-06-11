@@ -1,6 +1,6 @@
 module github.com/buildkite/lifecycled
 
-go 1.23.0
+go 1.26.4
 
 require (
 	github.com/alecthomas/kingpin v0.0.0-20180312062423-a39589180ebd
