@@ -44,6 +44,21 @@ func TestResolveRegion(t *testing.T) {
 		}
 	})
 
+	t.Run("fails when lookup returns an empty region", func(t *testing.T) {
+		sess := session.Must(session.NewSession())
+		sess.Config.Region = aws.String("")
+
+		err := resolveRegion(sess, func() (string, error) {
+			return "", nil
+		})
+		if err == nil {
+			t.Fatal("expected an error for an empty region, got nil")
+		}
+		if got := aws.StringValue(sess.Config.Region); got != "" {
+			t.Errorf("region = %q, want empty after empty lookup", got)
+		}
+	})
+
 	t.Run("wraps the lookup error", func(t *testing.T) {
 		sess := session.Must(session.NewSession())
 		sess.Config.Region = aws.String("")

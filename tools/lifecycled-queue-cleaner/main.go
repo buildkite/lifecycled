@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -42,7 +43,10 @@ func main() {
 
 	// Confirm the target account before any destructive calls. GetCallerIdentity
 	// needs no IAM permission, so a failure means the credentials are unusable.
-	ident, err := sts.New(sess).GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	// Bound the check so a slow or hung STS fails fast instead of stalling startup.
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	ident, err := sts.New(sess).GetCallerIdentityWithContext(ctx, &sts.GetCallerIdentityInput{})
 	if err != nil {
 		log.Fatalf("Failed to resolve caller identity: %s", err)
 	}
@@ -89,6 +93,9 @@ func resolveRegion(sess *session.Session, lookupRegion func() (string, error)) e
 	region, err := lookupRegion()
 	if err != nil {
 		return fmt.Errorf("look up region from EC2 metadata (set AWS_REGION, AWS_DEFAULT_REGION, or a profile region instead): %w", err)
+	}
+	if region == "" {
+		return fmt.Errorf("EC2 metadata returned an empty region (set AWS_REGION, AWS_DEFAULT_REGION, or a profile region instead)")
 	}
 	sess.Config.Region = aws.String(region)
 	return nil
