@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sts"
 )
 
 func main() {
@@ -38,6 +39,14 @@ func main() {
 	}
 
 	log.Printf("Using region %s", aws.StringValue(sess.Config.Region))
+
+	// Confirm the target account before any destructive calls. GetCallerIdentity
+	// needs no IAM permission, so a failure means the credentials are unusable.
+	ident, err := sts.New(sess).GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err != nil {
+		log.Fatalf("Failed to resolve caller identity: %s", err)
+	}
+	log.Printf("Using account %s as %s", aws.StringValue(ident.Account), aws.StringValue(ident.Arn))
 
 	for {
 		count, err := deleteInactiveSubscriptions(sess)
@@ -79,7 +88,7 @@ func resolveRegion(sess *session.Session, lookupRegion func() (string, error)) e
 	log.Println("No region in environment or shared config, looking up from EC2 metadata")
 	region, err := lookupRegion()
 	if err != nil {
-		return fmt.Errorf("look up region from EC2 metadata (set AWS_REGION or a profile region instead): %w", err)
+		return fmt.Errorf("look up region from EC2 metadata (set AWS_REGION, AWS_DEFAULT_REGION, or a profile region instead): %w", err)
 	}
 	sess.Config.Region = aws.String(region)
 	return nil
