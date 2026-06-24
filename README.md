@@ -344,6 +344,19 @@ See the [terraform/](terraform/) directory for a complete Terraform example that
 - IAM roles and policies
 - CloudWatch log groups
 
+## Cleaning Up Orphaned Queues and Subscriptions
+
+For every instance it runs on, lifecycled creates an SQS queue and an SNS subscription named with a `lifecycled-` prefix. These are removed when an instance shuts down cleanly, but an ungraceful termination can leave them behind, and over time the orphans accumulate against your account's SQS and SNS limits.
+
+The [`lifecycled-queue-cleaner`](tools/lifecycled-queue-cleaner) tool removes them. It lists the running instances, then deletes the `lifecycled-` queues and subscriptions that no longer map to one. Because it is destructive, it logs the resolved region and account at startup and accepts an `-account` guard that aborts before any delete if the resolved account does not match.
+
+```bash
+cd tools/lifecycled-queue-cleaner
+go run . -account 123456789012
+```
+
+See the [tool's README](tools/lifecycled-queue-cleaner/README.md) for how it resolves credentials and region (including AWS SSO) and the IAM permissions it needs.
+
 ## Troubleshooting
 
 ### Checking Service Status
