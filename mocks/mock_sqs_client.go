@@ -92,6 +92,56 @@ func (mr *MockSQSClientMockRecorder) AddPermissionWithContext(arg0, arg1 any, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPermissionWithContext", reflect.TypeOf((*MockSQSClient)(nil).AddPermissionWithContext), varargs...)
 }
 
+// CancelMessageMoveTask mocks base method.
+func (m *MockSQSClient) CancelMessageMoveTask(arg0 *sqs.CancelMessageMoveTaskInput) (*sqs.CancelMessageMoveTaskOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelMessageMoveTask", arg0)
+	ret0, _ := ret[0].(*sqs.CancelMessageMoveTaskOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CancelMessageMoveTask indicates an expected call of CancelMessageMoveTask.
+func (mr *MockSQSClientMockRecorder) CancelMessageMoveTask(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelMessageMoveTask", reflect.TypeOf((*MockSQSClient)(nil).CancelMessageMoveTask), arg0)
+}
+
+// CancelMessageMoveTaskRequest mocks base method.
+func (m *MockSQSClient) CancelMessageMoveTaskRequest(arg0 *sqs.CancelMessageMoveTaskInput) (*request.Request, *sqs.CancelMessageMoveTaskOutput) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CancelMessageMoveTaskRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*sqs.CancelMessageMoveTaskOutput)
+	return ret0, ret1
+}
+
+// CancelMessageMoveTaskRequest indicates an expected call of CancelMessageMoveTaskRequest.
+func (mr *MockSQSClientMockRecorder) CancelMessageMoveTaskRequest(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelMessageMoveTaskRequest", reflect.TypeOf((*MockSQSClient)(nil).CancelMessageMoveTaskRequest), arg0)
+}
+
+// CancelMessageMoveTaskWithContext mocks base method.
+func (m *MockSQSClient) CancelMessageMoveTaskWithContext(arg0 aws.Context, arg1 *sqs.CancelMessageMoveTaskInput, arg2 ...request.Option) (*sqs.CancelMessageMoveTaskOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CancelMessageMoveTaskWithContext", varargs...)
+	ret0, _ := ret[0].(*sqs.CancelMessageMoveTaskOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CancelMessageMoveTaskWithContext indicates an expected call of CancelMessageMoveTaskWithContext.
+func (mr *MockSQSClientMockRecorder) CancelMessageMoveTaskWithContext(arg0, arg1 any, arg2 ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelMessageMoveTaskWithContext", reflect.TypeOf((*MockSQSClient)(nil).CancelMessageMoveTaskWithContext), varargs...)
+}
+
 // ChangeMessageVisibility mocks base method.
 func (m *MockSQSClient) ChangeMessageVisibility(arg0 *sqs.ChangeMessageVisibilityInput) (*sqs.ChangeMessageVisibilityOutput, error) {
 	m.ctrl.T.Helper()
@@ -575,6 +625,56 @@ func (mr *MockSQSClientMockRecorder) ListDeadLetterSourceQueuesWithContext(arg0,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeadLetterSourceQueuesWithContext", reflect.TypeOf((*MockSQSClient)(nil).ListDeadLetterSourceQueuesWithContext), varargs...)
 }
 
+// ListMessageMoveTasks mocks base method.
+func (m *MockSQSClient) ListMessageMoveTasks(arg0 *sqs.ListMessageMoveTasksInput) (*sqs.ListMessageMoveTasksOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMessageMoveTasks", arg0)
+	ret0, _ := ret[0].(*sqs.ListMessageMoveTasksOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMessageMoveTasks indicates an expected call of ListMessageMoveTasks.
+func (mr *MockSQSClientMockRecorder) ListMessageMoveTasks(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMessageMoveTasks", reflect.TypeOf((*MockSQSClient)(nil).ListMessageMoveTasks), arg0)
+}
+
+// ListMessageMoveTasksRequest mocks base method.
+func (m *MockSQSClient) ListMessageMoveTasksRequest(arg0 *sqs.ListMessageMoveTasksInput) (*request.Request, *sqs.ListMessageMoveTasksOutput) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMessageMoveTasksRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*sqs.ListMessageMoveTasksOutput)
+	return ret0, ret1
+}
+
+// ListMessageMoveTasksRequest indicates an expected call of ListMessageMoveTasksRequest.
+func (mr *MockSQSClientMockRecorder) ListMessageMoveTasksRequest(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMessageMoveTasksRequest", reflect.TypeOf((*MockSQSClient)(nil).ListMessageMoveTasksRequest), arg0)
+}
+
+// ListMessageMoveTasksWithContext mocks base method.
+func (m *MockSQSClient) ListMessageMoveTasksWithContext(arg0 aws.Context, arg1 *sqs.ListMessageMoveTasksInput, arg2 ...request.Option) (*sqs.ListMessageMoveTasksOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListMessageMoveTasksWithContext", varargs...)
+	ret0, _ := ret[0].(*sqs.ListMessageMoveTasksOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMessageMoveTasksWithContext indicates an expected call of ListMessageMoveTasksWithContext.
+func (mr *MockSQSClientMockRecorder) ListMessageMoveTasksWithContext(arg0, arg1 any, arg2 ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMessageMoveTasksWithContext", reflect.TypeOf((*MockSQSClient)(nil).ListMessageMoveTasksWithContext), varargs...)
+}
+
 // ListQueueTags mocks base method.
 func (m *MockSQSClient) ListQueueTags(arg0 *sqs.ListQueueTagsInput) (*sqs.ListQueueTagsOutput, error) {
 	m.ctrl.T.Helper()
@@ -1006,6 +1106,56 @@ func (mr *MockSQSClientMockRecorder) SetQueueAttributesWithContext(arg0, arg1 an
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetQueueAttributesWithContext", reflect.TypeOf((*MockSQSClient)(nil).SetQueueAttributesWithContext), varargs...)
+}
+
+// StartMessageMoveTask mocks base method.
+func (m *MockSQSClient) StartMessageMoveTask(arg0 *sqs.StartMessageMoveTaskInput) (*sqs.StartMessageMoveTaskOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartMessageMoveTask", arg0)
+	ret0, _ := ret[0].(*sqs.StartMessageMoveTaskOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartMessageMoveTask indicates an expected call of StartMessageMoveTask.
+func (mr *MockSQSClientMockRecorder) StartMessageMoveTask(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartMessageMoveTask", reflect.TypeOf((*MockSQSClient)(nil).StartMessageMoveTask), arg0)
+}
+
+// StartMessageMoveTaskRequest mocks base method.
+func (m *MockSQSClient) StartMessageMoveTaskRequest(arg0 *sqs.StartMessageMoveTaskInput) (*request.Request, *sqs.StartMessageMoveTaskOutput) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartMessageMoveTaskRequest", arg0)
+	ret0, _ := ret[0].(*request.Request)
+	ret1, _ := ret[1].(*sqs.StartMessageMoveTaskOutput)
+	return ret0, ret1
+}
+
+// StartMessageMoveTaskRequest indicates an expected call of StartMessageMoveTaskRequest.
+func (mr *MockSQSClientMockRecorder) StartMessageMoveTaskRequest(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartMessageMoveTaskRequest", reflect.TypeOf((*MockSQSClient)(nil).StartMessageMoveTaskRequest), arg0)
+}
+
+// StartMessageMoveTaskWithContext mocks base method.
+func (m *MockSQSClient) StartMessageMoveTaskWithContext(arg0 aws.Context, arg1 *sqs.StartMessageMoveTaskInput, arg2 ...request.Option) (*sqs.StartMessageMoveTaskOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "StartMessageMoveTaskWithContext", varargs...)
+	ret0, _ := ret[0].(*sqs.StartMessageMoveTaskOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartMessageMoveTaskWithContext indicates an expected call of StartMessageMoveTaskWithContext.
+func (mr *MockSQSClientMockRecorder) StartMessageMoveTaskWithContext(arg0, arg1 any, arg2 ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartMessageMoveTaskWithContext", reflect.TypeOf((*MockSQSClient)(nil).StartMessageMoveTaskWithContext), varargs...)
 }
 
 // TagQueue mocks base method.
