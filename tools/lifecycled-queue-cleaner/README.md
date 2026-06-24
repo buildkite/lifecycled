@@ -6,15 +6,18 @@ instances, then removes the queues and subscriptions that no longer map to one.
 
 This is a destructive tool. It logs the resolved region and account at startup
 (`Using region ...` and `Using account ...`); confirm both point at what you
-intend to clean before letting it run.
+intend to clean before letting it run. Pass `-account <id>` to have it abort
+before deleting anything if the resolved account does not match.
 
 ## Usage
 
 ```bash
-go run . [-parallel N]
+go run . [-parallel N] [-account AWS_ACCOUNT_ID]
 ```
 
 `-parallel` controls how many queue deletes run concurrently (default 20).
+`-account` aborts before any delete if the resolved account ID does not match,
+guarding against running against the wrong account.
 
 ## AWS credentials and region
 

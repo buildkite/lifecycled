@@ -23,6 +23,7 @@ import (
 
 func main() {
 	parallel := flag.Int("parallel", 20, "The number of parallel deletes to run")
+	account := flag.String("account", "", "If set, abort unless the resolved AWS account ID matches")
 	flag.Parse()
 
 	// SharedConfigEnable loads ~/.aws/config so region, named profiles, and SSO resolve.
@@ -49,6 +50,9 @@ func main() {
 	ident, err := sts.New(sess).GetCallerIdentityWithContext(ctx, &sts.GetCallerIdentityInput{})
 	if err != nil {
 		log.Fatalf("Failed to resolve caller identity: %s", err)
+	}
+	if *account != "" && *account != aws.StringValue(ident.Account) {
+		log.Fatalf("Resolved account %s does not match the expected account %s", aws.StringValue(ident.Account), *account)
 	}
 	log.Printf("Using account %s as %s", aws.StringValue(ident.Account), aws.StringValue(ident.Arn))
 
