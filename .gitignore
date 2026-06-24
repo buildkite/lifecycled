@@ -1,6 +1,7 @@
 /handler.sh
 build/
 /lifecycled
+/tools/lifecycled-queue-cleaner/lifecycled-queue-cleaner
 .DS_Store
 
 # Terraform
