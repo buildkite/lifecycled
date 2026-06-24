@@ -34,3 +34,20 @@ including AWS SSO profiles. To use SSO, log in first and select the profile:
 aws sso login --profile my-profile
 AWS_PROFILE=my-profile go run .
 ```
+
+SSO sessions expire and are not refreshed mid-run, so a long cleanup can exit
+with an authentication error partway through. The tool re-lists queues and
+subscriptions on each run, so it is safe to run again after `aws sso login` and
+it picks up wherever the previous run left off.
+
+## Required IAM permissions
+
+The credentials need:
+
+- `ec2:DescribeInstances`
+- `sqs:ListQueues` and `sqs:DeleteQueue`
+- `sns:ListSubscriptions`, `sns:GetTopicAttributes`, and `sns:Unsubscribe`
+
+`sts:GetCallerIdentity`, used for the startup account check, requires no
+permission. Missing any of the above surfaces as a fatal error partway through a
+run, so confirm the policy before a large cleanup.
