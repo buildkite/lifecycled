@@ -119,16 +119,17 @@ func fatalAWS(err error) {
 // resolveRegion fills in the session region from EC2 metadata when neither the
 // environment nor shared config supplied one. lookupRegion is injectable for tests.
 func resolveRegion(sess *session.Session, lookupRegion func() (string, error)) error {
+	const hint = "set AWS_REGION, AWS_DEFAULT_REGION, or a profile region instead"
 	if aws.StringValue(sess.Config.Region) != "" {
 		return nil
 	}
 	log.Println("No region in environment or shared config, looking up from EC2 metadata")
 	region, err := lookupRegion()
 	if err != nil {
-		return fmt.Errorf("look up region from EC2 metadata (set AWS_REGION, AWS_DEFAULT_REGION, or a profile region instead): %w", err)
+		return fmt.Errorf("look up region from EC2 metadata (%s): %w", hint, err)
 	}
 	if region == "" {
-		return fmt.Errorf("EC2 metadata returned an empty region (set AWS_REGION, AWS_DEFAULT_REGION, or a profile region instead)")
+		return fmt.Errorf("EC2 metadata returned an empty region (%s)", hint)
 	}
 	sess.Config.Region = aws.String(region)
 	return nil
