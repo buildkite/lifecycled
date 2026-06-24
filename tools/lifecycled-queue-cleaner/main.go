@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -23,21 +23,24 @@ func main() {
 	parallel := flag.Int("parallel", 20, "The number of parallel deletes to run")
 	flag.Parse()
 
-	region := os.Getenv("AWS_REGION")
-	if region == "" {
-		log.Println("Looking up region from metadata service")
-		sess, err := session.NewSession()
-		if err != nil {
-			log.Fatalf("Failed to create new aws session: %s", err)
-		}
-		region, err = ec2metadata.New(sess).Region()
-		if err != nil {
-			log.Fatalf("Failed to look up region: %s", err)
-		}
+	// SharedConfigEnable loads ~/.aws/config so region, named profiles, and SSO resolve.
+	sess, err := session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	})
+	if err != nil {
+		log.Fatalf("Failed to create aws session: %s", err)
 	}
 
+	if err := resolveRegion(sess, func() (string, error) {
+		return ec2metadata.New(sess).Region()
+	}); err != nil {
+		log.Fatalf("Failed to resolve region: %s", err)
+	}
+
+	log.Printf("Using region %s", aws.StringValue(sess.Config.Region))
+
 	for {
-		count, err := deleteInactiveSubscriptions(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})))
+		count, err := deleteInactiveSubscriptions(sess)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -51,7 +54,7 @@ func main() {
 	}
 
 	for {
-		count, err := deleteInactiveQueues(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})), *parallel)
+		count, err := deleteInactiveQueues(sess, *parallel)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -65,6 +68,21 @@ func main() {
 	}
 
 	log.Printf("Done! Sorry for the inconvenience!")
+}
+
+// resolveRegion fills in the session region from EC2 metadata when neither the
+// environment nor shared config supplied one. lookupRegion is injectable for tests.
+func resolveRegion(sess *session.Session, lookupRegion func() (string, error)) error {
+	if aws.StringValue(sess.Config.Region) != "" {
+		return nil
+	}
+	log.Println("No region in environment or shared config, looking up from EC2 metadata")
+	region, err := lookupRegion()
+	if err != nil {
+		return fmt.Errorf("look up region from EC2 metadata (set AWS_REGION or a profile region instead): %w", err)
+	}
+	sess.Config.Region = aws.String(region)
+	return nil
 }
 
 func deleteInactiveQueues(sess *session.Session, parallel int) (uint64, error) {
