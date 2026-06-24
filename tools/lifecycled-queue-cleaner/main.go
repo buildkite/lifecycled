@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -23,21 +22,22 @@ func main() {
 	parallel := flag.Int("parallel", 20, "The number of parallel deletes to run")
 	flag.Parse()
 
-	region := os.Getenv("AWS_REGION")
-	if region == "" {
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	// If no region was resolved from environment or shared config, fall back to EC2 metadata
+	if aws.StringValue(sess.Config.Region) == "" {
 		log.Println("Looking up region from metadata service")
-		sess, err := session.NewSession()
-		if err != nil {
-			log.Fatalf("Failed to create new aws session: %s", err)
-		}
-		region, err = ec2metadata.New(sess).Region()
+		region, err := ec2metadata.New(sess).Region()
 		if err != nil {
 			log.Fatalf("Failed to look up region: %s", err)
 		}
+		sess.Config.Region = aws.String(region)
 	}
 
 	for {
-		count, err := deleteInactiveSubscriptions(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})))
+		count, err := deleteInactiveSubscriptions(sess)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -51,7 +51,7 @@ func main() {
 	}
 
 	for {
-		count, err := deleteInactiveQueues(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})), *parallel)
+		count, err := deleteInactiveQueues(sess, *parallel)
 		if err != nil {
 			log.Fatal(err)
 		}
