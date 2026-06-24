@@ -38,10 +38,11 @@ aws sso login --profile my-profile
 AWS_PROFILE=my-profile go run .
 ```
 
-SSO sessions expire and are not refreshed mid-run, so a long cleanup can exit
-with an authentication error partway through. The tool re-lists queues and
-subscriptions on each run, so it is safe to run again after `aws sso login` and
-it picks up wherever the previous run left off.
+SSO sessions expire and are not refreshed mid-run. An expired session is caught
+at startup by the account check, and a long cleanup can also exit partway through
+once the session lapses; either way the tool prints a hint to re-authenticate.
+The tool re-lists queues and subscriptions on each run, so it is safe to run
+again after `aws sso login` and it picks up wherever the previous run left off.
 
 ## Required IAM permissions
 
