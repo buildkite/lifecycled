@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -17,29 +18,48 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sts"
 )
 
 func main() {
 	parallel := flag.Int("parallel", 20, "The number of parallel deletes to run")
+	account := flag.String("account", "", "If set, abort unless the resolved AWS account ID matches")
 	flag.Parse()
 
-	region := os.Getenv("AWS_REGION")
-	if region == "" {
-		log.Println("Looking up region from metadata service")
-		sess, err := session.NewSession()
-		if err != nil {
-			log.Fatalf("Failed to create new aws session: %s", err)
-		}
-		region, err = ec2metadata.New(sess).Region()
-		if err != nil {
-			log.Fatalf("Failed to look up region: %s", err)
-		}
+	// SharedConfigEnable loads ~/.aws/config so region, named profiles, and SSO resolve.
+	sess, err := session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	})
+	if err != nil {
+		log.Fatalf("Failed to create aws session: %s", err)
 	}
 
+	if err := resolveRegion(sess, func() (string, error) {
+		// Bound the metadata lookup so it fails fast off-EC2 instead of stalling startup.
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		return ec2metadata.New(sess).RegionWithContext(ctx)
+	}); err != nil {
+		log.Fatalf("Failed to resolve region: %s", err)
+	}
+
+	log.Printf("Using region %s", aws.StringValue(sess.Config.Region))
+
+	// Confirm the target account before any destructive calls. A failure means the
+	// credentials are unusable, since GetCallerIdentity needs no IAM permission.
+	ident, err := callerIdentity(sess)
+	if err != nil {
+		log.Fatalf("Failed to resolve caller identity: %s", err)
+	}
+	if *account != "" && *account != aws.StringValue(ident.Account) {
+		log.Fatalf("Resolved account %s does not match the expected account %s", aws.StringValue(ident.Account), *account)
+	}
+	log.Printf("Using account %s as %s", aws.StringValue(ident.Account), aws.StringValue(ident.Arn))
+
 	for {
-		count, err := deleteInactiveSubscriptions(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})))
+		count, err := deleteInactiveSubscriptions(sess)
 		if err != nil {
-			log.Fatal(err)
+			fatalAWS(err)
 		}
 
 		if count == 0 {
@@ -51,9 +71,9 @@ func main() {
 	}
 
 	for {
-		count, err := deleteInactiveQueues(session.Must(session.NewSession(&aws.Config{Region: aws.String(region)})), *parallel)
+		count, err := deleteInactiveQueues(sess, *parallel)
 		if err != nil {
-			log.Fatal(err)
+			fatalAWS(err)
 		}
 
 		if count == 0 {
@@ -67,10 +87,58 @@ func main() {
 	log.Printf("Done! Sorry for the inconvenience!")
 }
 
+// callerIdentity resolves the account the credentials belong to, bounded so a
+// hung STS fails fast instead of stalling startup.
+func callerIdentity(sess *session.Session) (*sts.GetCallerIdentityOutput, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	return sts.New(sess).GetCallerIdentityWithContext(ctx, &sts.GetCallerIdentityInput{})
+}
+
+// credentialExpiryCodes are the AWS error codes meaning the credentials
+// (temporary STS credentials or the cached SSO token) expired and need a refresh.
+var credentialExpiryCodes = map[string]struct{}{
+	`ExpiredToken`:            {},
+	`ExpiredTokenException`:   {},
+	`RequestExpired`:          {},
+	`SSOProviderInvalidToken`: {},
+}
+
+// fatalAWS ends the run, adding a re-auth hint when the failure is expired
+// credentials. Re-running is safe: each run re-lists from scratch and resumes
+// where the last left off.
+func fatalAWS(err error) {
+	if awsErr, ok := err.(awserr.Error); ok {
+		if _, expired := credentialExpiryCodes[awsErr.Code()]; expired {
+			log.Fatalf("Credentials expired mid-run (%s); refresh them (e.g. `aws sso login`) and run again to resume: %s", awsErr.Code(), err)
+		}
+	}
+	log.Fatal(err)
+}
+
+// resolveRegion fills in the session region from EC2 metadata when neither the
+// environment nor shared config supplied one. lookupRegion is injectable for tests.
+func resolveRegion(sess *session.Session, lookupRegion func() (string, error)) error {
+	const hint = "set AWS_REGION, AWS_DEFAULT_REGION, or a profile region instead"
+	if aws.StringValue(sess.Config.Region) != "" {
+		return nil
+	}
+	log.Println("No region in environment or shared config, looking up from EC2 metadata")
+	region, err := lookupRegion()
+	if err != nil {
+		return fmt.Errorf("look up region from EC2 metadata (%s): %w", hint, err)
+	}
+	if region == "" {
+		return fmt.Errorf("EC2 metadata returned an empty region (%s)", hint)
+	}
+	sess.Config.Region = aws.String(region)
+	return nil
+}
+
 func deleteInactiveQueues(sess *session.Session, parallel int) (uint64, error) {
 	queues, err := listInactiveQueues(sess)
 	if err != nil {
-		log.Fatal(err)
+		fatalAWS(err)
 	}
 
 	var wg sync.WaitGroup
@@ -167,7 +235,7 @@ var queueRegex = regexp.MustCompile(`^https://sqs\.(.+?)\.amazonaws.com/(.+?)/li
 func listInactiveQueues(sess *session.Session) ([]string, error) {
 	instances, err := listInstances(sess)
 	if err != nil {
-		log.Fatal(err)
+		fatalAWS(err)
 	}
 
 	log.Printf("Found %d running instances", len(instances))
@@ -180,7 +248,7 @@ func listInactiveQueues(sess *session.Session) ([]string, error) {
 
 	queues, err := listQueues(sess)
 	if err != nil {
-		log.Fatal(err)
+		fatalAWS(err)
 	}
 
 	log.Printf("Found %d queues total (aws returns max 1000)", len(queues))
