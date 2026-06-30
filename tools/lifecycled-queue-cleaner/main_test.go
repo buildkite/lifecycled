@@ -139,6 +139,15 @@ func TestDeleteQueues(t *testing.T) {
 			failOn:   "q2",
 			wantErr:  sentinel,
 		},
+		{
+			// One queue, one worker: dispatch sends and exits before the worker
+			// reports, so the error surfaces via the post-Wait drain.
+			name:     "surfaces an error from the drain path",
+			queues:   []string{"q1"},
+			parallel: 1,
+			failOn:   "q1",
+			wantErr:  sentinel,
+		},
 	}
 
 	for _, tt := range tests {
@@ -175,6 +184,7 @@ type fakeSNS struct {
 	subs         []snstypes.Subscription
 	existing     map[string]bool
 	topicErr     map[string]error
+	unsubErr     map[string]error // per-subscription Unsubscribe error
 	topicCalls   int
 	unsubscribed []string
 }
@@ -196,7 +206,11 @@ func (f *fakeSNS) GetTopicAttributes(_ context.Context, in *sns.GetTopicAttribut
 }
 
 func (f *fakeSNS) Unsubscribe(_ context.Context, in *sns.UnsubscribeInput, _ ...func(*sns.Options)) (*sns.UnsubscribeOutput, error) {
-	f.unsubscribed = append(f.unsubscribed, aws.ToString(in.SubscriptionArn))
+	arn := aws.ToString(in.SubscriptionArn)
+	if err := f.unsubErr[arn]; err != nil {
+		return nil, err
+	}
+	f.unsubscribed = append(f.unsubscribed, arn)
 	return &sns.UnsubscribeOutput{}, nil
 }
 
@@ -214,6 +228,7 @@ func TestListInactiveSubscriptions(t *testing.T) {
 			newSub("arn:aws:sqs:us-east-1:123456789012:lifecycled-i-dead", "topic-gone", "sub-dead"),
 			newSub("arn:aws:sqs:us-east-1:123456789012:lifecycled-i-dead2", "topic-gone", "sub-dead2"),
 			newSub("arn:aws:sqs:us-east-1:123456789012:lifecycled-i-live", "topic-live", "sub-live"),
+			newSub("arn:aws:sqs:us-east-1:123456789012:lifecycled-i-live2", "topic-live", "sub-live2"),
 			newSub("arn:aws:sqs:us-east-1:123456789012:some-other-queue", "topic-gone", "sub-other"),
 		},
 		existing: map[string]bool{"topic-live": true},
@@ -228,9 +243,9 @@ func TestListInactiveSubscriptions(t *testing.T) {
 	if !slices.Equal(got, want) {
 		t.Errorf("listInactiveSubscriptions() = %v, want %v", got, want)
 	}
-	// topic-gone and topic-live are queried once each; the second lifecycled-i
-	// subscription on topic-gone is answered from the memo, and the non-lifecycled
-	// endpoint is filtered out before any topic lookup.
+	// topic-gone and topic-live are queried once each; the second subscription on
+	// each topic is answered from the memo (the dead one is queued, the live one
+	// is skipped), and the non-lifecycled endpoint is filtered out before any lookup.
 	if fake.topicCalls != 2 {
 		t.Errorf("GetTopicAttributes calls = %d, want 2 (memoized per topic)", fake.topicCalls)
 	}
@@ -254,6 +269,25 @@ func TestDeleteInactiveSubscriptions(t *testing.T) {
 	}
 	if !slices.Equal(fake.unsubscribed, []string{"sub-dead"}) {
 		t.Errorf("unsubscribed = %v, want [sub-dead]", fake.unsubscribed)
+	}
+}
+
+func TestDeleteInactiveSubscriptionsUnsubscribeError(t *testing.T) {
+	boom := errors.New("unsubscribe failed")
+	fake := &fakeSNS{
+		subs: []snstypes.Subscription{
+			newSub("arn:aws:sqs:us-east-1:123456789012:lifecycled-i-dead", "topic-gone", "sub-dead"),
+			newSub("arn:aws:sqs:us-east-1:123456789012:lifecycled-i-dead2", "topic-gone", "sub-dead2"),
+		},
+		unsubErr: map[string]error{"sub-dead": boom},
+	}
+
+	count, err := deleteInactiveSubscriptions(context.Background(), fake)
+	if !errors.Is(err, boom) {
+		t.Fatalf("error = %v, want %v", err, boom)
+	}
+	if count != 0 {
+		t.Errorf("count = %d, want 0 (aborts on the first unsubscribe failure)", count)
 	}
 }
 
