@@ -85,9 +85,12 @@ Lifecycled requires AWS credentials and region configuration:
 
 | Environment Variable | Description |
 |---------------------|-------------|
-| `AWS_REGION` | AWS region (auto-detected from EC2 metadata if not set) |
+| `AWS_REGION` | AWS region (see resolution order below) |
+| `AWS_DEFAULT_REGION` | Fallback region used when `AWS_REGION` is unset |
 | `AWS_ACCESS_KEY_ID` | AWS access key (optional if using IAM instance profile) |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret key (optional if using IAM instance profile) |
+
+The region is resolved in order: `AWS_REGION`, then `AWS_DEFAULT_REGION`, then the active profile's region, and finally the EC2 instance metadata service when running on EC2. Lifecycled exits at startup if none of these supply a region.
 
 ## Usage
 
@@ -289,13 +292,15 @@ If using `--cloudwatch-group`:
 {
   "Effect": "Allow",
   "Action": [
+    "logs:CreateLogGroup",
     "logs:CreateLogStream",
-    "logs:PutLogEvents",
-    "logs:DescribeLogStreams"
+    "logs:PutLogEvents"
   ],
   "Resource": "arn:aws:logs:REGION:ACCOUNT:log-group:YOUR_LOG_GROUP:*"
 }
 ```
+
+`logs:CreateLogGroup` is optional: lifecycled attempts to create the log group at startup but treats an access-denied response as a signal that the group is managed elsewhere and carries on. Omit it if the group is provisioned out of band; `logs:CreateLogStream` and `logs:PutLogEvents` are always required.
 
 ### AutoScaling Lifecycle Hook Role
 
@@ -382,6 +387,12 @@ systemctl restart lifecycled
 
 **Problem**: "Failed to lookup instance id"
 - **Solution**: Ensure the instance has access to EC2 metadata service or set `LIFECYCLED_INSTANCE_ID` explicitly
+
+**Problem**: "ec2 metadata is not available" or the daemon exits immediately when not running on EC2
+- **Solution**: The spot listener is enabled by default and probes the EC2 instance metadata service at startup. Off EC2, disable it with `--no-spot` (or `LIFECYCLED_NO_SPOT=true`)
+
+**Problem**: "No region resolved" at startup
+- **Solution**: Set `AWS_REGION` (or `AWS_DEFAULT_REGION`, or a profile region); the metadata fallback only applies on EC2
 
 **Problem**: "Permission denied" errors with SQS/SNS
 - **Solution**: Verify IAM instance profile has required permissions
