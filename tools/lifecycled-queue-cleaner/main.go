@@ -109,7 +109,9 @@ var credentialExpiryCodes = map[string]struct{}{
 
 // fatalAWS ends the run, adding a re-auth hint when the failure is expired
 // credentials. Re-running is safe: each run re-lists from scratch and resumes
-// where the last left off.
+// where the last left off. Aborting on any AWS error (rather than skipping the
+// offending resource) is deliberate: the SDK already retries transient failures,
+// so an error reaching here is unexpected and worth stopping on.
 func fatalAWS(err error) {
 	if apiErr, expired := expiredCredential(err); expired {
 		log.Fatalf("Credentials expired mid-run (%s); refresh them (e.g. `aws sso login`) and run again to resume: %s", apiErr.ErrorCode(), err)
