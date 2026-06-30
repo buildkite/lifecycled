@@ -161,3 +161,55 @@ func TestAutoscalingListenerCleanupSurvivesCancellation(t *testing.T) {
 		t.Error("Unsubscribe ran on a cancelled context; the SNS subscription would be orphaned")
 	}
 }
+
+type recordingASGClient struct {
+	completeErr error
+}
+
+func (c *recordingASGClient) CompleteLifecycleAction(ctx context.Context, _ *autoscaling.CompleteLifecycleActionInput, _ ...func(*autoscaling.Options)) (*autoscaling.CompleteLifecycleActionOutput, error) {
+	c.completeErr = ctx.Err()
+	return &autoscaling.CompleteLifecycleActionOutput{}, ctx.Err()
+}
+
+func (c *recordingASGClient) RecordLifecycleActionHeartbeat(context.Context, *autoscaling.RecordLifecycleActionHeartbeatInput, ...func(*autoscaling.Options)) (*autoscaling.RecordLifecycleActionHeartbeatOutput, error) {
+	return &autoscaling.RecordLifecycleActionHeartbeatOutput{}, nil
+}
+
+// blockingHandler stands in for a drain script that runs until its context is
+// cancelled, modelling a SIGINT/SIGTERM arriving mid-handle.
+type blockingHandler struct{}
+
+func (blockingHandler) Execute(ctx context.Context, _ ...string) error {
+	<-ctx.Done()
+	return ctx.Err()
+}
+
+// A signal cancels the handler context mid-drain, but the deferred
+// CompleteLifecycleAction must still release the ASG hook on a live context;
+// otherwise the instance sits in Terminating:Wait until the hook times out.
+func TestAutoscalingNoticeCompletesOnCancellation(t *testing.T) {
+	as := &recordingASGClient{}
+	notice := &autoscalingTerminationNotice{
+		noticeType:        "autoscaling",
+		message:           &Message{GroupName: "g", HookName: "h", InstanceID: "i", ActionToken: "t"},
+		autoscaling:       as,
+		heartbeatInterval: time.Hour,
+	}
+
+	logger := logrus.New()
+	logger.SetOutput(io.Discard)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		cancel()
+	}()
+
+	if err := notice.Handle(ctx, blockingHandler{}, logrus.NewEntry(logger)); !errors.Is(err, context.Canceled) {
+		t.Fatalf("Handle returned %v, want context.Canceled from the interrupted handler", err)
+	}
+
+	if errors.Is(as.completeErr, context.Canceled) {
+		t.Error("CompleteLifecycleAction ran on a cancelled context; the ASG hook would not be released")
+	}
+}

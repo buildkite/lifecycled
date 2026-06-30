@@ -173,7 +173,12 @@ func (n *autoscalingTerminationNotice) Type() string {
 
 func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
 	defer func() {
-		_, err := n.autoscaling.CompleteLifecycleAction(ctx, &autoscaling.CompleteLifecycleActionInput{
+		// Release the ASG hook on a detached context: a SIGINT/SIGTERM mid-handle
+		// cancels ctx to stop the drain script, but the lifecycle action must still
+		// complete or the instance sits in Terminating:Wait until the hook times out.
+		completeCtx, cancel := detachedContext(ctx)
+		defer cancel()
+		_, err := n.autoscaling.CompleteLifecycleAction(completeCtx, &autoscaling.CompleteLifecycleActionInput{
 			AutoScalingGroupName:  aws.String(n.message.GroupName),
 			LifecycleHookName:     aws.String(n.message.HookName),
 			InstanceId:            aws.String(n.message.InstanceID),
