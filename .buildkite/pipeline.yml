@@ -6,10 +6,11 @@ steps:
           config: .golangci.yml
 
   - label: "🔎"
-    commands:
-      - go generate ./...
-      - git diff --exit-code
-      - go test -race ./...
+    command: |
+      set -e
+      go generate ./...
+      git diff --exit-code
+      go test -race ./...
     plugins:
       - golang#v2.0.0:
           version: 1.26.4
