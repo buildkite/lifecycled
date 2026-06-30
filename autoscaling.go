@@ -15,11 +15,8 @@ import (
 // cancelled during shutdown.
 const awsTeardownTimeout = 30 * time.Second
 
-// detachedContext returns a context for teardown work that must outlive the
-// cancellation of ctx (receiving a notice cancels the listener context), bounded
-// so an unreachable AWS endpoint can't wedge shutdown. The v2 SDK refuses to send
-// a request on an already-cancelled context, so without this the deferred cleanup
-// and CompleteLifecycleAction calls would be dropped.
+// detachedContext returns a bounded context for teardown that must run even after
+// ctx is cancelled, since the v2 SDK won't send a request on a cancelled context.
 func detachedContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.WithoutCancel(ctx), awsTeardownTimeout)
 }
