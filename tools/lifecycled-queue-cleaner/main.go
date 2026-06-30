@@ -251,7 +251,15 @@ func deleteQueue(ctx context.Context, client *sqs.Client, queueURL string) error
 	return err
 }
 
-func topicExists(ctx context.Context, client *sns.Client, snsTopic string) (bool, error) {
+// snsCleanupClient is the subset of the SNS API the subscription cleanup uses,
+// so the logic can be exercised with a fake in tests.
+type snsCleanupClient interface {
+	ListSubscriptions(context.Context, *sns.ListSubscriptionsInput, ...func(*sns.Options)) (*sns.ListSubscriptionsOutput, error)
+	GetTopicAttributes(context.Context, *sns.GetTopicAttributesInput, ...func(*sns.Options)) (*sns.GetTopicAttributesOutput, error)
+	Unsubscribe(context.Context, *sns.UnsubscribeInput, ...func(*sns.Options)) (*sns.UnsubscribeOutput, error)
+}
+
+func topicExists(ctx context.Context, client snsCleanupClient, snsTopic string) (bool, error) {
 	_, err := client.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{
 		TopicArn: aws.String(snsTopic),
 	})
@@ -266,7 +274,7 @@ func topicExists(ctx context.Context, client *sns.Client, snsTopic string) (bool
 	return true, nil
 }
 
-func listInactiveSubscriptions(ctx context.Context, client *sns.Client) ([]string, error) {
+func listInactiveSubscriptions(ctx context.Context, client snsCleanupClient) ([]string, error) {
 	var subs []string
 	var topics = map[string]bool{}
 	var count int
@@ -289,7 +297,14 @@ func listInactiveSubscriptions(ctx context.Context, client *sns.Client) ([]strin
 				}
 				continue
 			}
-			if exists, _ := topicExists(ctx, client, topicArn); exists {
+			// A non-NotFound failure (AccessDenied, throttling, expired creds) must
+			// abort rather than be treated as a missing topic, or we would delete
+			// live subscriptions.
+			exists, err := topicExists(ctx, client, topicArn)
+			if err != nil {
+				return nil, err
+			}
+			if exists {
 				topics[topicArn] = true
 			} else {
 				topics[topicArn] = false
