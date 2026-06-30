@@ -143,6 +143,8 @@ make generate
 
 This runs `go generate ./...`, which invokes `go tool mockgen` to regenerate the mock files in the `mocks/` directory. `mockgen` is pinned as a `tool` dependency in `go.mod` (`go.uber.org/mock`, the actively maintained fork of `github.com/golang/mock`), so generation is reproducible without installing `mockgen` separately.
 
+CI verifies the committed mocks stay in sync by running `go generate ./...` followed by `git diff --exit-code`, so regenerate and commit the result after changing any interface. CI also runs `golangci-lint` (config in `.golangci.yml`) and `go test -race`.
+
 **Generated files:**
 - `mocks/mock_autoscaling_client.go`
 - `mocks/mock_sns_client.go`
