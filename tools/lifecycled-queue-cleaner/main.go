@@ -167,9 +167,18 @@ func deleteQueues(queues []string, parallel int, deleteFn func(string) error) (u
 		}()
 	}
 
-	// dispatch work, stopping early once a worker reports an error
+	// dispatch work, stopping as soon as a worker reports an error. The
+	// pre-send check keeps a buffered error from losing the select race to a
+	// ready send, which would otherwise dispatch more work after the failure.
 	var err error
 	for _, queue := range queues {
+		select {
+		case err = <-errCh:
+		default:
+		}
+		if err != nil {
+			break
+		}
 		select {
 		case queuesCh <- queue:
 		case err = <-errCh:
