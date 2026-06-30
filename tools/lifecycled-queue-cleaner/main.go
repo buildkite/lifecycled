@@ -237,21 +237,28 @@ func listInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *e
 
 	log.Printf("Found %d queues total (aws returns max 1000)", len(queues))
 
-	var inactiveQueues []string
-	for _, queue := range queues {
+	inactiveQueues := filterInactiveQueues(queues, instancesMap)
+
+	log.Printf("Found %d inactive queues", len(inactiveQueues))
+
+	return inactiveQueues, nil
+}
+
+// filterInactiveQueues returns the lifecycled- queue URLs whose instance id is
+// not in running. URLs that don't match the lifecycled- naming scheme are skipped.
+func filterInactiveQueues(urls []string, running map[string]struct{}) []string {
+	var inactive []string
+	for _, queue := range urls {
 		matches := queueRegex.FindStringSubmatch(queue)
 		if len(matches) != 4 {
 			continue
 		}
 		instanceID := matches[3]
-		if _, exists := instancesMap[instanceID]; !exists {
-			inactiveQueues = append(inactiveQueues, queue)
+		if _, exists := running[instanceID]; !exists {
+			inactive = append(inactive, queue)
 		}
 	}
-
-	log.Printf("Found %d inactive queues", len(inactiveQueues))
-
-	return inactiveQueues, nil
+	return inactive
 }
 
 func deleteQueue(ctx context.Context, client *sqs.Client, queueURL string) error {

@@ -105,3 +105,59 @@ func TestListInactiveSubscriptions(t *testing.T) {
 		})
 	}
 }
+
+// Only queues that match the lifecycled-i- naming scheme and whose instance is
+// no longer running are selected for deletion; everything else is left alone.
+func TestFilterInactiveQueues(t *testing.T) {
+	const (
+		dead    = "https://sqs.us-east-1.amazonaws.com/123456789012/lifecycled-i-0dead"
+		running = "https://sqs.us-east-1.amazonaws.com/123456789012/lifecycled-i-0run"
+	)
+	runningSet := map[string]struct{}{"i-0run": {}}
+
+	tests := []struct {
+		name string
+		urls []string
+		want []string
+	}{
+		{
+			name: "queue for a terminated instance is inactive",
+			urls: []string{dead},
+			want: []string{dead},
+		},
+		{
+			name: "queue for a running instance is kept",
+			urls: []string{running},
+			want: nil,
+		},
+		{
+			name: "queue without the i- instance prefix is ignored",
+			urls: []string{"https://sqs.us-east-1.amazonaws.com/123456789012/lifecycled-notaninstance"},
+			want: nil,
+		},
+		{
+			name: "non-lifecycled queue is ignored",
+			urls: []string{"https://sqs.us-east-1.amazonaws.com/123456789012/some-other-queue"},
+			want: nil,
+		},
+		{
+			name: "mixed list keeps running, deletes terminated, skips unrelated",
+			urls: []string{running, dead, "https://sqs.eu-west-2.amazonaws.com/111122223333/unrelated"},
+			want: []string{dead},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := filterInactiveQueues(tt.urls, runningSet)
+			if len(got) != len(tt.want) {
+				t.Fatalf("inactive = %v, want %v", got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("inactive[%d] = %q, want %q", i, got[i], tt.want[i])
+				}
+			}
+		})
+	}
+}
