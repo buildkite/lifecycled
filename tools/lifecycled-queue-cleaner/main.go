@@ -125,7 +125,9 @@ func deleteInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client 
 	var wg sync.WaitGroup
 	var count uint64
 	var queuesCh = make(chan string)
-	var errCh = make(chan error)
+	// Buffered so a worker that fails after the dispatch loop has stopped reading
+	// errCh can still report its error instead of blocking (and leaking) forever.
+	var errCh = make(chan error, parallel)
 
 	// spawn parallel workers
 	for i := 0; i < parallel; i++ {
@@ -149,9 +151,11 @@ func deleteInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client 
 
 	// dispatch work to parallel workers
 	for _, queue := range queues {
+		// Count the work before handing it off so a worker can't call wg.Done
+		// before the matching wg.Add and drive the counter negative.
+		wg.Add(1)
 		select {
 		case queuesCh <- queue:
-			wg.Add(1)
 		case err := <-errCh:
 			close(queuesCh)
 			return 0, err
@@ -162,7 +166,13 @@ func deleteInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client 
 	wg.Wait()
 	close(queuesCh)
 
-	return count, nil
+	// Surface an error from a worker that failed after dispatch finished.
+	select {
+	case err := <-errCh:
+		return count, err
+	default:
+		return count, nil
+	}
 }
 
 func listInstances(ctx context.Context, client *ec2.Client) ([]string, error) {
