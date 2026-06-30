@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strconv"
 	"sync/atomic"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/aws/smithy-go"
 )
 
@@ -271,5 +274,89 @@ func TestListInactiveSubscriptionsAbortsOnTopicError(t *testing.T) {
 	}
 	if got != nil {
 		t.Errorf("subscriptions = %v, want nil (a topic-lookup error must abort, not queue deletions)", got)
+	}
+}
+
+type fakeSQS struct {
+	pages      [][]string // queue-URL pages returned in order
+	listInputs []*sqs.ListQueuesInput
+	deleted    []string
+	deleteErr  map[string]error // per-URL DeleteQueue error
+}
+
+func (f *fakeSQS) ListQueues(_ context.Context, in *sqs.ListQueuesInput, _ ...func(*sqs.Options)) (*sqs.ListQueuesOutput, error) {
+	f.listInputs = append(f.listInputs, in)
+	page := 0
+	if in.NextToken != nil {
+		page, _ = strconv.Atoi(aws.ToString(in.NextToken))
+	}
+	out := &sqs.ListQueuesOutput{QueueUrls: f.pages[page]}
+	// Mimic SQS: a NextToken is only handed out when MaxResults is set.
+	if in.MaxResults != nil && page+1 < len(f.pages) {
+		out.NextToken = aws.String(strconv.Itoa(page + 1))
+	}
+	return out, nil
+}
+
+func (f *fakeSQS) DeleteQueue(_ context.Context, in *sqs.DeleteQueueInput, _ ...func(*sqs.Options)) (*sqs.DeleteQueueOutput, error) {
+	url := aws.ToString(in.QueueUrl)
+	f.deleted = append(f.deleted, url)
+	if err := f.deleteErr[url]; err != nil {
+		return nil, err
+	}
+	return &sqs.DeleteQueueOutput{}, nil
+}
+
+// listQueues must follow NextToken across every page. Without MaxResults set on
+// the request, SQS caps at one page, so this also guards the MaxResults fix.
+func TestListQueuesPaginates(t *testing.T) {
+	fake := &fakeSQS{pages: [][]string{
+		{"q1", "q2"},
+		{"q3", "q4"},
+		{"q5"},
+	}}
+
+	got, err := listQueues(context.Background(), fake)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	want := []string{"q1", "q2", "q3", "q4", "q5"}
+	if !slices.Equal(got, want) {
+		t.Errorf("listQueues() = %v, want %v", got, want)
+	}
+	if len(fake.listInputs) != len(fake.pages) {
+		t.Fatalf("ListQueues calls = %d, want %d (one per page)", len(fake.listInputs), len(fake.pages))
+	}
+	if aws.ToInt32(fake.listInputs[0].MaxResults) != 1000 {
+		t.Errorf("MaxResults = %d, want 1000", aws.ToInt32(fake.listInputs[0].MaxResults))
+	}
+}
+
+func TestDeleteQueue(t *testing.T) {
+	apiErr := &smithy.GenericAPIError{Code: "AccessDenied", Message: "denied"}
+	tests := []struct {
+		name    string
+		err     error
+		wantErr error
+	}{
+		{name: "success", err: nil},
+		{name: "already gone is success", err: &sqstypes.QueueDoesNotExist{Message: aws.String("gone")}},
+		{name: "other error propagates", err: apiErr, wantErr: apiErr},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fake := &fakeSQS{deleteErr: map[string]error{"q1": tt.err}}
+			err := deleteQueue(context.Background(), fake, "q1")
+			if tt.wantErr == nil {
+				if err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+				return
+			}
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("error = %v, want %v", err, tt.wantErr)
+			}
+		})
 	}
 }

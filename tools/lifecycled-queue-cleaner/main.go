@@ -234,7 +234,14 @@ func listInstances(ctx context.Context, client *ec2.Client) ([]string, error) {
 	return instances, nil
 }
 
-func listQueues(ctx context.Context, client *sqs.Client) ([]string, error) {
+// SQSClient is the subset of the SQS client the queue cleanup uses, so the
+// listing and delete logic can be exercised with a fake in tests.
+type SQSClient interface {
+	ListQueues(context.Context, *sqs.ListQueuesInput, ...func(*sqs.Options)) (*sqs.ListQueuesOutput, error)
+	DeleteQueue(context.Context, *sqs.DeleteQueueInput, ...func(*sqs.Options)) (*sqs.DeleteQueueOutput, error)
+}
+
+func listQueues(ctx context.Context, client SQSClient) ([]string, error) {
 	var urls []string
 	// MaxResults is required for SQS to return a NextToken; without it the
 	// response caps at 1000 URLs and the paginator stops after one page.
@@ -299,7 +306,7 @@ func filterInactiveQueues(urls []string, running map[string]struct{}) []string {
 	return inactive
 }
 
-func deleteQueue(ctx context.Context, client *sqs.Client, queueURL string) error {
+func deleteQueue(ctx context.Context, client SQSClient, queueURL string) error {
 	_, err := client.DeleteQueue(ctx, &sqs.DeleteQueueInput{
 		QueueUrl: aws.String(queueURL),
 	})
