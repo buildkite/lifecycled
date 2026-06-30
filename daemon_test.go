@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/buildkite/lifecycled"
 	"github.com/buildkite/lifecycled/mocks"
 	logrus "github.com/sirupsen/logrus/hooks/test"
@@ -24,8 +24,13 @@ import (
 
 func newMetadataStub(instanceID, terminationTime string) *httptest.Server {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var resp string
+		// IMDSv2 token negotiation; the value is not validated by the client.
+		if r.Method == http.MethodPut && r.RequestURI == "/latest/api/token" {
+			_, _ = w.Write([]byte("token"))
+			return
+		}
 
+		var resp string
 		switch r.RequestURI {
 		case "/latest/meta-data/instance-id":
 			resp = instanceID
@@ -45,7 +50,7 @@ func newMetadataStub(instanceID, terminationTime string) *httptest.Server {
 	return httptest.NewServer(handler)
 }
 
-func newSQSMessage(instanceID string) *sqs.Message {
+func newSQSMessage(instanceID string) sqstypes.Message {
 	m := fmt.Sprintf(`
 {
 	"Time": "2016-02-26T21:09:59.517Z",
@@ -68,7 +73,7 @@ func newSQSMessage(instanceID string) *sqs.Message {
 		panic(err)
 	}
 
-	return &sqs.Message{
+	return sqstypes.Message{
 		Body:          aws.String(string(e)),
 		ReceiptHandle: aws.String("handle"),
 	}
@@ -139,20 +144,18 @@ func TestDaemon(t *testing.T) {
 
 			// Expected SQS calls
 			if tc.snsTopic != "" {
-				sq.EXPECT().CreateQueue(gomock.Any()).Times(1).DoAndReturn(
-					func(input *sqs.CreateQueueInput) (*sqs.CreateQueueOutput, error) {
+				sq.EXPECT().CreateQueue(gomock.Any(), gomock.Any()).Times(1).DoAndReturn(
+					func(_ context.Context, input *sqs.CreateQueueInput, _ ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error) {
 						if tc.tags != "" {
-							if input.Tags == nil || len(input.Tags) == 0 {
+							if len(input.Tags) == 0 {
 								t.Error("expected tags to be set in CreateQueue request but got none")
 							} else {
 								for key, expectedValue := range expectedTags {
 									actualValue, ok := input.Tags[key]
 									if !ok {
 										t.Errorf("expected tag key '%s' not found in CreateQueue request", key)
-									} else if actualValue == nil {
-										t.Errorf("tag key '%s' has nil value", key)
-									} else if *actualValue != expectedValue {
-										t.Errorf("tag '%s': expected value '%s' but got '%s'", key, expectedValue, *actualValue)
+									} else if actualValue != expectedValue {
+										t.Errorf("tag '%s': expected value '%s' but got '%s'", key, expectedValue, actualValue)
 									}
 								}
 
@@ -167,27 +170,27 @@ func TestDaemon(t *testing.T) {
 						}, nil
 					},
 				)
-				sq.EXPECT().GetQueueAttributes(gomock.Any()).Times(1).Return(&sqs.GetQueueAttributesOutput{
-					Attributes: map[string]*string{"QueueArn": aws.String("arn")},
+				sq.EXPECT().GetQueueAttributes(gomock.Any(), gomock.Any()).Times(1).Return(&sqs.GetQueueAttributesOutput{
+					Attributes: map[string]string{"QueueArn": "arn"},
 				}, nil)
-				sq.EXPECT().DeleteQueue(gomock.Any()).Times(1).Return(nil, nil)
+				sq.EXPECT().DeleteQueue(gomock.Any(), gomock.Any()).Times(1).Return(nil, nil)
 
 				if tc.subscribeError == nil {
-					sq.EXPECT().ReceiveMessageWithContext(gomock.Any(), gomock.Any()).MinTimes(1).Return(&sqs.ReceiveMessageOutput{
-						Messages: []*sqs.Message{newSQSMessage(instanceID)},
+					sq.EXPECT().ReceiveMessage(gomock.Any(), gomock.Any()).MinTimes(1).Return(&sqs.ReceiveMessageOutput{
+						Messages: []sqstypes.Message{newSQSMessage(instanceID)},
 					}, nil)
-					sq.EXPECT().DeleteMessageWithContext(gomock.Any(), gomock.Any()).MinTimes(1).Return(nil, nil)
+					sq.EXPECT().DeleteMessage(gomock.Any(), gomock.Any()).MinTimes(1).Return(nil, nil)
 				}
 			}
 
 			// Expected SNS calls
 			if tc.snsTopic != "" {
-				sn.EXPECT().Subscribe(gomock.Any()).Times(1).Return(&sns.SubscribeOutput{
+				sn.EXPECT().Subscribe(gomock.Any(), gomock.Any()).Times(1).Return(&sns.SubscribeOutput{
 					SubscriptionArn: aws.String("arn"),
 				}, tc.subscribeError)
 
 				if tc.subscribeError == nil {
-					sn.EXPECT().Unsubscribe(gomock.Any()).Times(1).Return(nil, nil)
+					sn.EXPECT().Unsubscribe(gomock.Any(), gomock.Any()).Times(1).Return(nil, nil)
 				}
 			}
 
@@ -195,10 +198,7 @@ func TestDaemon(t *testing.T) {
 			server := newMetadataStub(instanceID, spotTerminationTime)
 			defer server.Close()
 
-			metadata := ec2metadata.New(session.Must(session.NewSession()), &aws.Config{
-				Endpoint:   aws.String(server.URL + "/latest"),
-				DisableSSL: aws.Bool(true),
-			})
+			metadata := imds.New(imds.Options{Endpoint: server.URL})
 
 			// Create and start the daemon
 			logger, hook := logrus.NewNullLogger()

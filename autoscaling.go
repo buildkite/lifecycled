@@ -5,16 +5,18 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/sirupsen/logrus"
 )
 
-// AutoscalingClient for testing purposes
+// AutoscalingClient is the subset of the EC2 Auto Scaling API used by the daemon.
 //
 //go:generate mockgen -destination=mocks/mock_autoscaling_client.go -package=mocks github.com/buildkite/lifecycled AutoscalingClient
-type AutoscalingClient autoscalingiface.AutoScalingAPI
+type AutoscalingClient interface {
+	CompleteLifecycleAction(context.Context, *autoscaling.CompleteLifecycleActionInput, ...func(*autoscaling.Options)) (*autoscaling.CompleteLifecycleActionOutput, error)
+	RecordLifecycleActionHeartbeat(context.Context, *autoscaling.RecordLifecycleActionHeartbeatInput, ...func(*autoscaling.Options)) (*autoscaling.RecordLifecycleActionHeartbeatOutput, error)
+}
 
 // Envelope ...
 type Envelope struct {
@@ -62,23 +64,23 @@ func (l *AutoscalingListener) Type() string {
 // Start the autoscaling lifecycle hook listener.
 func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- TerminationNotice, log *logrus.Entry) error {
 	log.WithField("queue", l.queue.name).Debug("Creating sqs queue")
-	if err := l.queue.Create(); err != nil {
+	if err := l.queue.Create(ctx); err != nil {
 		return err
 	}
 	defer func() {
 		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
-		if err := l.queue.Delete(); err != nil {
+		if err := l.queue.Delete(ctx); err != nil {
 			log.WithError(err).Error("Failed to delete queue")
 		}
 	}()
 
 	log.WithField("topic", l.queue.topicArn).Debug("Subscribing queue to sns topic")
-	if err := l.queue.Subscribe(); err != nil {
+	if err := l.queue.Subscribe(ctx); err != nil {
 		return err
 	}
 	defer func() {
 		log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
-		if err := l.queue.Unsubscribe(); err != nil {
+		if err := l.queue.Unsubscribe(ctx); err != nil {
 			log.WithError(err).Error("Failed to unsubscribe from sns topic")
 		}
 	}()
@@ -97,12 +99,12 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 				var env Envelope
 				var msg Message
 
-				if err := l.queue.DeleteMessage(ctx, aws.StringValue(m.ReceiptHandle)); err != nil {
+				if err := l.queue.DeleteMessage(ctx, aws.ToString(m.ReceiptHandle)); err != nil {
 					log.WithError(err).Warn("Failed to delete message")
 				}
 
 				// unmarshal outer layer
-				if err := json.Unmarshal([]byte(*m.Body), &env); err != nil {
+				if err := json.Unmarshal([]byte(aws.ToString(m.Body)), &env); err != nil {
 					log.WithError(err).Error("Failed to unmarshal envelope")
 					continue
 				}
@@ -153,7 +155,7 @@ func (n *autoscalingTerminationNotice) Type() string {
 
 func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
 	defer func() {
-		_, err := n.autoscaling.CompleteLifecycleAction(&autoscaling.CompleteLifecycleActionInput{
+		_, err := n.autoscaling.CompleteLifecycleAction(ctx, &autoscaling.CompleteLifecycleActionInput{
 			AutoScalingGroupName:  aws.String(n.message.GroupName),
 			LifecycleHookName:     aws.String(n.message.HookName),
 			InstanceId:            aws.String(n.message.InstanceID),
@@ -174,6 +176,7 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 		for range ticker.C {
 			log.Debug("Sending heartbeat")
 			_, err := n.autoscaling.RecordLifecycleActionHeartbeat(
+				ctx,
 				&autoscaling.RecordLifecycleActionHeartbeatInput{
 					AutoScalingGroupName: aws.String(n.message.GroupName),
 					LifecycleHookName:    aws.String(n.message.HookName),
