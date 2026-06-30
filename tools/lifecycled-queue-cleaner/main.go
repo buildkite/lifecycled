@@ -50,7 +50,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to resolve caller identity: %s", err)
 	}
-	if *account != "" && *account != aws.ToString(ident.Account) {
+	if !accountMatches(*account, aws.ToString(ident.Account)) {
 		log.Fatalf("Resolved account %s does not match the expected account %s", aws.ToString(ident.Account), *account)
 	}
 	log.Printf("Using account %s as %s", aws.ToString(ident.Account), aws.ToString(ident.Arn))
@@ -63,10 +63,9 @@ func main() {
 
 		if count == 0 {
 			break
-		} else {
-			log.Printf("Deleted %d subscriptions, running again as aws limits subscriptions returned to 100", count)
-			time.Sleep(time.Second * 2)
 		}
+		log.Printf("Deleted %d subscriptions, running again as aws limits subscriptions returned to 100", count)
+		time.Sleep(time.Second * 2)
 	}
 
 	for {
@@ -77,10 +76,9 @@ func main() {
 
 		if count == 0 {
 			break
-		} else {
-			log.Printf("Deleted %d queues, running again as aws limits queues returned to 1000", count)
-			time.Sleep(time.Second * 60)
 		}
+		log.Printf("Deleted %d queues, running again until a pass finds none", count)
+		time.Sleep(time.Second * 60)
 	}
 
 	log.Printf("Done! Sorry for the inconvenience!")
@@ -94,6 +92,12 @@ func callerIdentity(ctx context.Context, client *sts.Client) (*sts.GetCallerIden
 	return client.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
 }
 
+// accountMatches reports whether the resolved account satisfies the --account
+// guard. An empty expected means no guard was requested.
+func accountMatches(expected, resolved string) bool {
+	return expected == "" || expected == resolved
+}
+
 // credentialExpiryCodes are the AWS error codes meaning the credentials
 // (temporary STS credentials or the cached SSO token) expired and need a refresh.
 var credentialExpiryCodes = map[string]struct{}{
@@ -105,63 +109,99 @@ var credentialExpiryCodes = map[string]struct{}{
 
 // fatalAWS ends the run, adding a re-auth hint when the failure is expired
 // credentials. Re-running is safe: each run re-lists from scratch and resumes
-// where the last left off.
+// where the last left off. Aborting on any AWS error (rather than skipping the
+// offending resource) is deliberate: the SDK already retries transient failures,
+// so an error reaching here is unexpected and worth stopping on.
 func fatalAWS(err error) {
-	var apiErr smithy.APIError
-	if errors.As(err, &apiErr) {
-		if _, expired := credentialExpiryCodes[apiErr.ErrorCode()]; expired {
-			log.Fatalf("Credentials expired mid-run (%s); refresh them (e.g. `aws sso login`) and run again to resume: %s", apiErr.ErrorCode(), err)
-		}
+	if apiErr, expired := expiredCredential(err); expired {
+		log.Fatalf("Credentials expired mid-run (%s); refresh them (e.g. `aws sso login`) and run again to resume: %s", apiErr.ErrorCode(), err)
 	}
 	log.Fatal(err)
+}
+
+// expiredCredential returns the AWS API error and true when its code means the
+// credentials (temporary STS credentials or the cached SSO token) expired.
+func expiredCredential(err error) (smithy.APIError, bool) {
+	var apiErr smithy.APIError
+	if !errors.As(err, &apiErr) {
+		return nil, false
+	}
+	_, expired := credentialExpiryCodes[apiErr.ErrorCode()]
+	return apiErr, expired
 }
 
 func deleteInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *ec2.Client, parallel int) (uint64, error) {
 	queues, err := listInactiveQueues(ctx, sqsClient, ec2Client)
 	if err != nil {
-		fatalAWS(err)
+		return 0, err
 	}
+	return deleteQueues(queues, parallel, func(queue string) error {
+		return deleteQueue(ctx, sqsClient, queue)
+	})
+}
 
+// deleteQueues deletes queues using up to parallel workers. It stops at the
+// first error, returning 0 and that error; on success it returns the number
+// processed. deleteFn is expected to treat an already-deleted queue as success.
+func deleteQueues(queues []string, parallel int, deleteFn func(string) error) (uint64, error) {
+	if parallel < 1 {
+		parallel = 1
+	}
 	var wg sync.WaitGroup
 	var count uint64
-	var queuesCh = make(chan string)
-	var errCh = make(chan error)
+	queuesCh := make(chan string)
+	// Buffer to the worker count so a worker that errors after the dispatch
+	// loop has stopped reading errCh never blocks on the send (goroutine leak).
+	errCh := make(chan error, parallel)
 
-	// spawn parallel workers
+	wg.Add(parallel)
 	for i := 0; i < parallel; i++ {
-		go func(total int) {
+		go func() {
+			defer wg.Done()
 			for queue := range queuesCh {
-				atomic.AddUint64(&count, 1)
-				log.Printf("Deleting %s (%d of %d)", queue, count, total)
-				err := deleteQueue(ctx, sqsClient, queue)
-				wg.Done()
-				var notExist *sqstypes.QueueDoesNotExist
-				if errors.As(err, &notExist) {
-					continue
-				}
-				if err != nil {
+				n := atomic.AddUint64(&count, 1)
+				log.Printf("Deleting %s (%d of %d)", queue, n, len(queues))
+				if err := deleteFn(queue); err != nil {
 					errCh <- err
 					return
 				}
 			}
-		}(len(queues))
+		}()
 	}
 
-	// dispatch work to parallel workers
+	// dispatch work, stopping as soon as a worker reports an error. The
+	// pre-send check keeps a buffered error from losing the select race to a
+	// ready send, which would otherwise dispatch more work after the failure.
+	var err error
 	for _, queue := range queues {
 		select {
+		case err = <-errCh:
+		default:
+		}
+		if err != nil {
+			break
+		}
+		select {
 		case queuesCh <- queue:
-			wg.Add(1)
-		case err := <-errCh:
-			close(queuesCh)
-			return 0, err
+		case err = <-errCh:
+		}
+		if err != nil {
+			break
 		}
 	}
-
-	// wait for work to finish
-	wg.Wait()
 	close(queuesCh)
+	wg.Wait()
 
+	if err == nil {
+		// Surface an error from a worker that finished after dispatch ended.
+		select {
+		case err = <-errCh:
+		default:
+		}
+	}
+	if err != nil {
+		return 0, err
+	}
 	return count, nil
 }
 
@@ -194,22 +234,37 @@ func listInstances(ctx context.Context, client *ec2.Client) ([]string, error) {
 	return instances, nil
 }
 
-func listQueues(ctx context.Context, client *sqs.Client) ([]string, error) {
-	resp, err := client.ListQueues(ctx, &sqs.ListQueuesInput{
-		QueueNamePrefix: aws.String(`lifecycled-`),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return resp.QueueUrls, nil
+// SQSClient is the subset of the SQS client the queue cleanup uses, so the
+// listing and delete logic can be exercised with a fake in tests.
+type SQSClient interface {
+	ListQueues(context.Context, *sqs.ListQueuesInput, ...func(*sqs.Options)) (*sqs.ListQueuesOutput, error)
+	DeleteQueue(context.Context, *sqs.DeleteQueueInput, ...func(*sqs.Options)) (*sqs.DeleteQueueOutput, error)
 }
 
-var queueRegex = regexp.MustCompile(`^https://sqs\.(.+?)\.amazonaws.com/(.+?)/lifecycled-(i-.+)$`)
+func listQueues(ctx context.Context, client SQSClient) ([]string, error) {
+	var urls []string
+	// MaxResults is required for SQS to return a NextToken; without it the
+	// response caps at 1000 URLs and the paginator stops after one page.
+	paginator := sqs.NewListQueuesPaginator(client, &sqs.ListQueuesInput{
+		QueueNamePrefix: aws.String(`lifecycled-`),
+		MaxResults:      aws.Int32(1000),
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, page.QueueUrls...)
+	}
+	return urls, nil
+}
+
+var queueRegex = regexp.MustCompile(`^https://sqs\.(.+?)\.amazonaws\.com(?:\.cn)?/(.+?)/lifecycled-(i-.+)$`)
 
 func listInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *ec2.Client) ([]string, error) {
 	instances, err := listInstances(ctx, ec2Client)
 	if err != nil {
-		fatalAWS(err)
+		return nil, err
 	}
 
 	log.Printf("Found %d running instances", len(instances))
@@ -222,36 +277,56 @@ func listInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *e
 
 	queues, err := listQueues(ctx, sqsClient)
 	if err != nil {
-		fatalAWS(err)
+		return nil, err
 	}
 
-	log.Printf("Found %d queues total (aws returns max 1000)", len(queues))
+	log.Printf("Found %d lifecycled queues total", len(queues))
 
-	var inactiveQueues []string
-	for _, queue := range queues {
-		matches := queueRegex.FindStringSubmatch(queue)
-		if len(matches) != 4 {
-			continue
-		}
-		instanceID := matches[3]
-		if _, exists := instancesMap[instanceID]; !exists {
-			inactiveQueues = append(inactiveQueues, queue)
-		}
-	}
+	inactiveQueues := filterInactiveQueues(queues, instancesMap)
 
 	log.Printf("Found %d inactive queues", len(inactiveQueues))
 
 	return inactiveQueues, nil
 }
 
-func deleteQueue(ctx context.Context, client *sqs.Client, queueURL string) error {
+// filterInactiveQueues returns the lifecycled- queue URLs whose instance id is
+// not in running. URLs that don't match the lifecycled- naming scheme are ignored.
+func filterInactiveQueues(urls []string, running map[string]struct{}) []string {
+	var inactive []string
+	for _, queue := range urls {
+		matches := queueRegex.FindStringSubmatch(queue)
+		if len(matches) != 4 {
+			continue
+		}
+		instanceID := matches[3]
+		if _, exists := running[instanceID]; !exists {
+			inactive = append(inactive, queue)
+		}
+	}
+	return inactive
+}
+
+func deleteQueue(ctx context.Context, client SQSClient, queueURL string) error {
 	_, err := client.DeleteQueue(ctx, &sqs.DeleteQueueInput{
 		QueueUrl: aws.String(queueURL),
 	})
+	var notExist *sqstypes.QueueDoesNotExist
+	if errors.As(err, &notExist) {
+		// Already gone; deleting a non-existent queue is success.
+		return nil
+	}
 	return err
 }
 
-func topicExists(ctx context.Context, client *sns.Client, snsTopic string) (bool, error) {
+// SNSClient is the subset of the SNS client the subscription cleanup uses, so the
+// cleanup logic can be exercised with a fake in tests.
+type SNSClient interface {
+	ListSubscriptions(context.Context, *sns.ListSubscriptionsInput, ...func(*sns.Options)) (*sns.ListSubscriptionsOutput, error)
+	GetTopicAttributes(context.Context, *sns.GetTopicAttributesInput, ...func(*sns.Options)) (*sns.GetTopicAttributesOutput, error)
+	Unsubscribe(context.Context, *sns.UnsubscribeInput, ...func(*sns.Options)) (*sns.UnsubscribeOutput, error)
+}
+
+func topicExists(ctx context.Context, client SNSClient, snsTopic string) (bool, error) {
 	_, err := client.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{
 		TopicArn: aws.String(snsTopic),
 	})
@@ -266,7 +341,7 @@ func topicExists(ctx context.Context, client *sns.Client, snsTopic string) (bool
 	return true, nil
 }
 
-func listInactiveSubscriptions(ctx context.Context, client *sns.Client) ([]string, error) {
+func listInactiveSubscriptions(ctx context.Context, client SNSClient) ([]string, error) {
 	var subs []string
 	var topics = map[string]bool{}
 	var count int
@@ -289,7 +364,14 @@ func listInactiveSubscriptions(ctx context.Context, client *sns.Client) ([]strin
 				}
 				continue
 			}
-			if exists, _ := topicExists(ctx, client, topicArn); exists {
+			exists, err := topicExists(ctx, client, topicArn)
+			if err != nil {
+				// A non-NotFound lookup failure (throttling, AccessDenied, expired
+				// creds) must not be read as "topic gone": abort rather than risk
+				// unsubscribing live subscriptions.
+				return nil, err
+			}
+			if exists {
 				topics[topicArn] = true
 			} else {
 				topics[topicArn] = false
@@ -302,7 +384,7 @@ func listInactiveSubscriptions(ctx context.Context, client *sns.Client) ([]strin
 	return subs, nil
 }
 
-func deleteInactiveSubscriptions(ctx context.Context, client *sns.Client) (int, error) {
+func deleteInactiveSubscriptions(ctx context.Context, client SNSClient) (int, error) {
 	subs, err := listInactiveSubscriptions(ctx, client)
 	if err != nil {
 		return 0, err
