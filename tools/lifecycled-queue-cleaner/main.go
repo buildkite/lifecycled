@@ -225,8 +225,11 @@ func listInstances(ctx context.Context, client *ec2.Client) ([]string, error) {
 
 func listQueues(ctx context.Context, client *sqs.Client) ([]string, error) {
 	var urls []string
+	// MaxResults is required for SQS to return a NextToken; without it the
+	// response caps at 1000 URLs and the paginator stops after one page.
 	paginator := sqs.NewListQueuesPaginator(client, &sqs.ListQueuesInput{
 		QueueNamePrefix: aws.String(`lifecycled-`),
+		MaxResults:      aws.Int32(1000),
 	})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
