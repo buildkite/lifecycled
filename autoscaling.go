@@ -195,11 +195,22 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 	ticker := time.NewTicker(n.heartbeatInterval)
 	defer ticker.Stop()
 
+	// Stop the heartbeat goroutine when Handle returns and cancel any in-flight
+	// heartbeat; a bare "for range ticker.C" would otherwise park forever since
+	// ticker.Stop doesn't close the channel.
+	heartbeatCtx, stopHeartbeat := context.WithCancel(ctx)
+	defer stopHeartbeat()
+
 	go func() {
-		for range ticker.C {
+		for {
+			select {
+			case <-heartbeatCtx.Done():
+				return
+			case <-ticker.C:
+			}
 			log.Debug("Sending heartbeat")
 			_, err := n.autoscaling.RecordLifecycleActionHeartbeat(
-				ctx,
+				heartbeatCtx,
 				&autoscaling.RecordLifecycleActionHeartbeatInput{
 					AutoScalingGroupName: aws.String(n.message.GroupName),
 					LifecycleHookName:    aws.String(n.message.HookName),
