@@ -10,6 +10,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// sqsErrorBackoff paces the polling loop when GetMessages keeps failing, so a
+// persistent error (throttling, permissions) doesn't spin the loop.
+const sqsErrorBackoff = 5 * time.Second
+
+// awsActionTimeout bounds the cleanup and lifecycle-completion calls that run on
+// a fresh context during shutdown, so an unreachable endpoint can't wedge the
+// process while leaving room for the SDK's default retries to land.
+const awsActionTimeout = 30 * time.Second
+
 // AutoscalingClient is the subset of the EC2 Auto Scaling API used by the daemon.
 //
 //go:generate go tool mockgen -destination=mocks/mock_autoscaling_client.go -package=mocks github.com/buildkite/lifecycled AutoscalingClient
@@ -69,7 +78,10 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	}
 	defer func() {
 		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
-		if err := l.queue.Delete(ctx); err != nil {
+		// Use a fresh, bounded context so cleanup still runs after ctx is cancelled.
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), awsActionTimeout)
+		defer cancel()
+		if err := l.queue.Delete(cleanupCtx); err != nil {
 			log.WithError(err).Error("Failed to delete queue")
 		}
 	}()
@@ -80,7 +92,9 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	}
 	defer func() {
 		log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
-		if err := l.queue.Unsubscribe(ctx); err != nil {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), awsActionTimeout)
+		defer cancel()
+		if err := l.queue.Unsubscribe(cleanupCtx); err != nil {
 			log.WithError(err).Error("Failed to unsubscribe from sns topic")
 		}
 	}()
@@ -94,6 +108,12 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 			messages, err := l.queue.GetMessages(ctx)
 			if err != nil {
 				log.WithError(err).Warn("Failed to get messages from SQS")
+				select {
+				case <-ctx.Done():
+					return nil
+				case <-time.After(sqsErrorBackoff):
+				}
+				continue
 			}
 			for _, m := range messages {
 				var env Envelope
@@ -155,7 +175,12 @@ func (n *autoscalingTerminationNotice) Type() string {
 
 func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
 	defer func() {
-		_, err := n.autoscaling.CompleteLifecycleAction(ctx, &autoscaling.CompleteLifecycleActionInput{
+		// Use a fresh, bounded context so the lifecycle action always completes,
+		// even if the handler context was cancelled mid-shutdown, without hanging
+		// indefinitely on an unreachable endpoint.
+		completeCtx, cancel := context.WithTimeout(context.Background(), awsActionTimeout)
+		defer cancel()
+		_, err := n.autoscaling.CompleteLifecycleAction(completeCtx, &autoscaling.CompleteLifecycleActionInput{
 			AutoScalingGroupName:  aws.String(n.message.GroupName),
 			LifecycleHookName:     aws.String(n.message.HookName),
 			InstanceId:            aws.String(n.message.InstanceID),
@@ -172,20 +197,30 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 	ticker := time.NewTicker(n.heartbeatInterval)
 	defer ticker.Stop()
 
+	// Stop the heartbeat goroutine when Handle returns; ticker.Stop alone doesn't
+	// close the channel, so a bare "for range ticker.C" would park forever.
+	heartbeatCtx, stopHeartbeat := context.WithCancel(ctx)
+	defer stopHeartbeat()
+
 	go func() {
-		for range ticker.C {
-			log.Debug("Sending heartbeat")
-			_, err := n.autoscaling.RecordLifecycleActionHeartbeat(
-				ctx,
-				&autoscaling.RecordLifecycleActionHeartbeatInput{
-					AutoScalingGroupName: aws.String(n.message.GroupName),
-					LifecycleHookName:    aws.String(n.message.HookName),
-					InstanceId:           aws.String(n.message.InstanceID),
-					LifecycleActionToken: aws.String(n.message.ActionToken),
-				},
-			)
-			if err != nil {
-				log.WithError(err).Warn("Failed to send heartbeat")
+		for {
+			select {
+			case <-heartbeatCtx.Done():
+				return
+			case <-ticker.C:
+				log.Debug("Sending heartbeat")
+				_, err := n.autoscaling.RecordLifecycleActionHeartbeat(
+					heartbeatCtx,
+					&autoscaling.RecordLifecycleActionHeartbeatInput{
+						AutoScalingGroupName: aws.String(n.message.GroupName),
+						LifecycleHookName:    aws.String(n.message.HookName),
+						InstanceId:           aws.String(n.message.InstanceID),
+						LifecycleActionToken: aws.String(n.message.ActionToken),
+					},
+				)
+				if err != nil {
+					log.WithError(err).Warn("Failed to send heartbeat")
+				}
 			}
 		}
 	}()
