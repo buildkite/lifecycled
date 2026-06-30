@@ -37,7 +37,7 @@ const (
 
 // SQSClient is the subset of the SQS API used by the daemon.
 //
-//go:generate mockgen -destination=mocks/mock_sqs_client.go -package=mocks github.com/buildkite/lifecycled SQSClient
+//go:generate go tool mockgen -destination=mocks/mock_sqs_client.go -package=mocks github.com/buildkite/lifecycled SQSClient
 type SQSClient interface {
 	CreateQueue(context.Context, *sqs.CreateQueueInput, ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error)
 	GetQueueAttributes(context.Context, *sqs.GetQueueAttributesInput, ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error)
@@ -48,7 +48,7 @@ type SQSClient interface {
 
 // SNSClient is the subset of the SNS API used by the daemon.
 //
-//go:generate mockgen -destination=mocks/mock_sns_client.go -package=mocks github.com/buildkite/lifecycled SNSClient
+//go:generate go tool mockgen -destination=mocks/mock_sns_client.go -package=mocks github.com/buildkite/lifecycled SNSClient
 type SNSClient interface {
 	Subscribe(context.Context, *sns.SubscribeInput, ...func(*sns.Options)) (*sns.SubscribeOutput, error)
 	Unsubscribe(context.Context, *sns.UnsubscribeInput, ...func(*sns.Options)) (*sns.UnsubscribeOutput, error)
