@@ -10,6 +10,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// awsTeardownTimeout bounds teardown calls (queue/subscription cleanup and
+// lifecycle-action completion) that must still run after the daemon's context is
+// cancelled during shutdown.
+const awsTeardownTimeout = 30 * time.Second
+
+// detachedContext returns a context for teardown work that must outlive the
+// cancellation of ctx (receiving a notice cancels the listener context), bounded
+// so an unreachable AWS endpoint can't wedge shutdown. The v2 SDK refuses to send
+// a request on an already-cancelled context, so without this the deferred cleanup
+// and CompleteLifecycleAction calls would be dropped.
+func detachedContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), awsTeardownTimeout)
+}
+
 // AutoscalingClient is the subset of the EC2 Auto Scaling API used by the daemon.
 //
 //go:generate mockgen -destination=mocks/mock_autoscaling_client.go -package=mocks github.com/buildkite/lifecycled AutoscalingClient
@@ -69,7 +83,9 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	}
 	defer func() {
 		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
-		if err := l.queue.Delete(ctx); err != nil {
+		cleanupCtx, cancel := detachedContext(ctx)
+		defer cancel()
+		if err := l.queue.Delete(cleanupCtx); err != nil {
 			log.WithError(err).Error("Failed to delete queue")
 		}
 	}()
@@ -80,7 +96,9 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	}
 	defer func() {
 		log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
-		if err := l.queue.Unsubscribe(ctx); err != nil {
+		cleanupCtx, cancel := detachedContext(ctx)
+		defer cancel()
+		if err := l.queue.Unsubscribe(cleanupCtx); err != nil {
 			log.WithError(err).Error("Failed to unsubscribe from sns topic")
 		}
 	}()
