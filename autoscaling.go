@@ -3,6 +3,7 @@ package lifecycled
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -186,9 +187,7 @@ func (n *autoscalingTerminationNotice) Type() string {
 
 func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
 	defer func() {
-		// Use a fresh, bounded context so the lifecycle action always completes,
-		// even if the handler context was cancelled mid-shutdown, without hanging
-		// indefinitely on an unreachable endpoint.
+		// Fresh, bounded context so completion runs even if ctx was cancelled mid-shutdown.
 		completeCtx, cancel := context.WithTimeout(context.Background(), awsActionTimeout)
 		defer cancel()
 		_, err := n.autoscaling.CompleteLifecycleAction(completeCtx, &autoscaling.CompleteLifecycleActionInput{
@@ -229,7 +228,9 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 						LifecycleActionToken: aws.String(n.message.ActionToken),
 					},
 				)
-				if err != nil {
+				// A heartbeat cancelled because Handle returned is a clean stop, not
+				// a failure worth logging.
+				if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
 					log.WithError(err).Warn("Failed to send heartbeat")
 				}
 			}
