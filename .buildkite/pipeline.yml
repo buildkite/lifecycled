@@ -9,6 +9,7 @@ steps:
     command: |
       set -e
       go generate ./...
+      git add -N .
       git diff --exit-code
       go test -race ./...
     plugins:
