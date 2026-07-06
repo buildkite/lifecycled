@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"runtime"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -212,4 +213,68 @@ func TestAutoscalingNoticeCompletesOnCancellation(t *testing.T) {
 	if errors.Is(as.completeErr, context.Canceled) {
 		t.Error("CompleteLifecycleAction ran on a cancelled context; the ASG hook would not be released")
 	}
+}
+
+// countingASGClient counts heartbeats so a test can assert the heartbeat
+// goroutine stops once Handle returns.
+type countingASGClient struct {
+	heartbeats int64
+}
+
+func (c *countingASGClient) CompleteLifecycleAction(context.Context, *autoscaling.CompleteLifecycleActionInput, ...func(*autoscaling.Options)) (*autoscaling.CompleteLifecycleActionOutput, error) {
+	return &autoscaling.CompleteLifecycleActionOutput{}, nil
+}
+
+func (c *countingASGClient) RecordLifecycleActionHeartbeat(context.Context, *autoscaling.RecordLifecycleActionHeartbeatInput, ...func(*autoscaling.Options)) (*autoscaling.RecordLifecycleActionHeartbeatOutput, error) {
+	atomic.AddInt64(&c.heartbeats, 1)
+	return &autoscaling.RecordLifecycleActionHeartbeatOutput{}, nil
+}
+
+// sleepHandler models a drain script that runs for a fixed time and returns,
+// so the heartbeat goroutine emits a few beats before Handle returns.
+type sleepHandler struct{ d time.Duration }
+
+func (h sleepHandler) Execute(ctx context.Context, _ ...string) error {
+	select {
+	case <-time.After(h.d):
+	case <-ctx.Done():
+	}
+	return nil
+}
+
+// The heartbeat goroutine must stop when Handle returns; a bare "for range
+// ticker.C" would run forever since ticker.Stop doesn't close the channel.
+func TestAutoscalingNoticeStopsHeartbeat(t *testing.T) {
+	as := &countingASGClient{}
+	notice := &autoscalingTerminationNotice{
+		noticeType:        "autoscaling",
+		message:           &Message{GroupName: "g", HookName: "h", InstanceID: "i", ActionToken: "t"},
+		autoscaling:       as,
+		heartbeatInterval: 5 * time.Millisecond,
+	}
+
+	logger := logrus.New()
+	logger.SetOutput(io.Discard)
+
+	before := runtime.NumGoroutine()
+
+	if err := notice.Handle(context.Background(), sleepHandler{30 * time.Millisecond}, logrus.NewEntry(logger)); err != nil {
+		t.Fatalf("Handle: %v", err)
+	}
+
+	if atomic.LoadInt64(&as.heartbeats) == 0 {
+		t.Fatal("expected at least one heartbeat while handling")
+	}
+
+	// The heartbeat goroutine must exit once Handle returns; the old bare
+	// "for range ticker.C" left it parked on the channel forever (ticker.Stop
+	// stops beats but doesn't close the channel). Poll so a not-yet-scheduled
+	// exit doesn't flake.
+	for i := 0; i < 100; i++ {
+		if runtime.NumGoroutine() <= before {
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Errorf("heartbeat goroutine still running after Handle returned (goroutines: before=%d, now=%d)", before, runtime.NumGoroutine())
 }
