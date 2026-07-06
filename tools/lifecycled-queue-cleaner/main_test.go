@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
+	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/aws/smithy-go"
 )
 
@@ -160,4 +162,43 @@ func TestFilterInactiveQueues(t *testing.T) {
 			}
 		})
 	}
+}
+
+// deleteQueues tolerates QueueDoesNotExist but must surface any other delete
+// error rather than reporting success. The propagation case is looped because
+// the ordering it guards (publishing the error before signalling wg.Done) only
+// fails on some interleavings, so a single pass can pass even when broken.
+func TestDeleteQueues(t *testing.T) {
+	boom := errors.New("delete failed")
+	del := func(failures map[string]error) func(context.Context, string) error {
+		return func(_ context.Context, queue string) error {
+			return failures[queue]
+		}
+	}
+
+	t.Run("all deletes succeed", func(t *testing.T) {
+		count, err := deleteQueues(context.Background(), []string{"a", "b", "c"}, 3, del(nil))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if count != 3 {
+			t.Errorf("count = %d, want 3", count)
+		}
+	})
+
+	t.Run("QueueDoesNotExist is tolerated", func(t *testing.T) {
+		fn := del(map[string]error{"b": &sqstypes.QueueDoesNotExist{}})
+		if _, err := deleteQueues(context.Background(), []string{"a", "b", "c"}, 3, fn); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("a real delete error propagates", func(t *testing.T) {
+		fn := del(map[string]error{"b": boom})
+		for i := 0; i < 200; i++ {
+			if _, err := deleteQueues(context.Background(), []string{"a", "b", "c", "d"}, 4, fn); !errors.Is(err, boom) {
+				t.Fatalf("iteration %d: error = %v, want %v", i, err, boom)
+			}
+		}
+	})
 }

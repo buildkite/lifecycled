@@ -119,9 +119,18 @@ func fatalAWS(err error) {
 func deleteInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *ec2.Client, parallel int) (uint64, error) {
 	queues, err := listInactiveQueues(ctx, sqsClient, ec2Client)
 	if err != nil {
-		fatalAWS(err)
+		return 0, err
 	}
+	return deleteQueues(ctx, queues, parallel, func(ctx context.Context, queue string) error {
+		return deleteQueue(ctx, sqsClient, queue)
+	})
+}
 
+// deleteQueues deletes each queue URL with del, up to parallel at a time. A
+// QueueDoesNotExist result counts as success (that is the desired end state);
+// any other error aborts and is returned. The del seam keeps the worker pool
+// testable without real AWS.
+func deleteQueues(ctx context.Context, queues []string, parallel int, del func(context.Context, string) error) (uint64, error) {
 	var wg sync.WaitGroup
 	var count uint64
 	var queuesCh = make(chan string)
@@ -133,18 +142,18 @@ func deleteInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client 
 	for i := 0; i < parallel; i++ {
 		go func(total int) {
 			for queue := range queuesCh {
-				atomic.AddUint64(&count, 1)
-				log.Printf("Deleting %s (%d of %d)", queue, count, total)
-				err := deleteQueue(ctx, sqsClient, queue)
-				wg.Done()
+				n := atomic.AddUint64(&count, 1)
+				log.Printf("Deleting %s (%d of %d)", queue, n, total)
+				err := del(ctx, queue)
 				var notExist *sqstypes.QueueDoesNotExist
-				if errors.As(err, &notExist) {
-					continue
-				}
-				if err != nil {
+				if err != nil && !errors.As(err, &notExist) {
+					// Publish before wg.Done so wg.Wait can't return (and the
+					// post-Wait drain can't miss the error) before it is visible.
 					errCh <- err
+					wg.Done()
 					return
 				}
+				wg.Done()
 			}
 		}(len(queues))
 	}
@@ -158,6 +167,8 @@ func deleteInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client 
 		case queuesCh <- queue:
 		case err := <-errCh:
 			close(queuesCh)
+			// count is still being written by live workers here; the caller
+			// exits on this error, so the attempt count is not meaningful.
 			return 0, err
 		}
 	}
