@@ -16,13 +16,16 @@ import (
 )
 
 // stubSQSClient drives the autoscaling listener's queue without real AWS. Create
-// and Subscribe always succeed; ReceiveMessage returns receiveErr and counts how
-// often it was called so a test can tell a backed-off loop from a spinning one;
-// DeleteQueue returns deleteQueueErr so queue tests can exercise its error paths.
+// always succeeds; ReceiveMessage returns receiveErr and counts how often it was
+// called so a test can tell a backed-off loop from a spinning one; DeleteQueue
+// returns deleteQueueErr, counts calls, and records whether its context carried a
+// deadline so a test can assert cleanup runs on a bounded context.
 type stubSQSClient struct {
-	receiveErr     error
-	receiveCalls   int64
-	deleteQueueErr error
+	receiveErr             error
+	receiveCalls           int64
+	deleteQueueErr         error
+	deleteQueueCalls       int64
+	deleteQueueHadDeadline bool
 }
 
 func (s *stubSQSClient) CreateQueue(context.Context, *sqs.CreateQueueInput, ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error) {
@@ -45,20 +48,30 @@ func (s *stubSQSClient) DeleteMessage(context.Context, *sqs.DeleteMessageInput, 
 	return &sqs.DeleteMessageOutput{}, nil
 }
 
-func (s *stubSQSClient) DeleteQueue(context.Context, *sqs.DeleteQueueInput, ...func(*sqs.Options)) (*sqs.DeleteQueueOutput, error) {
+func (s *stubSQSClient) DeleteQueue(ctx context.Context, _ *sqs.DeleteQueueInput, _ ...func(*sqs.Options)) (*sqs.DeleteQueueOutput, error) {
+	_, s.deleteQueueHadDeadline = ctx.Deadline()
+	atomic.AddInt64(&s.deleteQueueCalls, 1)
 	if s.deleteQueueErr != nil {
 		return nil, s.deleteQueueErr
 	}
 	return &sqs.DeleteQueueOutput{}, nil
 }
 
-type stubSNSClient struct{}
+// stubSNSClient counts Unsubscribe calls and records whether its context carried
+// a deadline, so a test can assert the subscription teardown runs on a bounded
+// context during shutdown.
+type stubSNSClient struct {
+	unsubscribeCalls       int64
+	unsubscribeHadDeadline bool
+}
 
-func (stubSNSClient) Subscribe(context.Context, *sns.SubscribeInput, ...func(*sns.Options)) (*sns.SubscribeOutput, error) {
+func (*stubSNSClient) Subscribe(context.Context, *sns.SubscribeInput, ...func(*sns.Options)) (*sns.SubscribeOutput, error) {
 	return &sns.SubscribeOutput{SubscriptionArn: aws.String("arn")}, nil
 }
 
-func (stubSNSClient) Unsubscribe(context.Context, *sns.UnsubscribeInput, ...func(*sns.Options)) (*sns.UnsubscribeOutput, error) {
+func (s *stubSNSClient) Unsubscribe(ctx context.Context, _ *sns.UnsubscribeInput, _ ...func(*sns.Options)) (*sns.UnsubscribeOutput, error) {
+	_, s.unsubscribeHadDeadline = ctx.Deadline()
+	atomic.AddInt64(&s.unsubscribeCalls, 1)
 	return &sns.UnsubscribeOutput{}, nil
 }
 
@@ -99,7 +112,7 @@ func (h sleepHandler) Execute(ctx context.Context, _ ...string) error {
 // return promptly when the context is cancelled mid-backoff.
 func TestAutoscalingListenerBacksOffOnReceiveError(t *testing.T) {
 	sqsStub := &stubSQSClient{receiveErr: errors.New("throttled")}
-	queue := NewQueue("queue", "topic", sqsStub, stubSNSClient{}, "")
+	queue := NewQueue("queue", "topic", sqsStub, &stubSNSClient{}, "")
 	listener := NewAutoscalingListener("i-1234567890", queue, &stubAutoscalingClient{}, time.Minute)
 
 	logger, _ := logrustest.NewNullLogger()
@@ -126,6 +139,50 @@ func TestAutoscalingListenerBacksOffOnReceiveError(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("Start did not return after cancel; the backoff select may ignore ctx.Done()")
+	}
+}
+
+// Cleanup must run even after the parent context is cancelled during shutdown, and
+// it must run on a fresh bounded context so a slow endpoint can't wedge shutdown
+// or (on the notice path) delay the handler.
+func TestAutoscalingListenerCleanupRunsOnBoundedContext(t *testing.T) {
+	sqsStub := &stubSQSClient{}
+	snsStub := &stubSNSClient{}
+	queue := NewQueue("queue", "topic", sqsStub, snsStub, "")
+	listener := NewAutoscalingListener("i-1234567890", queue, &stubAutoscalingClient{}, time.Minute)
+
+	logger, _ := logrustest.NewNullLogger()
+	notices := make(chan TerminationNotice, 1)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	done := make(chan error, 1)
+	go func() { done <- listener.Start(ctx, notices, logrus.NewEntry(logger)) }()
+
+	// Let the listener get past Create/Subscribe into the poll loop, so the cleanup
+	// defer is registered with subscribed == true before we cancel.
+	waitFor(t, func() bool { return atomic.LoadInt64(&sqsStub.receiveCalls) >= 1 })
+	cancel()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("Start returned error: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Start did not return after cancel")
+	}
+
+	if got := atomic.LoadInt64(&snsStub.unsubscribeCalls); got != 1 {
+		t.Errorf("Unsubscribe called %d times, want 1; cleanup must run after ctx is cancelled", got)
+	}
+	if got := atomic.LoadInt64(&sqsStub.deleteQueueCalls); got != 1 {
+		t.Errorf("DeleteQueue called %d times, want 1; cleanup must run after ctx is cancelled", got)
+	}
+	if !snsStub.unsubscribeHadDeadline {
+		t.Error("Unsubscribe context had no deadline; cleanup must be bounded by a timeout")
+	}
+	if !sqsStub.deleteQueueHadDeadline {
+		t.Error("DeleteQueue context had no deadline; cleanup must be bounded by a timeout")
 	}
 }
 

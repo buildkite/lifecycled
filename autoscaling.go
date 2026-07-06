@@ -10,14 +10,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// sqsErrorBackoff paces the polling loop when GetMessages keeps failing, so a
-// persistent error (throttling, permissions) doesn't spin the loop.
-const sqsErrorBackoff = 5 * time.Second
+const (
+	// sqsErrorBackoff paces the polling loop when GetMessages keeps failing, so a
+	// persistent error (throttling, permissions) doesn't spin the loop.
+	sqsErrorBackoff = 5 * time.Second
 
-// awsActionTimeout bounds the cleanup and lifecycle-completion calls that run on
-// a fresh context during shutdown, so an unreachable endpoint can't wedge the
-// process while leaving room for the SDK's default retries to land.
-const awsActionTimeout = 30 * time.Second
+	// cleanupTimeout bounds the queue and subscription teardown that runs on a
+	// fresh context during shutdown. It is short and shared across both calls so
+	// cleanup can't delay the termination handler or outlast the supervisor's
+	// stop timeout when an endpoint is slow or unreachable.
+	cleanupTimeout = 5 * time.Second
+
+	// awsActionTimeout bounds CompleteLifecycleAction, which runs on a fresh
+	// context after the handler returns, so an unreachable endpoint can't wedge
+	// the process while leaving room for the SDK's default retries to land.
+	awsActionTimeout = 30 * time.Second
+)
 
 // AutoscalingClient is the subset of the EC2 Auto Scaling API used by the daemon.
 //
@@ -76,11 +84,21 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	if err := l.queue.Create(ctx); err != nil {
 		return err
 	}
+	subscribed := false
+	// Tear down the subscription and queue on a fresh, bounded context so cleanup
+	// still runs after ctx is cancelled during shutdown, sharing one short deadline
+	// so a slow endpoint can't delay the handler or outlast the supervisor's stop
+	// timeout.
 	defer func() {
-		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
-		// Use a fresh, bounded context so cleanup still runs after ctx is cancelled.
-		cleanupCtx, cancel := context.WithTimeout(context.Background(), awsActionTimeout)
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 		defer cancel()
+		if subscribed {
+			log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
+			if err := l.queue.Unsubscribe(cleanupCtx); err != nil {
+				log.WithError(err).Error("Failed to unsubscribe from sns topic")
+			}
+		}
+		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
 		if err := l.queue.Delete(cleanupCtx); err != nil {
 			log.WithError(err).Error("Failed to delete queue")
 		}
@@ -90,14 +108,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	if err := l.queue.Subscribe(ctx); err != nil {
 		return err
 	}
-	defer func() {
-		log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
-		cleanupCtx, cancel := context.WithTimeout(context.Background(), awsActionTimeout)
-		defer cancel()
-		if err := l.queue.Unsubscribe(cleanupCtx); err != nil {
-			log.WithError(err).Error("Failed to unsubscribe from sns topic")
-		}
-	}()
+	subscribed = true
 
 	for {
 		select {
