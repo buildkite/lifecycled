@@ -95,11 +95,19 @@ func main() {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		// LoadDefaultConfig resolves region and credentials from the environment,
-		// shared config, and (on EC2) the instance metadata service.
-		cfg, err := config.LoadDefaultConfig(ctx, config.WithEC2IMDSRegion())
+		// LoadDefaultConfig resolves region and credentials from the environment
+		// and shared config. WithEC2IMDSRegion is deliberately not used here: it
+		// makes an unreachable IMDS (i.e. running off EC2) a fatal config-load
+		// error, masking the clearer "no region" message below. Fall back to IMDS
+		// explicitly and ignore its error so an off-EC2 run reports the real cause.
+		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			logger.WithError(err).Fatal("Failed to load AWS configuration")
+		}
+		if cfg.Region == "" {
+			if out, err := imds.NewFromConfig(cfg).GetRegion(ctx, &imds.GetRegionInput{}); err == nil {
+				cfg.Region = out.Region
+			}
 		}
 		if cfg.Region == "" {
 			logger.Fatal("No region resolved; set AWS_REGION, AWS_DEFAULT_REGION, or a profile region")
@@ -152,8 +160,11 @@ func main() {
 
 		go func() {
 			for sig := range sigs {
-				logger.WithField("signal", sig.String()).Info("Received signal: shutting down...")
+				// Cancel before logging: with the CloudWatch hook enabled this line
+				// ships synchronously, so a slow endpoint must not delay cancelling
+				// the drain.
 				cancel()
+				logger.WithField("signal", sig.String()).Info("Received signal: shutting down...")
 				break
 			}
 		}()

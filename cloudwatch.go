@@ -95,7 +95,7 @@ func (h *CloudWatchLogsHook) Fire(entry *logrus.Entry) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = h.client.PutLogEvents(ctx, &cloudwatchlogs.PutLogEventsInput{
+	out, err := h.client.PutLogEvents(ctx, &cloudwatchlogs.PutLogEventsInput{
 		LogGroupName:  aws.String(h.groupName),
 		LogStreamName: aws.String(h.streamName),
 		LogEvents: []cwltypes.InputLogEvent{{
@@ -103,5 +103,13 @@ func (h *CloudWatchLogsHook) Fire(entry *logrus.Entry) error {
 			Timestamp: aws.Int64(ts.UnixMilli()),
 		}},
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	// A 200 with RejectedLogEventsInfo means the line was dropped (too old, too
+	// new, or expired). Surface it rather than reporting success.
+	if out.RejectedLogEventsInfo != nil {
+		return errors.New("cloudwatch rejected the log event (too old, too new, or expired)")
+	}
+	return nil
 }
