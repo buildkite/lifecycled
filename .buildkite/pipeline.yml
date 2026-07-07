@@ -1,9 +1,18 @@
 steps:
+  - label: "🧹"
+    plugins:
+      - golangci-lint#v1.0.0:
+          docker_image: "golangci/golangci-lint:v2.12.2"
+          config: .golangci.yml
+
   - label: "🔎"
-    command: go test ./...
+    command: |
+      set -e
+      go generate ./...
+      git add -N .
+      git diff --exit-code
+      go test -race ./...
     plugins:
       - golang#v2.0.0:
           version: 1.26.4
           import: github.com/buildkite/lifecycled
-          environment:
-            - GO111MODULE=on
