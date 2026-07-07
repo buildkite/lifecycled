@@ -270,7 +270,7 @@ func TestQueueGetMessages(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			q := NewQueue("queue", "topic", &stubSQSClient{receiveErr: tc.receiveErr}, stubSNSClient{}, "")
+			q := NewQueue("queue", "topic", &stubSQSClient{receiveErr: tc.receiveErr}, &stubSNSClient{}, "")
 			msgs, err := q.GetMessages(context.Background())
 
 			if tc.wantErr == nil {
@@ -306,7 +306,7 @@ func TestQueueDelete(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			q := NewQueue("queue", "topic", &stubSQSClient{deleteQueueErr: tc.deleteQueueErr}, stubSNSClient{}, "")
+			q := NewQueue("queue", "topic", &stubSQSClient{deleteQueueErr: tc.deleteQueueErr}, &stubSNSClient{}, "")
 			err := q.Delete(context.Background())
 
 			if tc.wantErr == nil {

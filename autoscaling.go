@@ -3,6 +3,7 @@ package lifecycled
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -10,16 +11,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// awsTeardownTimeout bounds teardown calls (queue/subscription cleanup and
-// lifecycle-action completion) that must still run after the daemon's context is
-// cancelled during shutdown.
-const awsTeardownTimeout = 30 * time.Second
+const (
+	// sqsErrorBackoff paces the polling loop when GetMessages keeps failing, so a
+	// persistent error (throttling, permissions) doesn't spin the loop.
+	sqsErrorBackoff = 5 * time.Second
 
-// detachedContext returns a bounded context for teardown that must run even after
-// ctx is cancelled, since the v2 SDK won't send a request on a cancelled context.
-func detachedContext(ctx context.Context) (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.WithoutCancel(ctx), awsTeardownTimeout)
-}
+	// cleanupTimeout bounds the queue and subscription teardown that runs on a
+	// fresh context during shutdown. It is short and shared across both calls so
+	// cleanup can't delay the termination handler or outlast the supervisor's
+	// stop timeout when an endpoint is slow or unreachable.
+	cleanupTimeout = 5 * time.Second
+
+	// awsActionTimeout bounds CompleteLifecycleAction, which runs on a fresh
+	// context after the handler returns, so an unreachable endpoint can't wedge
+	// the process while leaving room for the SDK's default retries to land.
+	awsActionTimeout = 30 * time.Second
+)
 
 // AutoscalingClient is the subset of the EC2 Auto Scaling API used by the daemon.
 //
@@ -78,10 +85,21 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	if err := l.queue.Create(ctx); err != nil {
 		return err
 	}
+	subscribed := false
+	// Tear down the subscription and queue on a fresh, bounded context so cleanup
+	// still runs after ctx is cancelled during shutdown, sharing one short deadline
+	// so a slow endpoint can't delay the handler or outlast the supervisor's stop
+	// timeout.
 	defer func() {
-		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
-		cleanupCtx, cancel := detachedContext(ctx)
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 		defer cancel()
+		if subscribed {
+			log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
+			if err := l.queue.Unsubscribe(cleanupCtx); err != nil {
+				log.WithError(err).Error("Failed to unsubscribe from sns topic")
+			}
+		}
+		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
 		if err := l.queue.Delete(cleanupCtx); err != nil {
 			log.WithError(err).Error("Failed to delete queue")
 		}
@@ -91,14 +109,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 	if err := l.queue.Subscribe(ctx); err != nil {
 		return err
 	}
-	defer func() {
-		log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
-		cleanupCtx, cancel := detachedContext(ctx)
-		defer cancel()
-		if err := l.queue.Unsubscribe(cleanupCtx); err != nil {
-			log.WithError(err).Error("Failed to unsubscribe from sns topic")
-		}
-	}()
+	subscribed = true
 
 	for {
 		select {
@@ -109,6 +120,12 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 			messages, err := l.queue.GetMessages(ctx)
 			if err != nil {
 				log.WithError(err).Warn("Failed to get messages from SQS")
+				select {
+				case <-ctx.Done():
+					return nil
+				case <-time.After(sqsErrorBackoff):
+				}
+				continue
 			}
 			for _, m := range messages {
 				var env Envelope
@@ -170,10 +187,8 @@ func (n *autoscalingTerminationNotice) Type() string {
 
 func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handler, log *logrus.Entry) error {
 	defer func() {
-		// Release the ASG hook on a detached context: a SIGINT/SIGTERM mid-handle
-		// cancels ctx to stop the drain script, but the lifecycle action must still
-		// complete or the instance sits in Terminating:Wait until the hook times out.
-		completeCtx, cancel := detachedContext(ctx)
+		// Fresh, bounded context so completion runs even if ctx was cancelled mid-shutdown.
+		completeCtx, cancel := context.WithTimeout(context.Background(), awsActionTimeout)
 		defer cancel()
 		_, err := n.autoscaling.CompleteLifecycleAction(completeCtx, &autoscaling.CompleteLifecycleActionInput{
 			AutoScalingGroupName:  aws.String(n.message.GroupName),
@@ -192,9 +207,8 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 	ticker := time.NewTicker(n.heartbeatInterval)
 	defer ticker.Stop()
 
-	// Stop the heartbeat goroutine when Handle returns and cancel any in-flight
-	// heartbeat; a bare "for range ticker.C" would otherwise park forever since
-	// ticker.Stop doesn't close the channel.
+	// Stop the heartbeat goroutine when Handle returns; ticker.Stop alone doesn't
+	// close the channel, so a bare "for range ticker.C" would park forever.
 	heartbeatCtx, stopHeartbeat := context.WithCancel(ctx)
 	defer stopHeartbeat()
 
@@ -204,19 +218,21 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 			case <-heartbeatCtx.Done():
 				return
 			case <-ticker.C:
-			}
-			log.Debug("Sending heartbeat")
-			_, err := n.autoscaling.RecordLifecycleActionHeartbeat(
-				heartbeatCtx,
-				&autoscaling.RecordLifecycleActionHeartbeatInput{
-					AutoScalingGroupName: aws.String(n.message.GroupName),
-					LifecycleHookName:    aws.String(n.message.HookName),
-					InstanceId:           aws.String(n.message.InstanceID),
-					LifecycleActionToken: aws.String(n.message.ActionToken),
-				},
-			)
-			if err != nil {
-				log.WithError(err).Warn("Failed to send heartbeat")
+				log.Debug("Sending heartbeat")
+				_, err := n.autoscaling.RecordLifecycleActionHeartbeat(
+					heartbeatCtx,
+					&autoscaling.RecordLifecycleActionHeartbeatInput{
+						AutoScalingGroupName: aws.String(n.message.GroupName),
+						LifecycleHookName:    aws.String(n.message.HookName),
+						InstanceId:           aws.String(n.message.InstanceID),
+						LifecycleActionToken: aws.String(n.message.ActionToken),
+					},
+				)
+				// A heartbeat cancelled because Handle returned is a clean stop, not
+				// a failure worth logging.
+				if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+					log.WithError(err).Warn("Failed to send heartbeat")
+				}
 			}
 		}
 	}()
