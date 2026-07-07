@@ -194,13 +194,14 @@ func main() {
 			// The handler runs on the signal-cancellable ctx, so a SIGINT/SIGTERM
 			// mid-handle intentionally cancels the drain script; the autoscaling notice
 			// still releases the ASG hook via CompleteLifecycleAction on a fresh context.
-			start, err := time.Now(), notice.Handle(ctx, handler, log)
+			start := time.Now()
+			err = notice.Handle(ctx, handler, log)
 			log = log.WithField("duration", time.Since(start).String())
 			if err != nil {
 				log.WithError(err).Error("Failed to execute handler")
+				return err
 			}
 			log.Info("Handler finished successfully")
-
 		}
 		return nil
 	})
