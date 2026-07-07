@@ -302,6 +302,8 @@ If using `--cloudwatch-group`:
 
 `logs:CreateLogGroup` is optional: lifecycled attempts to create the log group at startup but treats an access-denied response as a signal that the group is managed elsewhere and carries on. Omit it if the group is provisioned out of band; `logs:CreateLogStream` and `logs:PutLogEvents` are always required.
 
+Log lines are delivered synchronously, one `PutLogEvents` call per line, so each line reaches CloudWatch before the daemon continues. This keeps lines from being dropped when an instance terminates mid-drain, but every line is a separate network round-trip bounded to five seconds. Leaving `--debug` on in production is chatty and will slow the daemon whenever CloudWatch is slow to respond.
+
 ### AutoScaling Lifecycle Hook Role
 
 The lifecycle hook itself needs permissions to publish to SNS:

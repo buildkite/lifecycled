@@ -54,12 +54,10 @@ type metadataResponse struct {
 	body   string
 }
 
-// newSpotMetadataServer is an IMDS stub that satisfies the IMDSv2 token handshake
-// and the instance-id probe. The first spot/termination-time poll returns the
-// branch-under-test response (badResp); later polls return goodTime so the
-// listener emits a notice and Start returns on its own. Letting Start finish this
-// way avoids cancelling an in-flight poll, which spot.go would log as the same
-// "Failed to get spot termination" warning and mask a real regression.
+// newSpotMetadataServer is an IMDS stub that passes the IMDSv2 token handshake
+// and instance-id probe, returns badResp on the first spot/termination-time poll,
+// then goodTime on later polls so the listener emits a notice and Start returns
+// on its own instead of being cancelled mid-poll.
 func newSpotMetadataServer(instanceID, goodTime string, badResp metadataResponse) *httptest.Server {
 	var termHits int64
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

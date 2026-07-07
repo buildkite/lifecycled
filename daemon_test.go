@@ -54,7 +54,7 @@ func newSQSMessage(instanceID string) sqstypes.Message {
 	m := fmt.Sprintf(`
 {
 	"Time": "2016-02-26T21:09:59.517Z",
-	"AutoscalingGroupName": "group",
+	"AutoScalingGroupName": "group",
 	"EC2InstanceId": "%s",
 	"LifecycleActionToken": "token",
 	"LifecycleTransition": "autoscaling:EC2_INSTANCE_TERMINATING",

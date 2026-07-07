@@ -74,11 +74,9 @@ func (h *CloudWatchLogsHook) Levels() []logrus.Level {
 	}
 }
 
-// Fire ships the formatted entry to the CloudWatch Logs stream. It uses a
-// background context so a log line is still delivered while the daemon is
-// shutting down in response to a termination notice, bounded by a timeout so an
-// unreachable endpoint can't wedge the logging goroutine. v2 ignores the
-// sequence token, so a single PutLogEvents per entry is all that's needed.
+// Fire ships the formatted entry to CloudWatch Logs on a background context with
+// a timeout, so a line is still delivered during shutdown without an unreachable
+// endpoint wedging the logging goroutine.
 func (h *CloudWatchLogsHook) Fire(entry *logrus.Entry) error {
 	line, err := entry.String()
 	if err != nil {
@@ -92,14 +90,12 @@ func (h *CloudWatchLogsHook) Fire(entry *logrus.Entry) error {
 		ts = time.Now()
 	}
 
-	// No lock needed: Fire reads only immutable fields, and v2 PutLogEvents
-	// accepts parallel calls on the same stream, so concurrent log lines deliver
-	// in parallel rather than serializing behind a lock for up to the timeout
-	// each, which matters most during a termination.
+	// No lock needed: Fire reads only immutable fields and PutLogEvents accepts
+	// parallel calls on the same stream.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = h.client.PutLogEvents(ctx, &cloudwatchlogs.PutLogEventsInput{
+	out, err := h.client.PutLogEvents(ctx, &cloudwatchlogs.PutLogEventsInput{
 		LogGroupName:  aws.String(h.groupName),
 		LogStreamName: aws.String(h.streamName),
 		LogEvents: []cwltypes.InputLogEvent{{
@@ -107,5 +103,13 @@ func (h *CloudWatchLogsHook) Fire(entry *logrus.Entry) error {
 			Timestamp: aws.Int64(ts.UnixMilli()),
 		}},
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	// A 200 with RejectedLogEventsInfo means the line was dropped (too old, too
+	// new, or expired). Surface it rather than reporting success.
+	if out.RejectedLogEventsInfo != nil {
+		return errors.New("cloudwatch rejected the log event (too old, too new, or expired)")
+	}
+	return nil
 }
