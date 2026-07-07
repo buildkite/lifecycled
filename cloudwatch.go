@@ -41,10 +41,14 @@ func NewCloudWatchLogsHook(ctx context.Context, client CloudWatchLogsClient, gro
 	}); err != nil && !alreadyExists(err) && !accessDenied(err) {
 		return nil, err
 	}
+	// CreateLogStream is also best-effort against AccessDenied so a least-privilege
+	// role with only logs:PutLogEvents against a pre-provisioned stream isn't fatal.
+	// A genuinely missing stream we can't create then surfaces per-line in Fire
+	// rather than at startup.
 	if _, err := client.CreateLogStream(ctx, &cloudwatchlogs.CreateLogStreamInput{
 		LogGroupName:  aws.String(groupName),
 		LogStreamName: aws.String(streamName),
-	}); err != nil && !alreadyExists(err) {
+	}); err != nil && !alreadyExists(err) && !accessDenied(err) {
 		return nil, err
 	}
 	return &CloudWatchLogsHook{client: client, groupName: groupName, streamName: streamName}, nil
