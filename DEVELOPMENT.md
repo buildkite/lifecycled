@@ -4,23 +4,15 @@
 
 ### Required Tools
 
-- **Go**: Go 1.23.0 or later (required for module support and modern syntax)
+- **Go**: Go 1.26.4 or later (matches the `go` directive in `go.mod`; required for the `tool` directive and modern syntax)
 - **gox**: Cross-platform Go compilation tool (required for `make release`)
-- **mockgen**: Mock code generation tool (required for `make generate`)
+- **mockgen**: Provided as a `go.mod` `tool` dependency, so no separate install is needed (see [Code Generation](#code-generation))
 
 #### Installing gox
 
 ```bash
 go install github.com/mitchellh/gox@latest
 ```
-
-#### Installing mockgen
-
-```bash
-go install go.uber.org/mock/mockgen@latest
-```
-
-**Note**: This project uses `go.uber.org/mock` (the actively maintained fork) rather than the deprecated `github.com/golang/mock`.
 
 #### PATH Configuration
 
@@ -149,7 +141,7 @@ The project uses code generation to create mock implementations for testing. If 
 make generate
 ```
 
-This will regenerate mock files in the `mocks/` directory using `mockgen` from `go.uber.org/mock`.
+This runs `go generate ./...`, which invokes `go tool mockgen` to regenerate the mock files in the `mocks/` directory. `mockgen` is pinned as a `tool` dependency in `go.mod` (`go.uber.org/mock`, the actively maintained fork of `github.com/golang/mock`), so generation is reproducible without installing `mockgen` separately.
 
 **Generated files:**
 - `mocks/mock_autoscaling_client.go`
@@ -178,4 +170,4 @@ This will regenerate mock files in the `mocks/` directory using `mockgen` from `
 - Version information is derived from git tags
 - Mock generation uses `go.uber.org/mock` (the actively maintained fork of gomock), not the deprecated `github.com/golang/mock`
 - Generated mock files should not be manually edited; regenerate them using `make generate`
-- The project requires Go 1.23.0 or later due to modern Go syntax (use of `any` instead of `interface{}`)
+- The project requires Go 1.26.4 or later (the `go` directive in `go.mod`); the `tool` directive needs at least Go 1.24
