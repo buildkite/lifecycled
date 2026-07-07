@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -11,14 +11,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/smithy-go"
 )
 
 func main() {
@@ -26,38 +27,36 @@ func main() {
 	account := flag.String("account", "", "If set, abort unless the resolved AWS account ID matches")
 	flag.Parse()
 
-	// SharedConfigEnable loads ~/.aws/config so region, named profiles, and SSO resolve.
-	sess, err := session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	})
+	ctx := context.Background()
+
+	// LoadDefaultConfig loads ~/.aws/config so region, named profiles, and SSO
+	// resolve. WithEC2IMDSRegion falls back to instance metadata when running on EC2.
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithEC2IMDSRegion())
 	if err != nil {
-		log.Fatalf("Failed to create aws session: %s", err)
+		log.Fatalf("Failed to load aws config: %s", err)
 	}
-
-	if err := resolveRegion(sess, func() (string, error) {
-		// Bound the metadata lookup so it fails fast off-EC2 instead of stalling startup.
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancel()
-		return ec2metadata.New(sess).RegionWithContext(ctx)
-	}); err != nil {
-		log.Fatalf("Failed to resolve region: %s", err)
+	if cfg.Region == "" {
+		log.Fatal("No region resolved; set AWS_REGION, AWS_DEFAULT_REGION, or a profile region")
 	}
+	log.Printf("Using region %s", cfg.Region)
 
-	log.Printf("Using region %s", aws.StringValue(sess.Config.Region))
+	sqsClient := sqs.NewFromConfig(cfg)
+	snsClient := sns.NewFromConfig(cfg)
+	ec2Client := ec2.NewFromConfig(cfg)
 
 	// Confirm the target account before any destructive calls. A failure means the
 	// credentials are unusable, since GetCallerIdentity needs no IAM permission.
-	ident, err := callerIdentity(sess)
+	ident, err := callerIdentity(ctx, sts.NewFromConfig(cfg))
 	if err != nil {
 		log.Fatalf("Failed to resolve caller identity: %s", err)
 	}
-	if *account != "" && *account != aws.StringValue(ident.Account) {
-		log.Fatalf("Resolved account %s does not match the expected account %s", aws.StringValue(ident.Account), *account)
+	if *account != "" && *account != aws.ToString(ident.Account) {
+		log.Fatalf("Resolved account %s does not match the expected account %s", aws.ToString(ident.Account), *account)
 	}
-	log.Printf("Using account %s as %s", aws.StringValue(ident.Account), aws.StringValue(ident.Arn))
+	log.Printf("Using account %s as %s", aws.ToString(ident.Account), aws.ToString(ident.Arn))
 
 	for {
-		count, err := deleteInactiveSubscriptions(sess)
+		count, err := deleteInactiveSubscriptions(ctx, snsClient)
 		if err != nil {
 			fatalAWS(err)
 		}
@@ -71,7 +70,7 @@ func main() {
 	}
 
 	for {
-		count, err := deleteInactiveQueues(sess, *parallel)
+		count, err := deleteInactiveQueues(ctx, sqsClient, ec2Client, *parallel)
 		if err != nil {
 			fatalAWS(err)
 		}
@@ -89,10 +88,10 @@ func main() {
 
 // callerIdentity resolves the account the credentials belong to, bounded so a
 // hung STS fails fast instead of stalling startup.
-func callerIdentity(sess *session.Session) (*sts.GetCallerIdentityOutput, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+func callerIdentity(ctx context.Context, client *sts.Client) (*sts.GetCallerIdentityOutput, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
-	return sts.New(sess).GetCallerIdentityWithContext(ctx, &sts.GetCallerIdentityInput{})
+	return client.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
 }
 
 // credentialExpiryCodes are the AWS error codes meaning the credentials
@@ -108,72 +107,68 @@ var credentialExpiryCodes = map[string]struct{}{
 // credentials. Re-running is safe: each run re-lists from scratch and resumes
 // where the last left off.
 func fatalAWS(err error) {
-	if awsErr, ok := err.(awserr.Error); ok {
-		if _, expired := credentialExpiryCodes[awsErr.Code()]; expired {
-			log.Fatalf("Credentials expired mid-run (%s); refresh them (e.g. `aws sso login`) and run again to resume: %s", awsErr.Code(), err)
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		if _, expired := credentialExpiryCodes[apiErr.ErrorCode()]; expired {
+			log.Fatalf("Credentials expired mid-run (%s); refresh them (e.g. `aws sso login`) and run again to resume: %s", apiErr.ErrorCode(), err)
 		}
 	}
 	log.Fatal(err)
 }
 
-// resolveRegion fills in the session region from EC2 metadata when neither the
-// environment nor shared config supplied one. lookupRegion is injectable for tests.
-func resolveRegion(sess *session.Session, lookupRegion func() (string, error)) error {
-	const hint = "set AWS_REGION, AWS_DEFAULT_REGION, or a profile region instead"
-	if aws.StringValue(sess.Config.Region) != "" {
-		return nil
-	}
-	log.Println("No region in environment or shared config, looking up from EC2 metadata")
-	region, err := lookupRegion()
+func deleteInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *ec2.Client, parallel int) (uint64, error) {
+	queues, err := listInactiveQueues(ctx, sqsClient, ec2Client)
 	if err != nil {
-		return fmt.Errorf("look up region from EC2 metadata (%s): %w", hint, err)
+		return 0, err
 	}
-	if region == "" {
-		return fmt.Errorf("EC2 metadata returned an empty region (%s)", hint)
-	}
-	sess.Config.Region = aws.String(region)
-	return nil
+	return deleteQueues(ctx, queues, parallel, func(ctx context.Context, queue string) error {
+		return deleteQueue(ctx, sqsClient, queue)
+	})
 }
 
-func deleteInactiveQueues(sess *session.Session, parallel int) (uint64, error) {
-	queues, err := listInactiveQueues(sess)
-	if err != nil {
-		fatalAWS(err)
-	}
-
+// deleteQueues deletes each queue URL with del, up to parallel at a time. A
+// QueueDoesNotExist result counts as success (that is the desired end state);
+// any other error aborts and is returned. The del seam keeps the worker pool
+// testable without real AWS.
+func deleteQueues(ctx context.Context, queues []string, parallel int, del func(context.Context, string) error) (uint64, error) {
 	var wg sync.WaitGroup
 	var count uint64
 	var queuesCh = make(chan string)
-	var errCh = make(chan error)
+	// Buffered so a worker that fails after the dispatch loop has stopped reading
+	// errCh can still report its error instead of blocking (and leaking) forever.
+	var errCh = make(chan error, parallel)
 
 	// spawn parallel workers
 	for i := 0; i < parallel; i++ {
 		go func(total int) {
 			for queue := range queuesCh {
-				atomic.AddUint64(&count, 1)
-				log.Printf("Deleting %s (%d of %d)", queue, count, total)
-				err = deleteQueue(sess, queue)
-				wg.Done()
-				if awsErr, ok := err.(awserr.Error); ok {
-					if awsErr.Code() == `AWS.SimpleQueueService.NonExistentQueue` {
-						continue
-					}
-				}
-				if err != nil {
+				n := atomic.AddUint64(&count, 1)
+				log.Printf("Deleting %s (%d of %d)", queue, n, total)
+				err := del(ctx, queue)
+				var notExist *sqstypes.QueueDoesNotExist
+				if err != nil && !errors.As(err, &notExist) {
+					// Publish before wg.Done so wg.Wait can't return (and the
+					// post-Wait drain can't miss the error) before it is visible.
 					errCh <- err
+					wg.Done()
 					return
 				}
+				wg.Done()
 			}
 		}(len(queues))
 	}
 
 	// dispatch work to parallel workers
 	for _, queue := range queues {
+		// Count the work before handing it off so a worker can't call wg.Done
+		// before the matching wg.Add and drive the counter negative.
+		wg.Add(1)
 		select {
 		case queuesCh <- queue:
-			wg.Add(1)
 		case err := <-errCh:
 			close(queuesCh)
+			// count is still being written by live workers here; the caller
+			// exits on this error, so the attempt count is not meaningful.
 			return 0, err
 		}
 	}
@@ -182,58 +177,58 @@ func deleteInactiveQueues(sess *session.Session, parallel int) (uint64, error) {
 	wg.Wait()
 	close(queuesCh)
 
-	return count, nil
+	// Surface an error from a worker that failed after dispatch finished.
+	select {
+	case err := <-errCh:
+		return count, err
+	default:
+		return count, nil
+	}
 }
 
-func listInstances(sess *session.Session) ([]string, error) {
+func listInstances(ctx context.Context, client *ec2.Client) ([]string, error) {
 	var instances []string
 
 	// Only grab instances that are running or just started
 	params := &ec2.DescribeInstancesInput{
-		Filters: []*ec2.Filter{
+		Filters: []ec2types.Filter{
 			{
 				Name:   aws.String(`instance-state-name`),
-				Values: aws.StringSlice([]string{"running", "pending"}),
+				Values: []string{"running", "pending"},
 			},
 		},
 	}
 
-	err := ec2.New(sess).DescribeInstancesPages(params,
-		func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
-			for _, reservation := range page.Reservations {
-				for _, instance := range reservation.Instances {
-					instances = append(instances, *instance.InstanceId)
-				}
+	paginator := ec2.NewDescribeInstancesPaginator(client, params)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, reservation := range page.Reservations {
+			for _, instance := range reservation.Instances {
+				instances = append(instances, aws.ToString(instance.InstanceId))
 			}
-			return lastPage
-		})
-	if err != nil {
-		return nil, err
+		}
 	}
 
 	return instances, nil
 }
 
-func listQueues(sess *session.Session) ([]string, error) {
-	resp, err := sqs.New(sess).ListQueues(&sqs.ListQueuesInput{
+func listQueues(ctx context.Context, client *sqs.Client) ([]string, error) {
+	resp, err := client.ListQueues(ctx, &sqs.ListQueuesInput{
 		QueueNamePrefix: aws.String(`lifecycled-`),
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	var queues = make([]string, len(resp.QueueUrls))
-	for idx, queue := range resp.QueueUrls {
-		queues[idx] = *queue
-	}
-
-	return queues, nil
+	return resp.QueueUrls, nil
 }
 
 var queueRegex = regexp.MustCompile(`^https://sqs\.(.+?)\.amazonaws.com/(.+?)/lifecycled-(i-.+)$`)
 
-func listInactiveQueues(sess *session.Session) ([]string, error) {
-	instances, err := listInstances(sess)
+func listInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *ec2.Client) ([]string, error) {
+	instances, err := listInstances(ctx, ec2Client)
 	if err != nil {
 		fatalAWS(err)
 	}
@@ -246,91 +241,112 @@ func listInactiveQueues(sess *session.Session) ([]string, error) {
 		instancesMap[instance] = struct{}{}
 	}
 
-	queues, err := listQueues(sess)
+	queues, err := listQueues(ctx, sqsClient)
 	if err != nil {
 		fatalAWS(err)
 	}
 
 	log.Printf("Found %d queues total (aws returns max 1000)", len(queues))
 
-	var inactiveQueues []string
-	for _, queue := range queues {
-		matches := queueRegex.FindStringSubmatch(queue)
-		if len(matches) != 4 {
-			continue
-		}
-		instanceId := matches[3]
-		if _, exists := instancesMap[instanceId]; !exists {
-			inactiveQueues = append(inactiveQueues, queue)
-		}
-	}
+	inactiveQueues := filterInactiveQueues(queues, instancesMap)
 
 	log.Printf("Found %d inactive queues", len(inactiveQueues))
 
 	return inactiveQueues, nil
-
 }
 
-func deleteQueue(sess *session.Session, queueUrl string) error {
-	_, err := sqs.New(sess).DeleteQueue(&sqs.DeleteQueueInput{
-		QueueUrl: aws.String(queueUrl),
+// filterInactiveQueues returns the lifecycled- queue URLs whose instance id is
+// not in running. URLs that don't match the lifecycled- naming scheme are skipped.
+func filterInactiveQueues(urls []string, running map[string]struct{}) []string {
+	var inactive []string
+	for _, queue := range urls {
+		matches := queueRegex.FindStringSubmatch(queue)
+		if len(matches) != 4 {
+			continue
+		}
+		instanceID := matches[3]
+		if _, exists := running[instanceID]; !exists {
+			inactive = append(inactive, queue)
+		}
+	}
+	return inactive
+}
+
+func deleteQueue(ctx context.Context, client *sqs.Client, queueURL string) error {
+	_, err := client.DeleteQueue(ctx, &sqs.DeleteQueueInput{
+		QueueUrl: aws.String(queueURL),
 	})
 	return err
 }
 
-func topicExists(sess *session.Session, snsTopic string) (bool, error) {
-	_, err := sns.New(sess).GetTopicAttributes(&sns.GetTopicAttributesInput{
+// snsCleanupClient is the subset of the SNS API the subscription cleanup uses,
+// so the logic can be exercised with a fake in tests.
+type snsCleanupClient interface {
+	ListSubscriptions(context.Context, *sns.ListSubscriptionsInput, ...func(*sns.Options)) (*sns.ListSubscriptionsOutput, error)
+	GetTopicAttributes(context.Context, *sns.GetTopicAttributesInput, ...func(*sns.Options)) (*sns.GetTopicAttributesOutput, error)
+	Unsubscribe(context.Context, *sns.UnsubscribeInput, ...func(*sns.Options)) (*sns.UnsubscribeOutput, error)
+}
+
+func topicExists(ctx context.Context, client snsCleanupClient, snsTopic string) (bool, error) {
+	_, err := client.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{
 		TopicArn: aws.String(snsTopic),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == `NotFound` {
-				return false, nil
-			}
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode() == `NotFound` {
+			return false, nil
 		}
-		log.Printf("%#v", err.Error())
+		log.Printf("Failed to get topic attributes: %s", err)
 		return false, err
 	}
 	return true, nil
 }
 
-func listInactiveSubscriptions(sess *session.Session) ([]string, error) {
+func listInactiveSubscriptions(ctx context.Context, client snsCleanupClient) ([]string, error) {
 	var subs []string
-	var topics = make(map[string]bool, 0)
+	var topics = map[string]bool{}
 	var count int
 
-	err := sns.New(sess).ListSubscriptionsPages(&sns.ListSubscriptionsInput{},
-		func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {
-			count = count + len(page.Subscriptions)
-			for _, s := range page.Subscriptions {
-				if !strings.Contains(*s.Endpoint, "lifecycled-i") {
-					continue
-				}
-				if exists, ok := topics[*s.TopicArn]; ok {
-					if !exists {
-						subs = append(subs, *s.SubscriptionArn)
-					}
-					continue
-				}
-				if exists, _ := topicExists(sess, *s.TopicArn); exists {
-					topics[*s.TopicArn] = true
-				} else {
-					topics[*s.TopicArn] = false
-					subs = append(subs, *s.SubscriptionArn)
-				}
+	paginator := sns.NewListSubscriptionsPaginator(client, &sns.ListSubscriptionsInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		count = count + len(page.Subscriptions)
+		for _, s := range page.Subscriptions {
+			if !strings.Contains(aws.ToString(s.Endpoint), "lifecycled-i") {
+				continue
 			}
-			return lastPage
-		})
-	if err != nil {
-		return nil, err
+			topicArn := aws.ToString(s.TopicArn)
+			if exists, ok := topics[topicArn]; ok {
+				if !exists {
+					subs = append(subs, aws.ToString(s.SubscriptionArn))
+				}
+				continue
+			}
+			// A non-NotFound failure (AccessDenied, throttling, expired creds) must
+			// abort rather than be treated as a missing topic, or we would delete
+			// live subscriptions.
+			exists, err := topicExists(ctx, client, topicArn)
+			if err != nil {
+				return nil, err
+			}
+			if exists {
+				topics[topicArn] = true
+			} else {
+				topics[topicArn] = false
+				subs = append(subs, aws.ToString(s.SubscriptionArn))
+			}
+		}
 	}
 
 	log.Printf("Found %d sns subscriptions in total", count)
 	return subs, nil
 }
 
-func deleteInactiveSubscriptions(sess *session.Session) (int, error) {
-	subs, err := listInactiveSubscriptions(sess)
+func deleteInactiveSubscriptions(ctx context.Context, client *sns.Client) (int, error) {
+	subs, err := listInactiveSubscriptions(ctx, client)
 	if err != nil {
 		return 0, err
 	}
@@ -338,7 +354,7 @@ func deleteInactiveSubscriptions(sess *session.Session) (int, error) {
 	var deleted int
 	for idx, s := range subs {
 		log.Printf("Deleting sns subscription %s (%d of %d)", s, idx+1, len(subs))
-		_, err := sns.New(sess).Unsubscribe(&sns.UnsubscribeInput{
+		_, err := client.Unsubscribe(ctx, &sns.UnsubscribeInput{
 			SubscriptionArn: aws.String(s),
 		})
 		if err != nil {

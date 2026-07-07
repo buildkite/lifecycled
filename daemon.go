@@ -9,22 +9,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/sirupsen/logrus"
 )
 
 // New creates a new lifecycle Daemon.
-func New(config *Config, sess *session.Session, logger *logrus.Logger) *Daemon {
+func New(config *Config, cfg aws.Config, logger *logrus.Logger) *Daemon {
 	return NewDaemon(
 		config,
-		sqs.New(sess),
-		sns.New(sess),
-		autoscaling.New(sess),
-		ec2metadata.New(sess),
+		sqs.NewFromConfig(cfg),
+		sns.NewFromConfig(cfg),
+		autoscaling.NewFromConfig(cfg),
+		imds.NewFromConfig(cfg),
 		logger,
 	)
 }
@@ -35,7 +35,7 @@ func NewDaemon(
 	sqsClient SQSClient,
 	snsClient SNSClient,
 	asgClient AutoscalingClient,
-	metadata *ec2metadata.EC2Metadata,
+	metadata MetadataClient,
 	logger *logrus.Logger,
 ) *Daemon {
 	daemon := &Daemon{

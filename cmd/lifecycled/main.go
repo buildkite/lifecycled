@@ -2,18 +2,19 @@ package main
 
 import (
 	"context"
+	"io"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/buildkite/lifecycled"
 
-	cloudwatchlogs "github.com/kdar/logrus-cloudwatchlogs"
 	"github.com/sirupsen/logrus"
 )
 
@@ -90,32 +91,41 @@ func main() {
 			logger.SetLevel(logrus.DebugLevel)
 		}
 
-		region := os.Getenv("AWS_REGION")
-		if region == "" {
-			logger.Info("Looking up region from metadata service")
-			sess, err := session.NewSession()
-			if err != nil {
-				logger.WithError(err).Fatal("Failed to create new aws session")
-			}
-			region, err = ec2metadata.New(sess).Region()
-			if err != nil {
-				logger.WithError(err).Fatal("Failed to look up region")
-			}
-		}
+		// Cancelled on SIGINT/SIGTERM by the signal handler below.
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
-		sess, err := session.NewSession(&aws.Config{
-			Region: aws.String(region),
-		})
+		// LoadDefaultConfig resolves region and credentials from the environment
+		// and shared config. WithEC2IMDSRegion is deliberately not used here: it
+		// makes an unreachable IMDS (i.e. running off EC2) a fatal config-load
+		// error, masking the clearer "no region" message below. Fall back to IMDS
+		// explicitly and ignore its error so an off-EC2 run reports the real cause.
+		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
-			logger.WithError(err).Fatal("Failed to create new aws session")
+			logger.WithError(err).Fatal("Failed to load AWS configuration")
 		}
+		if cfg.Region == "" {
+			if out, err := imds.NewFromConfig(cfg).GetRegion(ctx, &imds.GetRegionInput{}); err == nil {
+				cfg.Region = out.Region
+			}
+		}
+		if cfg.Region == "" {
+			logger.Fatal("No region resolved; set AWS_REGION, AWS_DEFAULT_REGION, or a profile region")
+		}
+		logger.WithField("region", cfg.Region).Info("Using region")
 
 		if instanceID == "" {
 			logger.Info("Looking up instance id from metadata service")
-			instanceID, err = ec2metadata.New(sess).GetMetadata("instance-id")
+			out, err := imds.NewFromConfig(cfg).GetMetadata(ctx, &imds.GetMetadataInput{Path: "instance-id"})
 			if err != nil {
 				logger.WithError(err).Fatal("Failed to lookup instance id")
 			}
+			b, err := io.ReadAll(out.Content)
+			_ = out.Content.Close()
+			if err != nil {
+				logger.WithError(err).Fatal("Failed to read instance id")
+			}
+			instanceID = strings.TrimSpace(string(b))
 		}
 
 		if cloudwatchStream == "" {
@@ -123,7 +133,7 @@ func main() {
 		}
 
 		if cloudwatchGroup != "" {
-			hook, err := cloudwatchlogs.NewHook(cloudwatchGroup, cloudwatchStream, sess)
+			hook, err := lifecycled.NewCloudWatchLogsHook(ctx, cloudwatchlogs.NewFromConfig(cfg), cloudwatchGroup, cloudwatchStream)
 			if err != nil {
 				logger.Fatal(err)
 			}
@@ -148,14 +158,13 @@ func main() {
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		defer signal.Stop(sigs)
 
-		// Create an execution context for the daemon that can be cancelled on OS signal
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
 		go func() {
 			for sig := range sigs {
-				logger.WithField("signal", sig.String()).Info("Received signal: shutting down...")
+				// Cancel before logging: with the CloudWatch hook enabled this line
+				// ships synchronously, so a slow endpoint must not delay cancelling
+				// the drain.
 				cancel()
+				logger.WithField("signal", sig.String()).Info("Received signal: shutting down...")
 				break
 			}
 		}()
@@ -168,7 +177,7 @@ func main() {
 			SpotListener:                 !disableSpotListener,
 			SpotListenerInterval:         spotListenerInterval,
 			AutoscalingHeartbeatInterval: autoscalingHeartbeatInterval,
-		}, sess, logger)
+		}, cfg, logger)
 
 		notice, err := daemon.Start(ctx)
 		if err != nil {
@@ -178,6 +187,9 @@ func main() {
 			log := logger.WithFields(logrus.Fields{"instanceId": instanceID, "notice": notice.Type()})
 			log.Info("Executing handler")
 
+			// The handler runs on the signal-cancellable ctx, so a SIGINT/SIGTERM
+			// mid-handle intentionally cancels the drain script; the autoscaling notice
+			// still releases the ASG hook via CompleteLifecycleAction on a fresh context.
 			start, err := time.Now(), notice.Handle(ctx, handler, log)
 			log = log.WithField("duration", time.Since(start).String())
 			if err != nil {

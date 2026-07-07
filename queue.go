@@ -7,13 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
 
 const (
@@ -38,15 +35,24 @@ const (
 `
 )
 
-// SQSClient for testing purposes
+// SQSClient is the subset of the SQS API used by the daemon.
 //
 //go:generate mockgen -destination=mocks/mock_sqs_client.go -package=mocks github.com/buildkite/lifecycled SQSClient
-type SQSClient sqsiface.SQSAPI
+type SQSClient interface {
+	CreateQueue(context.Context, *sqs.CreateQueueInput, ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error)
+	GetQueueAttributes(context.Context, *sqs.GetQueueAttributesInput, ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error)
+	ReceiveMessage(context.Context, *sqs.ReceiveMessageInput, ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
+	DeleteMessage(context.Context, *sqs.DeleteMessageInput, ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error)
+	DeleteQueue(context.Context, *sqs.DeleteQueueInput, ...func(*sqs.Options)) (*sqs.DeleteQueueOutput, error)
+}
 
-// SNSClient for testing purposes
+// SNSClient is the subset of the SNS API used by the daemon.
 //
 //go:generate mockgen -destination=mocks/mock_sns_client.go -package=mocks github.com/buildkite/lifecycled SNSClient
-type SNSClient snsiface.SNSAPI
+type SNSClient interface {
+	Subscribe(context.Context, *sns.SubscribeInput, ...func(*sns.Options)) (*sns.SubscribeOutput, error)
+	Unsubscribe(context.Context, *sns.UnsubscribeInput, ...func(*sns.Options)) (*sns.UnsubscribeOutput, error)
+}
 
 // Queue manages the SQS queue and SNS subscription.
 type Queue struct {
@@ -73,52 +79,52 @@ func NewQueue(queueName, topicArn string, sqsClient SQSClient, snsClient SNSClie
 }
 
 // Create the SQS queue.
-func (q *Queue) Create() error {
+func (q *Queue) Create(ctx context.Context) error {
 	tags, err := parseTags(q.tags)
 	if err != nil {
 		return err
 	}
-	out, err := q.sqsClient.CreateQueue(&sqs.CreateQueueInput{
+	out, err := q.sqsClient.CreateQueue(ctx, &sqs.CreateQueueInput{
 		QueueName: aws.String(q.name),
-		Attributes: map[string]*string{
-			"Policy":                        aws.String(fmt.Sprintf(queuePolicy, q.topicArn)),
-			"ReceiveMessageWaitTimeSeconds": aws.String(strconv.Itoa(longPollingWaitTimeSeconds)),
+		Attributes: map[string]string{
+			"Policy":                        fmt.Sprintf(queuePolicy, q.topicArn),
+			"ReceiveMessageWaitTimeSeconds": strconv.Itoa(longPollingWaitTimeSeconds),
 		},
 		Tags: tags,
 	})
 	if err != nil {
 		return err
 	}
-	q.url = aws.StringValue(out.QueueUrl)
+	q.url = aws.ToString(out.QueueUrl)
 	return nil
 }
 
 // GetArn for the SQS queue.
-func (q *Queue) getArn() (string, error) {
+func (q *Queue) getArn(ctx context.Context) (string, error) {
 	if q.arn == "" {
-		out, err := q.sqsClient.GetQueueAttributes(&sqs.GetQueueAttributesInput{
-			AttributeNames: aws.StringSlice([]string{"QueueArn"}),
+		out, err := q.sqsClient.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+			AttributeNames: []sqstypes.QueueAttributeName{sqstypes.QueueAttributeNameQueueArn},
 			QueueUrl:       aws.String(q.url),
 		})
 		if err != nil {
 			return "", err
 		}
-		arn, ok := out.Attributes["QueueArn"]
+		arn, ok := out.Attributes[string(sqstypes.QueueAttributeNameQueueArn)]
 		if !ok {
 			return "", errors.New("no attribute QueueArn")
 		}
-		q.arn = aws.StringValue(arn)
+		q.arn = arn
 	}
 	return q.arn, nil
 }
 
 // Subscribe the queue to an SNS topic
-func (q *Queue) Subscribe() error {
-	arn, err := q.getArn()
+func (q *Queue) Subscribe(ctx context.Context) error {
+	arn, err := q.getArn(ctx)
 	if err != nil {
 		return err
 	}
-	out, err := q.snsClient.Subscribe(&sns.SubscribeInput{
+	out, err := q.snsClient.Subscribe(ctx, &sns.SubscribeInput{
 		TopicArn: aws.String(q.topicArn),
 		Protocol: aws.String("sqs"),
 		Endpoint: aws.String(arn),
@@ -126,21 +132,21 @@ func (q *Queue) Subscribe() error {
 	if err != nil {
 		return err
 	}
-	q.subscriptionArn = aws.StringValue(out.SubscriptionArn)
+	q.subscriptionArn = aws.ToString(out.SubscriptionArn)
 	return nil
 }
 
 // GetMessages long polls for messages from the SQS queue.
-func (q *Queue) GetMessages(ctx context.Context) ([]*sqs.Message, error) {
-	out, err := q.sqsClient.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+func (q *Queue) GetMessages(ctx context.Context) ([]sqstypes.Message, error) {
+	out, err := q.sqsClient.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:            aws.String(q.url),
-		MaxNumberOfMessages: aws.Int64(1),
-		WaitTimeSeconds:     aws.Int64(longPollingWaitTimeSeconds),
-		VisibilityTimeout:   aws.Int64(0),
+		MaxNumberOfMessages: 1,
+		WaitTimeSeconds:     longPollingWaitTimeSeconds,
+		VisibilityTimeout:   0,
 	})
 	if err != nil {
 		// Ignore error if the context was cancelled (i.e. we are shutting down)
-		if e, ok := err.(awserr.Error); ok && e.Code() == request.CanceledErrorCode {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return nil, nil
 		}
 		return nil, err
@@ -150,12 +156,12 @@ func (q *Queue) GetMessages(ctx context.Context) ([]*sqs.Message, error) {
 
 // DeleteMessage from the queue.
 func (q *Queue) DeleteMessage(ctx context.Context, receiptHandle string) error {
-	_, err := q.sqsClient.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
+	_, err := q.sqsClient.DeleteMessage(ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(q.url),
 		ReceiptHandle: aws.String(receiptHandle),
 	})
 	if err != nil {
-		if e, ok := err.(awserr.Error); ok && e.Code() == request.CanceledErrorCode {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return nil
 		}
 		return err
@@ -164,21 +170,22 @@ func (q *Queue) DeleteMessage(ctx context.Context, receiptHandle string) error {
 }
 
 // Unsubscribe the queue from the SNS topic.
-func (q *Queue) Unsubscribe() error {
-	_, err := q.snsClient.Unsubscribe(&sns.UnsubscribeInput{
+func (q *Queue) Unsubscribe(ctx context.Context) error {
+	_, err := q.snsClient.Unsubscribe(ctx, &sns.UnsubscribeInput{
 		SubscriptionArn: aws.String(q.subscriptionArn),
 	})
 	return err
 }
 
 // Delete the SQS queue.
-func (q *Queue) Delete() error {
-	_, err := q.sqsClient.DeleteQueue(&sqs.DeleteQueueInput{
+func (q *Queue) Delete(ctx context.Context) error {
+	_, err := q.sqsClient.DeleteQueue(ctx, &sqs.DeleteQueueInput{
 		QueueUrl: aws.String(q.url),
 	})
 	if err != nil {
 		// Ignore error if queue does not exist (which is what we want)
-		if e, ok := err.(awserr.Error); !ok || e.Code() != sqs.ErrCodeQueueDoesNotExist {
+		var notExist *sqstypes.QueueDoesNotExist
+		if !errors.As(err, &notExist) {
 			return err
 		}
 	}
@@ -186,7 +193,7 @@ func (q *Queue) Delete() error {
 }
 
 // Expects format like "key1=alpha,key2=beta"
-func parseTags(input string) (map[string]*string, error) {
+func parseTags(input string) (map[string]string, error) {
 	if input == "" {
 		return nil, nil
 	}
@@ -197,7 +204,7 @@ func parseTags(input string) (map[string]*string, error) {
 		maxValueLength = 256
 	)
 
-	tags := make(map[string]*string)
+	tags := make(map[string]string)
 	pairs := strings.Split(input, ",")
 
 	for _, pair := range pairs {
@@ -228,7 +235,7 @@ func parseTags(input string) (map[string]*string, error) {
 			return nil, fmt.Errorf("tag keys cannot start with 'aws:' prefix: %q", key)
 		}
 
-		tags[key] = aws.String(value)
+		tags[key] = value
 	}
 
 	// Check total number of tags
@@ -237,7 +244,7 @@ func parseTags(input string) (map[string]*string, error) {
 	}
 
 	if len(tags) == 0 {
-		return map[string]*string{}, nil
+		return map[string]string{}, nil
 	}
 
 	return tags, nil
