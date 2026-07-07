@@ -170,14 +170,18 @@ func main() {
 		}()
 
 		handler := lifecycled.NewFileHandler(handler)
-		daemon := lifecycled.New(&lifecycled.Config{
+		daemonConfig := &lifecycled.Config{
 			InstanceID:                   instanceID,
 			Tags:                         tags,
 			SNSTopic:                     snsTopic,
 			SpotListener:                 !disableSpotListener,
 			SpotListenerInterval:         spotListenerInterval,
 			AutoscalingHeartbeatInterval: autoscalingHeartbeatInterval,
-		}, cfg, logger)
+		}
+		if err := daemonConfig.Validate(); err != nil {
+			logger.WithError(err).Fatal("Invalid configuration")
+		}
+		daemon := lifecycled.New(daemonConfig, cfg, logger)
 
 		notice, err := daemon.Start(ctx)
 		if err != nil {

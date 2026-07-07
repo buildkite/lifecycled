@@ -253,6 +253,61 @@ func TestDaemon(t *testing.T) {
 
 }
 
+func TestConfigValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  lifecycled.Config
+		wantErr string
+	}{
+		{
+			name:   "spot listener with a valid interval",
+			config: lifecycled.Config{SpotListener: true, SpotListenerInterval: time.Second},
+		},
+		{
+			name:   "autoscaling listener with a valid interval",
+			config: lifecycled.Config{SNSTopic: "topic", AutoscalingHeartbeatInterval: time.Second},
+		},
+		{
+			name:    "no listeners enabled",
+			config:  lifecycled.Config{},
+			wantErr: "no listeners enabled",
+		},
+		{
+			name:    "spot interval not positive",
+			config:  lifecycled.Config{SpotListener: true, SpotListenerInterval: 0},
+			wantErr: "spot-listener-interval",
+		},
+		{
+			name:    "heartbeat interval not positive",
+			config:  lifecycled.Config{SNSTopic: "topic", AutoscalingHeartbeatInterval: -time.Second},
+			wantErr: "autoscaling-heartbeat-interval",
+		},
+		{
+			// A disabled listener's interval is irrelevant and must not fail validation.
+			name:   "disabled spot listener ignores its interval",
+			config: lifecycled.Config{SNSTopic: "topic", AutoscalingHeartbeatInterval: time.Second, SpotListenerInterval: 0},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.config.Validate()
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("Validate() = %v, want nil", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("Validate() = nil, want an error containing %q", tc.wantErr)
+			}
+			if !strings.Contains(err.Error(), tc.wantErr) {
+				t.Errorf("Validate() error = %q, want it to contain %q", err.Error(), tc.wantErr)
+			}
+		})
+	}
+}
+
 func parseTagString(tagString string) map[string]string {
 	tags := make(map[string]string)
 
