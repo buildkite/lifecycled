@@ -79,7 +79,7 @@ Lifecycled is configured via command-line flags or environment variables (with `
 | `--cloudwatch-stream` | `LIFECYCLED_CLOUDWATCH_STREAM` | Instance ID | CloudWatch Logs stream name |
 | `--tags` | `LIFECYCLED_TAGS` | - | Comma-separated tags for SQS queues (e.g., `Team=platform,Environment=prod`) |
 | `--spot-listener-interval` | `LIFECYCLED_SPOT_LISTENER_INTERVAL` | `5s` | Interval to check for spot termination notices |
-| `--autoscaling-heartbeat-interval` | `LIFECYCLED_AUTOSCALING_HEARTBEAT_INTERVAL` | `10s` | Interval to send lifecycle heartbeats to AWS |
+| `--autoscaling-heartbeat-interval` | `LIFECYCLED_AUTOSCALING_HEARTBEAT_INTERVAL` | `10s` | Interval to send lifecycle heartbeats to AWS; keep shorter than the hook's `HeartbeatTimeout` |
 
 ### AWS Configuration
 

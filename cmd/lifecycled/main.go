@@ -75,7 +75,7 @@ func main() {
 		Default("5s").
 		DurationVar(&spotListenerInterval)
 
-	app.Flag("autoscaling-heartbeat-interval", "Interval to send AWS Lifecycle Heartbeat Actions").
+	app.Flag("autoscaling-heartbeat-interval", "Interval to send AWS Lifecycle Heartbeat Actions; keep shorter than the hook's HeartbeatTimeout").
 		Default("10s").
 		DurationVar(&autoscalingHeartbeatInterval)
 
