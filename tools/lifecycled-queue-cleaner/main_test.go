@@ -18,10 +18,13 @@ import (
 
 func TestFilterInactiveQueues(t *testing.T) {
 	const (
-		dead    = "https://sqs.us-east-1.amazonaws.com/123456789012/lifecycled-i-dead"
-		running = "https://sqs.us-east-1.amazonaws.com/123456789012/lifecycled-i-running"
-		other   = "https://sqs.us-east-1.amazonaws.com/123456789012/some-other-queue"
-		chinaCN = "https://sqs.cn-north-1.amazonaws.com.cn/123456789012/lifecycled-i-dead"
+		dead      = "https://sqs.us-east-1.amazonaws.com/123456789012/lifecycled-i-dead"
+		running   = "https://sqs.us-east-1.amazonaws.com/123456789012/lifecycled-i-running"
+		other     = "https://sqs.us-east-1.amazonaws.com/123456789012/some-other-queue"
+		chinaCN   = "https://sqs.cn-north-1.amazonaws.com.cn/123456789012/lifecycled-i-dead"
+		fips      = "https://sqs-fips.us-east-1.amazonaws.com/123456789012/lifecycled-i-dead"
+		dualstack = "https://sqs.us-east-1.api.aws/123456789012/lifecycled-i-dead"
+		emptyID   = "https://sqs.us-east-1.amazonaws.com/123456789012/lifecycled-i-"
 	)
 	runningSet := map[string]struct{}{"i-running": {}}
 
@@ -34,7 +37,10 @@ func TestFilterInactiveQueues(t *testing.T) {
 		{name: "keeps queue for terminated instance", urls: []string{dead}, want: []string{dead}},
 		{name: "skips queue for running instance", urls: []string{running}, want: nil},
 		{name: "ignores non-lifecycled queue", urls: []string{other}, want: nil},
+		{name: "ignores queue with no instance id", urls: []string{emptyID}, want: nil},
 		{name: "matches china partition url", urls: []string{chinaCN}, want: []string{chinaCN}},
+		{name: "matches fips endpoint url", urls: []string{fips}, want: []string{fips}},
+		{name: "matches dualstack endpoint url", urls: []string{dualstack}, want: []string{dualstack}},
 		{name: "mixed", urls: []string{dead, running, other}, want: []string{dead}},
 	}
 
