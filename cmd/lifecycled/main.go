@@ -201,14 +201,45 @@ func main() {
 			start := time.Now()
 			err = notice.Handle(ctx, handler, log)
 			log = log.WithField("duration", time.Since(start).String())
-			if err != nil {
+			switch classifyDrain(err, ctx.Err()) {
+			case drainInterrupted:
+				// Our own SIGINT/SIGTERM cancelled the drain; the lifecycle action
+				// still completes on a fresh context, so this is a clean shutdown.
+				log.WithError(err).Warn("Handler interrupted by shutdown")
+			case drainFailed:
 				log.WithError(err).Error("Failed to execute handler")
 				return err
+			case drainSucceeded:
+				log.Info("Handler finished successfully")
 			}
-			log.Info("Handler finished successfully")
 		}
 		return nil
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+}
+
+// drainOutcome classifies how a termination handler finished, which decides both
+// what we log and whether the process exits non-zero.
+type drainOutcome int
+
+const (
+	drainSucceeded drainOutcome = iota
+	drainFailed
+	drainInterrupted
+)
+
+// classifyDrain interprets the handler's result against the daemon context. A
+// handler error is a genuine failure only when our own context wasn't cancelled:
+// a SIGINT/SIGTERM that cancels the drain is a clean shutdown, not a failure, so
+// it must not make the process exit non-zero.
+func classifyDrain(handlerErr, ctxErr error) drainOutcome {
+	switch {
+	case handlerErr == nil:
+		return drainSucceeded
+	case ctxErr != nil:
+		return drainInterrupted
+	default:
+		return drainFailed
+	}
 }
