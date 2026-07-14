@@ -91,6 +91,20 @@ func main() {
 			logger.SetLevel(logrus.DebugLevel)
 		}
 
+		// Validate the flags before touching AWS so a misconfiguration surfaces
+		// immediately rather than behind a region or IMDS error. InstanceID is
+		// filled in below once resolved.
+		daemonConfig := &lifecycled.Config{
+			Tags:                         tags,
+			SNSTopic:                     snsTopic,
+			SpotListener:                 !disableSpotListener,
+			SpotListenerInterval:         spotListenerInterval,
+			AutoscalingHeartbeatInterval: autoscalingHeartbeatInterval,
+		}
+		if err := daemonConfig.Validate(); err != nil {
+			logger.WithError(err).Fatal("Invalid configuration")
+		}
+
 		// Cancelled on SIGINT/SIGTERM by the signal handler below.
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -170,17 +184,7 @@ func main() {
 		}()
 
 		handler := lifecycled.NewFileHandler(handler)
-		daemonConfig := &lifecycled.Config{
-			InstanceID:                   instanceID,
-			Tags:                         tags,
-			SNSTopic:                     snsTopic,
-			SpotListener:                 !disableSpotListener,
-			SpotListenerInterval:         spotListenerInterval,
-			AutoscalingHeartbeatInterval: autoscalingHeartbeatInterval,
-		}
-		if err := daemonConfig.Validate(); err != nil {
-			logger.WithError(err).Fatal("Invalid configuration")
-		}
+		daemonConfig.InstanceID = instanceID
 		daemon := lifecycled.New(daemonConfig, cfg, logger)
 
 		notice, err := daemon.Start(ctx)
