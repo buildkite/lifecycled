@@ -23,7 +23,7 @@ Lifecycled runs as a daemon on your EC2 instances and:
    - Sends periodic heartbeats to AWS to extend the timeout
    - Completes the lifecycle action when the handler finishes
 
-   AutoScaling notices are handled at most once: the SQS message is deleted on receipt, before the handler runs. If lifecycled is killed mid-drain it does not resume on restart; the instance waits out the hook's `HeartbeatTimeout`, then the ASG applies its default result, so size that timeout accordingly. (Spot notices differ: they are re-read from instance metadata each poll, so a restarted daemon re-runs the handler.)
+   AutoScaling notices are handled at most once: the SQS message is deleted on receipt, before the handler runs. If lifecycled crashes or is hard-killed (SIGKILL) mid-drain it does not resume on restart; the instance waits out the hook's `HeartbeatTimeout`, then the ASG applies its default result, so size that timeout accordingly. A graceful SIGINT/SIGTERM instead cancels the handler but still completes the lifecycle action, so the instance proceeds without waiting. (Spot notices differ: they are re-read from instance metadata each poll, so a restarted daemon re-runs the handler.)
 
 2. **For Spot Terminations**: Polls the EC2 instance metadata service for spot termination notices. When detected:
    - Executes your handler script
