@@ -142,11 +142,13 @@ func (c *recordingSQSClient) DeleteQueue(ctx context.Context, _ *sqs.DeleteQueue
 
 // batchSQSClient returns one batch holding another instance's event followed by
 // the target instance's, then empty batches, so a test can prove the listener
-// scans the whole batch rather than only the first message.
+// scans the whole batch rather than only the first message. It also records the
+// last MaxNumberOfMessages it was asked for so a test can assert the batch size.
 type batchSQSClient struct {
-	match    string
-	received int64
-	deletes  int64
+	match       string
+	received    int64
+	deletes     int64
+	maxMessages int64
 }
 
 func (c *batchSQSClient) CreateQueue(context.Context, *sqs.CreateQueueInput, ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error) {
@@ -157,7 +159,8 @@ func (c *batchSQSClient) GetQueueAttributes(context.Context, *sqs.GetQueueAttrib
 	return &sqs.GetQueueAttributesOutput{Attributes: map[string]string{"QueueArn": "arn"}}, nil
 }
 
-func (c *batchSQSClient) ReceiveMessage(context.Context, *sqs.ReceiveMessageInput, ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
+func (c *batchSQSClient) ReceiveMessage(_ context.Context, in *sqs.ReceiveMessageInput, _ ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
+	atomic.StoreInt64(&c.maxMessages, int64(in.MaxNumberOfMessages))
 	if atomic.AddInt64(&c.received, 1) != 1 {
 		return &sqs.ReceiveMessageOutput{}, nil
 	}
@@ -473,6 +476,12 @@ func TestAutoscalingListenerScansMessageBatch(t *testing.T) {
 	// proving the loop walked past the first message.
 	if got := atomic.LoadInt64(&sq.deletes); got < 2 {
 		t.Errorf("DeleteMessage calls = %d, want >= 2 (the whole batch up to the match is scanned)", got)
+	}
+
+	// The poll must request a full batch; at MaxNumberOfMessages: 1 the fan-out
+	// backlog would drain one round-trip at a time, which is the regression here.
+	if got := atomic.LoadInt64(&sq.maxMessages); got != 10 {
+		t.Errorf("ReceiveMessage MaxNumberOfMessages = %d, want 10", got)
 	}
 }
 
