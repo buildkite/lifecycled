@@ -77,6 +77,12 @@ func TestNewCloudWatchLogsHook(t *testing.T) {
 			wantErr:  true,
 		},
 		{
+			// A pre-provisioned stream + a role without logs:CreateLogStream must not
+			// be fatal, mirroring the group tolerance above.
+			name:      "tolerates access denied on stream",
+			streamErr: &smithy.GenericAPIError{Code: "AccessDeniedException", Message: "no perms"},
+		},
+		{
 			name:      "propagates other stream errors",
 			streamErr: errors.New("access denied"),
 			wantErr:   true,

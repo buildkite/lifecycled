@@ -139,8 +139,10 @@ func (q *Queue) Subscribe(ctx context.Context) error {
 // GetMessages long polls for messages from the SQS queue.
 func (q *Queue) GetMessages(ctx context.Context) ([]sqstypes.Message, error) {
 	out, err := q.sqsClient.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
-		QueueUrl:            aws.String(q.url),
-		MaxNumberOfMessages: 1,
+		QueueUrl: aws.String(q.url),
+		// SQS max per receive. Under SNS fan-out the queue also carries other
+		// instances' events, so draining a batch per poll beats one-at-a-time.
+		MaxNumberOfMessages: 10,
 		WaitTimeSeconds:     longPollingWaitTimeSeconds,
 		VisibilityTimeout:   0,
 	})

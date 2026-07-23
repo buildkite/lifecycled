@@ -140,6 +140,51 @@ func (c *recordingSQSClient) DeleteQueue(ctx context.Context, _ *sqs.DeleteQueue
 	return &sqs.DeleteQueueOutput{}, ctx.Err()
 }
 
+// batchSQSClient returns one batch holding another instance's event followed by
+// the target instance's, then empty batches, so a test can prove the listener
+// scans the whole batch rather than only the first message. It also records the
+// last MaxNumberOfMessages it was asked for so a test can assert the batch size.
+type batchSQSClient struct {
+	match       string
+	received    int64
+	deletes     int64
+	maxMessages int64
+}
+
+func (c *batchSQSClient) CreateQueue(context.Context, *sqs.CreateQueueInput, ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error) {
+	return &sqs.CreateQueueOutput{QueueUrl: aws.String("url")}, nil
+}
+
+func (c *batchSQSClient) GetQueueAttributes(context.Context, *sqs.GetQueueAttributesInput, ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error) {
+	return &sqs.GetQueueAttributesOutput{Attributes: map[string]string{"QueueArn": "arn"}}, nil
+}
+
+func (c *batchSQSClient) ReceiveMessage(_ context.Context, in *sqs.ReceiveMessageInput, _ ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
+	atomic.StoreInt64(&c.maxMessages, int64(in.MaxNumberOfMessages))
+	if atomic.AddInt64(&c.received, 1) != 1 {
+		return &sqs.ReceiveMessageOutput{}, nil
+	}
+	return &sqs.ReceiveMessageOutput{Messages: []sqstypes.Message{
+		batchMessage("i-999999999999", "h1"),
+		batchMessage(c.match, "h2"),
+	}}, nil
+}
+
+func (c *batchSQSClient) DeleteMessage(context.Context, *sqs.DeleteMessageInput, ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error) {
+	atomic.AddInt64(&c.deletes, 1)
+	return &sqs.DeleteMessageOutput{}, nil
+}
+
+func (c *batchSQSClient) DeleteQueue(context.Context, *sqs.DeleteQueueInput, ...func(*sqs.Options)) (*sqs.DeleteQueueOutput, error) {
+	return &sqs.DeleteQueueOutput{}, nil
+}
+
+func batchMessage(instanceID, handle string) sqstypes.Message {
+	inner := `{"AutoScalingGroupName":"group","EC2InstanceId":"` + instanceID + `","LifecycleActionToken":"token","LifecycleTransition":"autoscaling:EC2_INSTANCE_TERMINATING","LifecycleHookName":"hook"}`
+	env, _ := json.Marshal(&Envelope{Type: "t", Message: inner})
+	return sqstypes.Message{Body: aws.String(string(env)), ReceiptHandle: aws.String(handle)}
+}
+
 type recordingSNSClient struct {
 	unsubscribeErr error
 }
@@ -397,6 +442,46 @@ func TestAutoscalingNoticeStopsHeartbeatWhenHandleReturns(t *testing.T) {
 	// by a timeout so an unreachable endpoint can't wedge the process.
 	if !as.completeHadDeadline {
 		t.Error("CompleteLifecycleAction context had no deadline; the completion call must be bounded by a timeout")
+	}
+}
+
+// A single ReceiveMessage batch can carry several instances' events under SNS
+// fan-out, so the listener must scan the whole batch and emit for the matching
+// instance even when it isn't the first message.
+func TestAutoscalingListenerScansMessageBatch(t *testing.T) {
+	const instanceID = "i-000000000000"
+	sq := &batchSQSClient{match: instanceID}
+	queue := NewQueue("queue", "topic", sq, &stubSNSClient{}, "")
+	listener := NewAutoscalingListener(instanceID, queue, &stubAutoscalingClient{}, time.Minute)
+
+	logger, _ := logrustest.NewNullLogger()
+	notices := make(chan TerminationNotice, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := listener.Start(ctx, notices, logrus.NewEntry(logger)); err != nil {
+		t.Fatalf("Start returned error: %v", err)
+	}
+
+	select {
+	case n := <-notices:
+		if got := n.Type(); got != "autoscaling" {
+			t.Errorf("notice type = %q, want %q", got, "autoscaling")
+		}
+	default:
+		t.Fatal("expected a notice from the matching message later in the batch, got none")
+	}
+
+	// Both the non-matching message and the match ahead of the return are deleted,
+	// proving the loop walked past the first message.
+	if got := atomic.LoadInt64(&sq.deletes); got < 2 {
+		t.Errorf("DeleteMessage calls = %d, want >= 2 (the whole batch up to the match is scanned)", got)
+	}
+
+	// The poll must request a full batch; at MaxNumberOfMessages: 1 the fan-out
+	// backlog would drain one round-trip at a time, which is the regression here.
+	if got := atomic.LoadInt64(&sq.maxMessages); got != 10 {
+		t.Errorf("ReceiveMessage MaxNumberOfMessages = %d, want 10", got)
 	}
 }
 
