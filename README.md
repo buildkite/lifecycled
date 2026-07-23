@@ -240,6 +240,12 @@ kubectl drain "${NODE_NAME}" \
   --grace-period=300
 ```
 
+## Exit codes and restarts
+
+Lifecycled exits 0 when the handler completes successfully, and also when a drain is cut short by lifecycled's own SIGINT/SIGTERM: a graceful self-shutdown is not a failure. It exits non-zero only when the handler itself returns non-zero, for both autoscaling and spot terminations.
+
+The shipped [systemd unit](init/systemd/lifecycled.unit) sets `Restart=on-failure` with `RestartSec=30s`, so a failed handler restarts the daemon. A restarted autoscaling drain does not re-run the handler: the notice is handled at most once (as described above), and the lifecycle action is completed regardless of the handler's result. A restarted spot drain does re-run the handler, because the notice is re-read from instance metadata; with the 30s `RestartSec` and the roughly two-minute spot warning that retries a few times before the instance is reclaimed, which recovers a transient failure but loops on one that fails deterministically. Set `Restart=no` if you would rather a handler run exactly once.
+
 ## IAM Permissions
 
 Lifecycled requires specific IAM permissions to function properly.
