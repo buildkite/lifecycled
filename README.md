@@ -23,6 +23,8 @@ Lifecycled runs as a daemon on your EC2 instances and:
    - Sends periodic heartbeats to AWS to extend the timeout
    - Completes the lifecycle action when the handler finishes
 
+   lifecycled deletes each AutoScaling SQS message on receipt, before the handler runs, so after a successful delete the drain isn't replayed on restart. That delete is best-effort: if it fails (or the queue isn't torn down on shutdown), SQS may redeliver the message and re-run the handler. If lifecycled crashes or is hard-killed (SIGKILL) mid-drain it does not resume on restart; the instance waits out the hook's `HeartbeatTimeout`, then the ASG applies its default result, so size that timeout accordingly. A graceful SIGINT/SIGTERM instead cancels the handler but still completes the lifecycle action, so the instance proceeds without waiting. (Spot notices differ: they are re-read from instance metadata each poll, so a restarted daemon re-runs the handler.)
+
 2. **For Spot Terminations**: Polls the EC2 instance metadata service for spot termination notices. When detected:
    - Executes your handler script
    - Allows graceful shutdown before AWS terminates the instance
@@ -77,7 +79,7 @@ Lifecycled is configured via command-line flags or environment variables (with `
 | `--cloudwatch-stream` | `LIFECYCLED_CLOUDWATCH_STREAM` | Instance ID | CloudWatch Logs stream name |
 | `--tags` | `LIFECYCLED_TAGS` | - | Comma-separated tags for SQS queues (e.g., `Team=platform,Environment=prod`) |
 | `--spot-listener-interval` | `LIFECYCLED_SPOT_LISTENER_INTERVAL` | `5s` | Interval to check for spot termination notices |
-| `--autoscaling-heartbeat-interval` | `LIFECYCLED_AUTOSCALING_HEARTBEAT_INTERVAL` | `10s` | Interval to send lifecycle heartbeats to AWS |
+| `--autoscaling-heartbeat-interval` | `LIFECYCLED_AUTOSCALING_HEARTBEAT_INTERVAL` | `10s` | Interval to send lifecycle heartbeats to AWS; keep shorter than the hook's `HeartbeatTimeout` |
 
 ### AWS Configuration
 
@@ -237,6 +239,12 @@ kubectl drain "${NODE_NAME}" \
   --force \
   --grace-period=300
 ```
+
+## Exit codes and restarts
+
+Lifecycled exits 0 when the handler completes successfully, and also when a drain is cut short by lifecycled's own SIGINT/SIGTERM: a graceful self-shutdown is not a failure. Once a drain has started, it exits non-zero only when the handler itself returns non-zero, for both autoscaling and spot terminations. It also exits non-zero on any fatal startup error before a drain begins, such as invalid config, AWS/IMDS setup failures, or a listener that fails to start.
+
+The shipped [systemd unit](init/systemd/lifecycled.unit) sets `Restart=on-failure` with `RestartSec=30s`, so a failed handler restarts the daemon. A restarted autoscaling drain normally does not re-run the handler: the SQS message is deleted on receipt (best-effort, as described above), and the lifecycle action is completed regardless of the handler's result. A restarted spot drain does re-run the handler, because the notice is re-read from instance metadata; with the 30s `RestartSec` and the roughly two-minute spot warning that retries a few times before the instance is reclaimed, which recovers a transient failure but loops on one that fails deterministically. Set `Restart=no` if you would rather a handler run exactly once.
 
 ## IAM Permissions
 

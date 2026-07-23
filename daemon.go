@@ -68,6 +68,24 @@ type Config struct {
 	AutoscalingHeartbeatInterval time.Duration
 }
 
+// Validate rejects configuration that would otherwise fail at runtime: a
+// non-positive listener interval panics time.NewTicker (the autoscaling one only
+// when a termination notice arrives), and a daemon with no listeners blocks
+// forever doing nothing.
+func (c *Config) Validate() error {
+	if !c.SpotListener && c.SNSTopic == "" {
+		return errors.New("no listeners enabled: set --sns-topic and/or drop --no-spot")
+	}
+	var errs []error
+	if c.SpotListener && c.SpotListenerInterval <= 0 {
+		errs = append(errs, fmt.Errorf("--spot-listener-interval must be positive, got %s", c.SpotListenerInterval))
+	}
+	if c.SNSTopic != "" && c.AutoscalingHeartbeatInterval <= 0 {
+		errs = append(errs, fmt.Errorf("--autoscaling-heartbeat-interval must be positive, got %s", c.AutoscalingHeartbeatInterval))
+	}
+	return errors.Join(errs...)
+}
+
 // Daemon is what orchestrates the listening and execution of the handler on a termination notice.
 type Daemon struct {
 	instanceID string
@@ -145,6 +163,13 @@ type TerminationNotice interface {
 	Type() string
 	Handle(context.Context, Handler, *logrus.Entry) error
 }
+
+// ErrDrainInterrupted marks a handler error caused by the daemon's own
+// SIGINT/SIGTERM cancelling the drain rather than a genuine handler failure.
+// Handle wraps the handler error with it, captured when the handler returns, so
+// the outcome is fixed before any detached cleanup (e.g. CompleteLifecycleAction)
+// can widen the cancellation window and relabel a real failure as an interrupt.
+var ErrDrainInterrupted = errors.New("drain interrupted by shutdown")
 
 // Handler ...
 type Handler interface {

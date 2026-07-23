@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -237,5 +238,12 @@ func (n *autoscalingTerminationNotice) Handle(ctx context.Context, handler Handl
 		}
 	}()
 
-	return handler.Execute(ctx, n.message.Transition, n.message.InstanceID)
+	// Snapshot cancellation here, before the deferred CompleteLifecycleAction runs
+	// on a fresh context for up to awsActionTimeout: a SIGTERM landing during that
+	// cleanup must not relabel a genuine handler failure as an interrupt.
+	err := handler.Execute(ctx, n.message.Transition, n.message.InstanceID)
+	if err != nil && ctx.Err() != nil {
+		return fmt.Errorf("%w: %w", ErrDrainInterrupted, err)
+	}
+	return err
 }
