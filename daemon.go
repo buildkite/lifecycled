@@ -76,13 +76,14 @@ func (c *Config) Validate() error {
 	if !c.SpotListener && c.SNSTopic == "" {
 		return errors.New("no listeners enabled: set --sns-topic and/or drop --no-spot")
 	}
+	var errs []error
 	if c.SpotListener && c.SpotListenerInterval <= 0 {
-		return fmt.Errorf("--spot-listener-interval must be positive, got %s", c.SpotListenerInterval)
+		errs = append(errs, fmt.Errorf("--spot-listener-interval must be positive, got %s", c.SpotListenerInterval))
 	}
 	if c.SNSTopic != "" && c.AutoscalingHeartbeatInterval <= 0 {
-		return fmt.Errorf("--autoscaling-heartbeat-interval must be positive, got %s", c.AutoscalingHeartbeatInterval)
+		errs = append(errs, fmt.Errorf("--autoscaling-heartbeat-interval must be positive, got %s", c.AutoscalingHeartbeatInterval))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // Daemon is what orchestrates the listening and execution of the handler on a termination notice.
