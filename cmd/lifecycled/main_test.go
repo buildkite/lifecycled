@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 
@@ -10,13 +11,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// fakeNotice is a TerminationNotice whose Handle returns a preset error,
-// ignoring the handler, so handleNotice's exit-code wiring can be tested.
+// fakeNotice is a TerminationNotice whose Handle returns a preset error, ignoring
+// the handler, so handleNotice's exit-code wiring can be tested. It mirrors the
+// real Handle contract: a handler error observed while ctx is cancelled is marked
+// ErrDrainInterrupted.
 type fakeNotice struct{ err error }
 
 func (fakeNotice) Type() string { return "fake" }
 
-func (n fakeNotice) Handle(context.Context, lifecycled.Handler, *logrus.Entry) error {
+func (n fakeNotice) Handle(ctx context.Context, _ lifecycled.Handler, _ *logrus.Entry) error {
+	if n.err != nil && ctx.Err() != nil {
+		return fmt.Errorf("%w: %w", lifecycled.ErrDrainInterrupted, n.err)
+	}
 	return n.err
 }
 
@@ -62,20 +68,20 @@ func TestClassifyDrain(t *testing.T) {
 	tests := []struct {
 		name       string
 		handlerErr error
-		ctxErr     error
 		want       drainOutcome
 	}{
-		{"success", nil, nil, drainSucceeded},
-		// A handler that returns nil is a success even if ctx was cancelled.
-		{"success despite cancellation", nil, context.Canceled, drainSucceeded},
-		{"failure", handlerErr, nil, drainFailed},
-		{"interrupted by shutdown", handlerErr, context.Canceled, drainInterrupted},
+		{"success", nil, drainSucceeded},
+		{"failure", handlerErr, drainFailed},
+		// Only an error Handle marked as interrupted is a clean shutdown; a bare
+		// handler error, even one wrapping context.Canceled, is a genuine failure.
+		{"unmarked cancellation is failure", fmt.Errorf("%w: %w", context.Canceled, handlerErr), drainFailed},
+		{"interrupted by shutdown", fmt.Errorf("%w: %w", lifecycled.ErrDrainInterrupted, handlerErr), drainInterrupted},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := classifyDrain(tc.handlerErr, tc.ctxErr); got != tc.want {
-				t.Errorf("classifyDrain(%v, %v) = %d, want %d", tc.handlerErr, tc.ctxErr, got, tc.want)
+			if got := classifyDrain(tc.handlerErr); got != tc.want {
+				t.Errorf("classifyDrain(%v) = %d, want %d", tc.handlerErr, got, tc.want)
 			}
 		})
 	}

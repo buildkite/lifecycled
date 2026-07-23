@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"os/signal"
@@ -213,7 +214,7 @@ func handleNotice(ctx context.Context, notice lifecycled.TerminationNotice, hand
 	start := time.Now()
 	err := notice.Handle(ctx, handler, log)
 	log = log.WithField("duration", time.Since(start).String())
-	switch classifyDrain(err, ctx.Err()) {
+	switch classifyDrain(err) {
 	case drainSucceeded:
 		log.Info("Handler finished successfully")
 	case drainFailed:
@@ -235,19 +236,16 @@ const (
 	drainInterrupted
 )
 
-// classifyDrain interprets the handler's result against the daemon context. A
-// handler error is a genuine failure only when our own context wasn't cancelled:
-// a SIGINT/SIGTERM that cancels the drain is a clean shutdown, not a failure, so
-// it must not make the process exit non-zero.
-func classifyDrain(handlerErr, ctxErr error) drainOutcome {
+// classifyDrain interprets the handler's result. A handler error is a genuine
+// failure unless Handle marked it ErrDrainInterrupted, meaning our own
+// SIGINT/SIGTERM cancelled the drain: a clean shutdown, not a failure, so it must
+// not make the process exit non-zero. Handle captures that cause when the handler
+// returns, so detached cleanup (e.g. CompleteLifecycleAction) can't relabel it.
+func classifyDrain(handlerErr error) drainOutcome {
 	switch {
 	case handlerErr == nil:
 		return drainSucceeded
-	case ctxErr != nil:
-		// Deliberate trade-off: a handler that failed on its own merits at the
-		// same instant a SIGINT/SIGTERM arrived is reported as an interrupt, not a
-		// failure. exec.CommandContext's kill error is indistinguishable from the
-		// child's own non-zero exit, and the race window is narrow.
+	case errors.Is(handlerErr, lifecycled.ErrDrainInterrupted):
 		return drainInterrupted
 	default:
 		return drainFailed

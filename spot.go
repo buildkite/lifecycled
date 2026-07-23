@@ -118,5 +118,9 @@ func (n *spotTerminationNotice) Type() string {
 }
 
 func (n *spotTerminationNotice) Handle(ctx context.Context, handler Handler, _ *logrus.Entry) error {
-	return handler.Execute(ctx, n.transition, n.instanceID, n.terminationTime.Format(time.RFC3339))
+	err := handler.Execute(ctx, n.transition, n.instanceID, n.terminationTime.Format(time.RFC3339))
+	if err != nil && ctx.Err() != nil {
+		return fmt.Errorf("%w: %w", ErrDrainInterrupted, err)
+	}
+	return err
 }

@@ -164,6 +164,13 @@ type TerminationNotice interface {
 	Handle(context.Context, Handler, *logrus.Entry) error
 }
 
+// ErrDrainInterrupted marks a handler error caused by the daemon's own
+// SIGINT/SIGTERM cancelling the drain rather than a genuine handler failure.
+// Handle wraps the handler error with it, captured when the handler returns, so
+// the outcome is fixed before any detached cleanup (e.g. CompleteLifecycleAction)
+// can widen the cancellation window and relabel a real failure as an interrupt.
+var ErrDrainInterrupted = errors.New("drain interrupted by shutdown")
+
 // Handler ...
 type Handler interface {
 	Execute(ctx context.Context, args ...string) error
