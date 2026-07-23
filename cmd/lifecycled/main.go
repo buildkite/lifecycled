@@ -193,30 +193,36 @@ func main() {
 		}
 		if notice != nil {
 			log := logger.WithFields(logrus.Fields{"instanceId": instanceID, "notice": notice.Type()})
-			log.Info("Executing handler")
-
-			// The handler runs on the signal-cancellable ctx, so a SIGINT/SIGTERM
-			// mid-handle intentionally cancels the drain script; the autoscaling notice
-			// still releases the ASG hook via CompleteLifecycleAction on a fresh context.
-			start := time.Now()
-			err = notice.Handle(ctx, handler, log)
-			log = log.WithField("duration", time.Since(start).String())
-			switch classifyDrain(err, ctx.Err()) {
-			case drainInterrupted:
-				// Our own SIGINT/SIGTERM cancelled the drain; the lifecycle action
-				// still completes on a fresh context, so this is a clean shutdown.
-				log.WithError(err).Warn("Handler interrupted by shutdown")
-			case drainFailed:
-				log.WithError(err).Error("Failed to execute handler")
-				return err
-			case drainSucceeded:
-				log.Info("Handler finished successfully")
-			}
+			return handleNotice(ctx, notice, handler, log)
 		}
 		return nil
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+}
+
+// handleNotice runs the termination handler and maps its outcome to a process
+// exit: a genuine handler failure is returned so the process exits non-zero,
+// while a success or a drain cancelled by our own shutdown returns nil.
+func handleNotice(ctx context.Context, notice lifecycled.TerminationNotice, handler lifecycled.Handler, log *logrus.Entry) error {
+	log.Info("Executing handler")
+
+	// The handler runs on the signal-cancellable ctx, so a SIGINT/SIGTERM
+	// mid-handle intentionally cancels the drain script; the autoscaling notice
+	// still releases the ASG hook via CompleteLifecycleAction on a fresh context.
+	start := time.Now()
+	err := notice.Handle(ctx, handler, log)
+	log = log.WithField("duration", time.Since(start).String())
+	switch classifyDrain(err, ctx.Err()) {
+	case drainSucceeded:
+		log.Info("Handler finished successfully")
+	case drainFailed:
+		log.WithError(err).Error("Failed to execute handler")
+		return err
+	case drainInterrupted:
+		log.WithError(err).Warn("Handler interrupted by shutdown")
+	}
+	return nil
 }
 
 // drainOutcome classifies how a termination handler finished, which decides both
@@ -238,6 +244,10 @@ func classifyDrain(handlerErr, ctxErr error) drainOutcome {
 	case handlerErr == nil:
 		return drainSucceeded
 	case ctxErr != nil:
+		// Deliberate trade-off: a handler that failed on its own merits at the
+		// same instant a SIGINT/SIGTERM arrived is reported as an interrupt, not a
+		// failure. exec.CommandContext's kill error is indistinguishable from the
+		// child's own non-zero exit, and the race window is narrow.
 		return drainInterrupted
 	default:
 		return drainFailed
