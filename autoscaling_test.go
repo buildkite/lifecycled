@@ -299,6 +299,55 @@ func TestAutoscalingNoticeCompletesOnCancellation(t *testing.T) {
 	}
 }
 
+// failingHandler returns a genuine error immediately, modelling a drain script
+// that fails on its own merits while the context is still live.
+type failingHandler struct{ err error }
+
+func (h failingHandler) Execute(context.Context, ...string) error { return h.err }
+
+// cancelOnCompleteASGClient cancels the daemon context from inside
+// CompleteLifecycleAction, modelling a SIGTERM that lands during the detached
+// cleanup that runs after the handler has already failed.
+type cancelOnCompleteASGClient struct{ cancel context.CancelFunc }
+
+func (c cancelOnCompleteASGClient) CompleteLifecycleAction(context.Context, *autoscaling.CompleteLifecycleActionInput, ...func(*autoscaling.Options)) (*autoscaling.CompleteLifecycleActionOutput, error) {
+	c.cancel()
+	return &autoscaling.CompleteLifecycleActionOutput{}, nil
+}
+
+func (cancelOnCompleteASGClient) RecordLifecycleActionHeartbeat(context.Context, *autoscaling.RecordLifecycleActionHeartbeatInput, ...func(*autoscaling.Options)) (*autoscaling.RecordLifecycleActionHeartbeatOutput, error) {
+	return &autoscaling.RecordLifecycleActionHeartbeatOutput{}, nil
+}
+
+// A handler that fails on its own merits must stay a genuine failure even when a
+// SIGTERM cancels the context during the detached CompleteLifecycleAction that
+// runs after the handler returns. Handle snapshots cancellation when the handler
+// returns, so the up-to-awsActionTimeout cleanup window can't relabel a real
+// failure as an interrupt and exit 0.
+func TestAutoscalingNoticeFailureSurvivesCancellationDuringCleanup(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	handlerErr := errors.New("drain failed")
+	notice := &autoscalingTerminationNotice{
+		noticeType:        "autoscaling",
+		message:           &Message{GroupName: "g", HookName: "h", InstanceID: "i", ActionToken: "t"},
+		autoscaling:       cancelOnCompleteASGClient{cancel: cancel},
+		heartbeatInterval: time.Hour,
+	}
+
+	logger := logrus.New()
+	logger.SetOutput(io.Discard)
+
+	err := notice.Handle(ctx, failingHandler{err: handlerErr}, logrus.NewEntry(logger))
+	if !errors.Is(err, handlerErr) {
+		t.Fatalf("Handle returned %v, want the handler error", err)
+	}
+	if errors.Is(err, ErrDrainInterrupted) {
+		t.Error("handler failure relabelled as interrupt after cancellation during cleanup; the process would exit 0")
+	}
+}
+
 // countingASGClient counts heartbeats so a test can assert the heartbeat
 // goroutine stops once Handle returns.
 type countingASGClient struct {

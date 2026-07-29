@@ -253,6 +253,74 @@ func TestDaemon(t *testing.T) {
 
 }
 
+func TestConfigValidate(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   lifecycled.Config
+		wantErrs []string
+	}{
+		{
+			name:   "spot listener with a valid interval",
+			config: lifecycled.Config{SpotListener: true, SpotListenerInterval: time.Second},
+		},
+		{
+			name:   "autoscaling listener with a valid interval",
+			config: lifecycled.Config{SNSTopic: "topic", AutoscalingHeartbeatInterval: time.Second},
+		},
+		{
+			name:     "no listeners enabled",
+			config:   lifecycled.Config{},
+			wantErrs: []string{"no listeners enabled"},
+		},
+		{
+			name:     "spot interval not positive",
+			config:   lifecycled.Config{SpotListener: true, SpotListenerInterval: 0},
+			wantErrs: []string{"spot-listener-interval"},
+		},
+		{
+			name:     "spot interval negative",
+			config:   lifecycled.Config{SpotListener: true, SpotListenerInterval: -time.Second},
+			wantErrs: []string{"spot-listener-interval"},
+		},
+		{
+			name:     "heartbeat interval not positive",
+			config:   lifecycled.Config{SNSTopic: "topic", AutoscalingHeartbeatInterval: -time.Second},
+			wantErrs: []string{"autoscaling-heartbeat-interval"},
+		},
+		{
+			// Both listeners misconfigured: Validate reports both, not just the first.
+			name:     "both intervals not positive",
+			config:   lifecycled.Config{SpotListener: true, SpotListenerInterval: 0, SNSTopic: "topic", AutoscalingHeartbeatInterval: 0},
+			wantErrs: []string{"spot-listener-interval", "autoscaling-heartbeat-interval"},
+		},
+		{
+			// A disabled listener's interval is irrelevant and must not fail validation.
+			name:   "disabled spot listener ignores its interval",
+			config: lifecycled.Config{SNSTopic: "topic", AutoscalingHeartbeatInterval: time.Second, SpotListenerInterval: 0},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.config.Validate()
+			if len(tc.wantErrs) == 0 {
+				if err != nil {
+					t.Fatalf("Validate() = %v, want nil", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("Validate() = nil, want an error containing %q", tc.wantErrs)
+			}
+			for _, want := range tc.wantErrs {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("Validate() error = %q, want it to contain %q", err.Error(), want)
+				}
+			}
+		})
+	}
+}
+
 func parseTagString(tagString string) map[string]string {
 	tags := make(map[string]string)
 

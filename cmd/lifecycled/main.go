@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"os/signal"
@@ -75,7 +76,7 @@ func main() {
 		Default("5s").
 		DurationVar(&spotListenerInterval)
 
-	app.Flag("autoscaling-heartbeat-interval", "Interval to send AWS Lifecycle Heartbeat Actions").
+	app.Flag("autoscaling-heartbeat-interval", "Interval to send AWS Lifecycle Heartbeat Actions; keep shorter than the hook's HeartbeatTimeout").
 		Default("10s").
 		DurationVar(&autoscalingHeartbeatInterval)
 
@@ -89,6 +90,20 @@ func main() {
 
 		if debugLogging {
 			logger.SetLevel(logrus.DebugLevel)
+		}
+
+		// Validate the flags before touching AWS so a misconfiguration surfaces
+		// immediately rather than behind a region or IMDS error. InstanceID is
+		// filled in below once resolved.
+		daemonConfig := &lifecycled.Config{
+			Tags:                         tags,
+			SNSTopic:                     snsTopic,
+			SpotListener:                 !disableSpotListener,
+			SpotListenerInterval:         spotListenerInterval,
+			AutoscalingHeartbeatInterval: autoscalingHeartbeatInterval,
+		}
+		if err := daemonConfig.Validate(); err != nil {
+			logger.WithError(err).Fatal("Invalid configuration")
 		}
 
 		// Cancelled on SIGINT/SIGTERM by the signal handler below.
@@ -170,14 +185,8 @@ func main() {
 		}()
 
 		handler := lifecycled.NewFileHandler(handler)
-		daemon := lifecycled.New(&lifecycled.Config{
-			InstanceID:                   instanceID,
-			Tags:                         tags,
-			SNSTopic:                     snsTopic,
-			SpotListener:                 !disableSpotListener,
-			SpotListenerInterval:         spotListenerInterval,
-			AutoscalingHeartbeatInterval: autoscalingHeartbeatInterval,
-		}, cfg, logger)
+		daemonConfig.InstanceID = instanceID
+		daemon := lifecycled.New(daemonConfig, cfg, logger)
 
 		notice, err := daemon.Start(ctx)
 		if err != nil {
@@ -185,21 +194,60 @@ func main() {
 		}
 		if notice != nil {
 			log := logger.WithFields(logrus.Fields{"instanceId": instanceID, "notice": notice.Type()})
-			log.Info("Executing handler")
-
-			// The handler runs on the signal-cancellable ctx, so a SIGINT/SIGTERM
-			// mid-handle intentionally cancels the drain script; the autoscaling notice
-			// still releases the ASG hook via CompleteLifecycleAction on a fresh context.
-			start, err := time.Now(), notice.Handle(ctx, handler, log)
-			log = log.WithField("duration", time.Since(start).String())
-			if err != nil {
-				log.WithError(err).Error("Failed to execute handler")
-			}
-			log.Info("Handler finished successfully")
-
+			return handleNotice(ctx, notice, handler, log)
 		}
 		return nil
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+}
+
+// handleNotice runs the termination handler and maps its outcome to a process
+// exit: a genuine handler failure is returned so the process exits non-zero,
+// while a success or a drain cancelled by our own shutdown returns nil.
+func handleNotice(ctx context.Context, notice lifecycled.TerminationNotice, handler lifecycled.Handler, log *logrus.Entry) error {
+	log.Info("Executing handler")
+
+	// The handler runs on the signal-cancellable ctx, so a SIGINT/SIGTERM
+	// mid-handle intentionally cancels the drain script; the autoscaling notice
+	// still releases the ASG hook via CompleteLifecycleAction on a fresh context.
+	start := time.Now()
+	err := notice.Handle(ctx, handler, log)
+	log = log.WithField("duration", time.Since(start).String())
+	switch classifyDrain(err) {
+	case drainSucceeded:
+		log.Info("Handler finished successfully")
+	case drainFailed:
+		log.WithError(err).Error("Failed to execute handler")
+		return err
+	case drainInterrupted:
+		log.WithError(err).Warn("Handler interrupted by shutdown")
+	}
+	return nil
+}
+
+// drainOutcome classifies how a termination handler finished, which decides both
+// what we log and whether the process exits non-zero.
+type drainOutcome int
+
+const (
+	drainSucceeded drainOutcome = iota
+	drainFailed
+	drainInterrupted
+)
+
+// classifyDrain interprets the handler's result. A handler error is a genuine
+// failure unless Handle marked it ErrDrainInterrupted, meaning our own
+// SIGINT/SIGTERM cancelled the drain: a clean shutdown, not a failure, so it must
+// not make the process exit non-zero. Handle captures that cause when the handler
+// returns, so detached cleanup (e.g. CompleteLifecycleAction) can't relabel it.
+func classifyDrain(handlerErr error) drainOutcome {
+	switch {
+	case handlerErr == nil:
+		return drainSucceeded
+	case errors.Is(handlerErr, lifecycled.ErrDrainInterrupted):
+		return drainInterrupted
+	default:
+		return drainFailed
+	}
 }
