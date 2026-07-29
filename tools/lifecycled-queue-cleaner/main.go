@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"log"
-	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -259,8 +258,6 @@ func listQueues(ctx context.Context, client SQSClient) ([]string, error) {
 	return urls, nil
 }
 
-var queueRegex = regexp.MustCompile(`^https://sqs\.(.+?)\.amazonaws\.com(?:\.cn)?/(.+?)/lifecycled-(i-.+)$`)
-
 func listInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *ec2.Client) ([]string, error) {
 	instances, err := listInstances(ctx, ec2Client)
 	if err != nil {
@@ -289,16 +286,32 @@ func listInactiveQueues(ctx context.Context, sqsClient *sqs.Client, ec2Client *e
 	return inactiveQueues, nil
 }
 
+// instanceIDFromQueueURL returns the EC2 instance id encoded in a lifecycled
+// queue URL (.../<account>/lifecycled-<instanceID>) and whether the URL follows
+// that scheme. It reads the queue name from the final path segment, so it works
+// across every SQS endpoint (standard, GovCloud, China, FIPS, dualstack) without
+// matching the hostname.
+func instanceIDFromQueueURL(queueURL string) (string, bool) {
+	name := queueURL[strings.LastIndex(queueURL, "/")+1:]
+	id, ok := strings.CutPrefix(name, "lifecycled-")
+	if !ok {
+		return "", false
+	}
+	if rest, ok := strings.CutPrefix(id, "i-"); !ok || rest == "" {
+		return "", false
+	}
+	return id, true
+}
+
 // filterInactiveQueues returns the lifecycled- queue URLs whose instance id is
-// not in running. URLs that don't match the lifecycled- naming scheme are ignored.
+// not in running. URLs that don't follow the lifecycled- naming scheme are ignored.
 func filterInactiveQueues(urls []string, running map[string]struct{}) []string {
 	var inactive []string
 	for _, queue := range urls {
-		matches := queueRegex.FindStringSubmatch(queue)
-		if len(matches) != 4 {
+		instanceID, ok := instanceIDFromQueueURL(queue)
+		if !ok {
 			continue
 		}
-		instanceID := matches[3]
 		if _, exists := running[instanceID]; !exists {
 			inactive = append(inactive, queue)
 		}
