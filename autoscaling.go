@@ -82,7 +82,7 @@ func (l *AutoscalingListener) Type() string {
 
 // Start the autoscaling lifecycle hook listener.
 func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- TerminationNotice, log *logrus.Entry) error {
-	log.WithField("queue", l.queue.name).Debug("Creating sqs queue")
+	log.WithField("queue", l.queue.name).Debug("Creating SQS queue")
 	if err := l.queue.Create(ctx); err != nil {
 		return err
 	}
@@ -95,18 +95,18 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 		cleanupCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 		defer cancel()
 		if subscribed {
-			log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting sns subscription")
+			log.WithField("arn", l.queue.subscriptionArn).Debug("Deleting SNS subscription")
 			if err := l.queue.Unsubscribe(cleanupCtx); err != nil {
-				log.WithError(err).Error("Failed to unsubscribe from sns topic")
+				log.WithError(err).Error("Failed to unsubscribe from SNS topic")
 			}
 		}
-		log.WithField("queue", l.queue.name).Debug("Deleting sqs queue")
+		log.WithField("queue", l.queue.name).Debug("Deleting SQS queue")
 		if err := l.queue.Delete(cleanupCtx); err != nil {
 			log.WithError(err).Error("Failed to delete queue")
 		}
 	}()
 
-	log.WithField("topic", l.queue.topicArn).Debug("Subscribing queue to sns topic")
+	log.WithField("topic", l.queue.topicArn).Debug("Subscribing queue to SNS topic")
 	if err := l.queue.Subscribe(ctx); err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (l *AutoscalingListener) Start(ctx context.Context, notices chan<- Terminat
 		case <-ctx.Done():
 			return nil
 		default:
-			log.WithField("queueURL", l.queue.url).Debug("Polling sqs for messages")
+			log.WithField("queueURL", l.queue.url).Debug("Polling SQS for messages")
 			messages, err := l.queue.GetMessages(ctx)
 			if err != nil {
 				log.WithError(err).Warn("Failed to get messages from SQS")
