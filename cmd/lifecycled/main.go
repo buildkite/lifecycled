@@ -63,10 +63,10 @@ func main() {
 	app.Flag("json", "Enable JSON logging").
 		BoolVar(&jsonLogging)
 
-	app.Flag("cloudwatch-group", "Write logs to a specific Cloudwatch Logs group").
+	app.Flag("cloudwatch-group", "Write logs to a specific CloudWatch Logs group").
 		StringVar(&cloudwatchGroup)
 
-	app.Flag("cloudwatch-stream", "Write logs to a specific Cloudwatch Logs stream, defaults to instance-id").
+	app.Flag("cloudwatch-stream", "Write logs to a specific CloudWatch Logs stream, defaults to instance-id").
 		StringVar(&cloudwatchStream)
 
 	app.Flag("debug", "Show debugging info").
