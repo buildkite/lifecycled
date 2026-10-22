@@ -13,6 +13,7 @@ Lifecycled is a daemon that gracefully handles AWS EC2 instance lifecycle events
 - **SQS Queue Tagging**: Support for tagging SQS queues for cost allocation and organization
 - **Automatic Instance Discovery**: Auto-detects instance ID and region from EC2 metadata
 - **Configurable Intervals**: Customize polling and heartbeat intervals
+- **Agent Health Recovery**: Optionally power off an instance whose local Buildkite agents do not recover
 
 ## How It Works
 
@@ -80,6 +81,16 @@ Lifecycled is configured via command-line flags or environment variables (with `
 | `--tags` | `LIFECYCLED_TAGS` | - | Comma-separated tags for SQS queues (e.g., `Team=platform,Environment=prod`) |
 | `--spot-listener-interval` | `LIFECYCLED_SPOT_LISTENER_INTERVAL` | `5s` | Interval to check for spot termination notices |
 | `--autoscaling-heartbeat-interval` | `LIFECYCLED_AUTOSCALING_HEARTBEAT_INTERVAL` | `10s` | Interval to send lifecycle heartbeats to AWS; keep shorter than the hook's `HeartbeatTimeout` |
+| `--agent-health-url` | `LIFECYCLED_AGENT_HEALTH_URL` | - | Local Buildkite agent health server URL; empty disables monitoring |
+| `--agent-health-expected-workers` | `LIFECYCLED_AGENT_HEALTH_EXPECTED_WORKERS` | `1` | Number of agent workers expected in `/status.json` |
+| `--agent-health-check-interval` | `LIFECYCLED_AGENT_HEALTH_CHECK_INTERVAL` | `10s` | Interval between health checks |
+| `--agent-health-request-timeout` | `LIFECYCLED_AGENT_HEALTH_REQUEST_TIMEOUT` | `2s` | Timeout for each local health request |
+| `--agent-health-startup-grace` | `LIFECYCLED_AGENT_HEALTH_STARTUP_GRACE` | `5m` | Startup grace before failures become actionable |
+| `--agent-unhealthy-duration` | `LIFECYCLED_AGENT_UNHEALTHY_DURATION` | `2m` | Continuous actionable failure required before power-off |
+| `--agent-memory-evidence-window` | `LIFECYCLED_AGENT_MEMORY_EVIDENCE_WINDOW` | `5m` | How long OOM or sustained PSI evidence remains actionable |
+| `--agent-cgroup-path` | `LIFECYCLED_AGENT_CGROUP_PATH` | `/sys/fs/cgroup/buildkite-agent.slice` | Agent cgroup v2 directory |
+| `--agent-full-pressure-threshold` | `LIFECYCLED_AGENT_FULL_PRESSURE_THRESHOLD` | `20` | Memory PSI `full avg10` percentage considered severe |
+| `--agent-full-pressure-duration` | `LIFECYCLED_AGENT_FULL_PRESSURE_DURATION` | `30s` | Continuous severe PSI required as local evidence |
 
 ### AWS Configuration
 
@@ -128,6 +139,12 @@ The region is resolved in order: `AWS_REGION`, then `AWS_DEFAULT_REGION`, then t
    systemctl start lifecycled
    systemctl status lifecycled
    ```
+
+### Agent health recovery
+
+Agent health recovery is Linux-only and disabled unless `LIFECYCLED_AGENT_HEALTH_URL` is set. The health server must listen on loopback and expose `/status.json` plus `/agent/<spawn-index>` endpoints.
+
+An unreachable or malformed local server is treated as a local failure. Failed worker heartbeats alone do not power off an instance because a Buildkite API or network outage could otherwise recycle a whole fleet. They become actionable only when the agent cgroup also reports a recent OOM or sustained full memory pressure. Every worker must remain unhealthy for the configured duration before lifecycled calls the Linux power-off syscall directly.
 
 ### Manual Execution
 

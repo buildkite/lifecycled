@@ -26,6 +26,36 @@ func (n fakeNotice) Handle(ctx context.Context, _ lifecycled.Handler, _ *logrus.
 	return n.err
 }
 
+type fakeEmergencyNotice struct {
+	called *bool
+	err    error
+}
+
+func (fakeEmergencyNotice) Type() string { return "emergency" }
+
+func (n fakeEmergencyNotice) Handle(context.Context, lifecycled.Handler, *logrus.Entry) error {
+	return errors.New("ordinary Handle must not be called for an emergency")
+}
+
+func (n fakeEmergencyNotice) HandleEmergency(context.Context) error {
+	*n.called = true
+	return n.err
+}
+
+func TestHandleTerminationNoticeEmergency(t *testing.T) {
+	wantErr := errors.New("power off failed")
+	called := false
+	notice := fakeEmergencyNotice{called: &called, err: wantErr}
+
+	err := handleTerminationNotice(t.Context(), notice, nil, nil)
+	if !called {
+		t.Fatal("HandleEmergency() was not called")
+	}
+	if !errors.Is(err, wantErr) {
+		t.Errorf("handleTerminationNotice() error = %v, want %v", err, wantErr)
+	}
+}
+
 func TestHandleNotice(t *testing.T) {
 	handlerErr := errors.New("handler failed")
 	tests := []struct {

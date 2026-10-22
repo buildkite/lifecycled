@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"sync"
@@ -55,6 +56,17 @@ func NewDaemon(
 		)
 		daemon.AddListener(NewAutoscalingListener(config.InstanceID, queue, asgClient, config.AutoscalingHeartbeatInterval))
 	}
+	if config.AgentHealth.URL != "" {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.Proxy = nil
+		daemon.AddListener(newAgentHealthListener(
+			config.InstanceID,
+			config.AgentHealth,
+			&http.Client{Transport: transport, Timeout: config.AgentHealth.RequestTimeout},
+			newCgroupMemoryObserver(config.AgentHealth.CgroupPath),
+			newLocalPoweroff(),
+		))
+	}
 	return daemon
 }
 
@@ -66,6 +78,7 @@ type Config struct {
 	SpotListener                 bool
 	SpotListenerInterval         time.Duration
 	AutoscalingHeartbeatInterval time.Duration
+	AgentHealth                  AgentHealthConfig
 }
 
 // Validate rejects configuration that would otherwise fail at runtime: a
@@ -73,8 +86,8 @@ type Config struct {
 // when a termination notice arrives), and a daemon with no listeners blocks
 // forever doing nothing.
 func (c *Config) Validate() error {
-	if !c.SpotListener && c.SNSTopic == "" {
-		return errors.New("no listeners enabled: set --sns-topic and/or drop --no-spot")
+	if !c.SpotListener && c.SNSTopic == "" && c.AgentHealth.URL == "" {
+		return errors.New("no listeners enabled: configure agent health, set --sns-topic, and/or drop --no-spot")
 	}
 	var errs []error
 	if c.SpotListener && c.SpotListenerInterval <= 0 {
@@ -82,6 +95,9 @@ func (c *Config) Validate() error {
 	}
 	if c.SNSTopic != "" && c.AutoscalingHeartbeatInterval <= 0 {
 		errs = append(errs, fmt.Errorf("--autoscaling-heartbeat-interval must be positive, got %s", c.AutoscalingHeartbeatInterval))
+	}
+	if c.AgentHealth.URL != "" {
+		errs = append(errs, c.AgentHealth.Validate())
 	}
 	return errors.Join(errs...)
 }
@@ -162,6 +178,14 @@ type Listener interface {
 type TerminationNotice interface {
 	Type() string
 	Handle(context.Context, Handler, *logrus.Entry) error
+}
+
+// EmergencyTerminationNotice handles a host emergency without invoking the
+// ordinary logger or external handler, either of which may block under severe
+// resource pressure.
+type EmergencyTerminationNotice interface {
+	TerminationNotice
+	HandleEmergency(context.Context) error
 }
 
 // ErrDrainInterrupted marks a handler error caused by the daemon's own

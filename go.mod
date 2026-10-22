@@ -16,6 +16,7 @@ require (
 	github.com/aws/smithy-go v1.27.2
 	github.com/sirupsen/logrus v1.8.3
 	go.uber.org/mock v0.6.0
+	golang.org/x/sys v0.35.0
 )
 
 require (
@@ -33,7 +34,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.6 // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
 )
 

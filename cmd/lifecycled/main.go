@@ -42,6 +42,16 @@ func main() {
 		tags                         string
 		spotListenerInterval         time.Duration
 		autoscalingHeartbeatInterval time.Duration
+		agentHealthURL               string
+		agentHealthExpectedWorkers   int
+		agentHealthCheckInterval     time.Duration
+		agentHealthRequestTimeout    time.Duration
+		agentHealthStartupGrace      time.Duration
+		agentUnhealthyDuration       time.Duration
+		agentMemoryEvidenceWindow    time.Duration
+		agentCgroupPath              string
+		agentFullPressureThreshold   float64
+		agentFullPressureDuration    time.Duration
 	)
 
 	app.Flag("instance-id", "The instance id to listen for events for").
@@ -80,6 +90,45 @@ func main() {
 		Default("10s").
 		DurationVar(&autoscalingHeartbeatInterval)
 
+	app.Flag("agent-health-url", "Buildkite agent HTTP health server URL; empty disables agent health monitoring").
+		StringVar(&agentHealthURL)
+
+	app.Flag("agent-health-expected-workers", "Number of Buildkite agent workers expected on this instance").
+		Default("1").
+		IntVar(&agentHealthExpectedWorkers)
+
+	app.Flag("agent-health-check-interval", "Interval between local Buildkite agent health checks").
+		Default("10s").
+		DurationVar(&agentHealthCheckInterval)
+
+	app.Flag("agent-health-request-timeout", "Timeout for each local Buildkite agent health request").
+		Default("2s").
+		DurationVar(&agentHealthRequestTimeout)
+
+	app.Flag("agent-health-startup-grace", "Time allowed for the Buildkite agent health server to start").
+		Default("5m").
+		DurationVar(&agentHealthStartupGrace)
+
+	app.Flag("agent-unhealthy-duration", "Continuous actionable failure required before powering off the instance").
+		Default("2m").
+		DurationVar(&agentUnhealthyDuration)
+
+	app.Flag("agent-memory-evidence-window", "How long local OOM or sustained PSI evidence remains actionable").
+		Default("5m").
+		DurationVar(&agentMemoryEvidenceWindow)
+
+	app.Flag("agent-cgroup-path", "Path to the Buildkite agent cgroup v2 directory").
+		Default("/sys/fs/cgroup/buildkite-agent.slice").
+		StringVar(&agentCgroupPath)
+
+	app.Flag("agent-full-pressure-threshold", "Memory PSI full avg10 percentage considered severe").
+		Default("20").
+		Float64Var(&agentFullPressureThreshold)
+
+	app.Flag("agent-full-pressure-duration", "Continuous severe memory PSI required as local failure evidence").
+		Default("30s").
+		DurationVar(&agentFullPressureDuration)
+
 	app.Action(func(c *kingpin.ParseContext) error {
 		logger := logrus.New()
 		if jsonLogging {
@@ -101,6 +150,18 @@ func main() {
 			SpotListener:                 !disableSpotListener,
 			SpotListenerInterval:         spotListenerInterval,
 			AutoscalingHeartbeatInterval: autoscalingHeartbeatInterval,
+			AgentHealth: lifecycled.AgentHealthConfig{
+				URL:                   agentHealthURL,
+				ExpectedWorkers:       agentHealthExpectedWorkers,
+				CheckInterval:         agentHealthCheckInterval,
+				RequestTimeout:        agentHealthRequestTimeout,
+				StartupGrace:          agentHealthStartupGrace,
+				UnhealthyDuration:     agentUnhealthyDuration,
+				MemoryEvidenceWindow:  agentMemoryEvidenceWindow,
+				CgroupPath:            agentCgroupPath,
+				FullPressureThreshold: agentFullPressureThreshold,
+				FullPressureDuration:  agentFullPressureDuration,
+			},
 		}
 		if err := daemonConfig.Validate(); err != nil {
 			logger.WithError(err).Fatal("Invalid configuration")
@@ -194,12 +255,19 @@ func main() {
 		}
 		if notice != nil {
 			log := logger.WithFields(logrus.Fields{"instanceId": instanceID, "notice": notice.Type()})
-			return handleNotice(ctx, notice, handler, log)
+			return handleTerminationNotice(ctx, notice, handler, log)
 		}
 		return nil
 	})
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+}
+
+func handleTerminationNotice(ctx context.Context, notice lifecycled.TerminationNotice, handler lifecycled.Handler, log *logrus.Entry) error {
+	if emergency, ok := notice.(lifecycled.EmergencyTerminationNotice); ok {
+		return emergency.HandleEmergency(ctx)
+	}
+	return handleNotice(ctx, notice, handler, log)
 }
 
 // handleNotice runs the termination handler and maps its outcome to a process
