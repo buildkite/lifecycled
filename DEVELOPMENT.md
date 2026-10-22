@@ -4,7 +4,7 @@
 
 ### Required Tools
 
-- **Go**: Go 1.26.4 or later (matches the `go` directive in `go.mod`; required for the `tool` directive and modern syntax)
+- **Go**: Go 1.26.10 or a patched newer release (matches the `go` directive in `go.mod`; Go 1.27 builds require at least 1.27.3 for the eMudhra trust fix)
 - **gox**: Cross-platform Go compilation tool (required for `make release`)
 - **mockgen**: Provided as a `go.mod` `tool` dependency, so no separate install is needed (see [Code Generation](#code-generation))
 
@@ -78,8 +78,13 @@ make clean
 The current release process uses `gox` for cross-platform compilation:
 
 ```bash
-make release
+GOTOOLCHAIN=go1.26.10 make release
 ```
+
+Use a patched compiler for every release build. Go 1.26.10 and 1.27.3 include the
+[eMudhra trust fix](https://emudhra.we-have-a-problem.com/); rebuilding is required
+to include it in lifecycled binaries. Verify the compiler with `go version -m`
+on each release binary before uploading it.
 
 This builds binaries for the following platforms:
 - freebsd/amd64
@@ -117,7 +122,7 @@ This version is embedded into the binary using Go build flags:
 
 2. **Build release binaries:**
    ```bash
-   make release
+   GOTOOLCHAIN=go1.26.10 make release
    ```
 
 3. **Create GitHub release:**
@@ -172,4 +177,4 @@ CI verifies the committed mocks stay in sync by running `go generate ./...` foll
 - Version information is derived from git tags
 - Mock generation uses `go.uber.org/mock` (the actively maintained fork of gomock), not the deprecated `github.com/golang/mock`
 - Generated mock files should not be manually edited; regenerate them using `make generate`
-- The project requires Go 1.26.4 or later (the `go` directive in `go.mod`); the `tool` directive needs at least Go 1.24
+- The project requires Go 1.26.10 or a patched newer release (Go 1.27.3 or later on the 1.27 branch); the `tool` directive needs at least Go 1.24
