@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -188,7 +191,14 @@ type FileHandler struct {
 
 // Execute the file handler.
 func (h *FileHandler) Execute(ctx context.Context, args ...string) error {
-	cmd := exec.CommandContext(ctx, h.file.Name(), args...)
+	name := h.file.Name()
+	// os/exec starts the handler with CreateProcess, which can't run a .ps1
+	// (only executables, plus .bat/.cmd through cmd.exe), so run it through PowerShell.
+	if runtime.GOOS == "windows" && strings.EqualFold(filepath.Ext(name), ".ps1") {
+		args = append([]string{"-NoProfile", "-NonInteractive", "-File", name}, args...)
+		name = "powershell.exe"
+	}
+	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Env = os.Environ()
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
