@@ -162,6 +162,8 @@ CMD ["/usr/bin/lifecycled", "--handler=/usr/local/bin/shutdown-handler.sh"]
 
 Handler scripts receive termination events and perform graceful shutdown operations. The script is passed the event type and instance ID as arguments.
 
+On Windows, a handler ending in `.ps1` runs as `powershell.exe -NoProfile -NonInteractive -File <handler> <args>`; any other handler must be something Windows can start directly, such as an `.exe`, `.cmd` or `.bat`.
+
 ### Arguments Passed to Handler
 
 - **AutoScaling Events**: `autoscaling:EC2_INSTANCE_TERMINATING i-001405f0fc67e3b12`
